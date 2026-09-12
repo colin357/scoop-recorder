@@ -17,7 +17,11 @@ export async function POST(req: Request) {
     if (provided !== secret) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = (await req.json()) as { event?: string; data?: { bot?: { id?: string }; bot_id?: string; status?: { code?: string } } };
+  // Recall payload: { event, data: { data: { code, sub_code }, bot: { id }, transcript?: { id }, recording?: { id } } }
+  const body = (await req.json()) as {
+    event?: string;
+    data?: { bot?: { id?: string }; bot_id?: string; data?: { code?: string; sub_code?: string | null }; status?: { code?: string } };
+  };
   const botId = body.data?.bot?.id ?? body.data?.bot_id;
   if (!botId) return NextResponse.json({ ok: true, ignored: "no bot id" });
 
@@ -25,14 +29,20 @@ export async function POST(req: Request) {
   if (!meeting) return NextResponse.json({ ok: true, ignored: "unknown bot" });
 
   const event = body.event ?? "";
-  const code = body.data?.status?.code ?? "";
+  const code = body.data?.data?.code ?? body.data?.status?.code ?? "";
+  const subCode = body.data?.data?.sub_code ?? null;
 
   if (event === "bot.in_call_recording" || code === "in_call_recording") {
     await db.meeting.update({ where: { id: meeting.id }, data: { status: "recording", startedAt: meeting.startedAt ?? new Date() } });
-  } else if (event === "bot.joining_call" || code === "joining_call") {
+  } else if (["bot.joining_call", "bot.in_waiting_room", "bot.in_call_not_recording"].includes(event) || ["joining_call", "in_waiting_room", "in_call_not_recording"].includes(code)) {
     await db.meeting.update({ where: { id: meeting.id }, data: { status: "joining" } });
-  } else if (event === "bot.fatal" || code === "fatal") {
-    await db.meeting.update({ where: { id: meeting.id }, data: { status: "failed", error: "The recorder could not join or was removed from the call." } });
+  } else if (event === "bot.fatal" || code === "fatal" || event === "transcript.failed") {
+    await db.meeting.update({
+      where: { id: meeting.id },
+      data: { status: "failed", error: `The recorder could not complete this meeting${subCode ? ` (${subCode})` : ""}.` },
+    });
+  } else if (event === "bot.call_ended" || code === "call_ended") {
+    await db.meeting.update({ where: { id: meeting.id }, data: { status: "processing", endedAt: meeting.endedAt ?? new Date() } });
   } else if (event === "transcript.done" || event === "bot.done" || code === "done") {
     await db.meeting.update({ where: { id: meeting.id }, data: { status: "processing", endedAt: meeting.endedAt ?? new Date() } });
     // Respond to Recall immediately; run ingestion after the response is sent.

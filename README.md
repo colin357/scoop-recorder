@@ -44,8 +44,8 @@ Set `XAI_API_KEY` to use Grok (default model `grok-4`, override with `XAI_MODEL`
 ## Live recording setup (Recall.ai)
 
 1. Set `RECALL_API_KEY` (and `RECALL_REGION` if not `us-west-2`).
-2. Bots are created with a `transcript.done` realtime webhook pointing at `<APP_URL>/api/webhooks/recall`.
-3. In the Recall dashboard, also add `https://www.scooprecorder.com/api/webhooks/recall` as a webhook for bot status changes so meeting pages show joining / recording / done.
+2. Bots are created with meeting-captions transcription and a mixed MP4 recording.
+3. In the Recall dashboard, add `https://www.scooprecorder.com/api/webhooks/recall?secret=<RECALL_WEBHOOK_SECRET>` as a webhook endpoint subscribed to **bot status change** events and **transcript.done / transcript.failed**. This is how the app learns a recording finished; nothing is configured per bot.
 4. Optionally set `RECALL_WEBHOOK_SECRET` and configure Recall to send it as `x-webhook-secret` or `?secret=`.
 
 ## Calendar auto-record setup

@@ -48,9 +48,12 @@ export type RecallBot = {
   }[];
 };
 
-/** Send a bot to a meeting. `joinAt` schedules it; omit to join now. */
+/**
+ * Send a bot to a meeting. `joinAt` schedules it; omit to join now.
+ * Completion events (bot.done, transcript.done) arrive via the webhook endpoint
+ * configured in the Recall dashboard, not per bot.
+ */
 export async function createBot(input: { meetingUrl: string; botName: string; joinAt?: Date }) {
-  const webhookBase = appUrl();
   return recallFetch<RecallBot>("/bot/", {
     method: "POST",
     body: JSON.stringify({
@@ -60,10 +63,8 @@ export async function createBot(input: { meetingUrl: string; botName: string; jo
       recording_config: {
         transcript: { provider: { meeting_captions: {} } },
         video_mixed_mp4: {},
-        ...(webhookBase.startsWith("https://")
-          ? { realtime_endpoints: [{ type: "webhook", url: `${webhookBase}/api/webhooks/recall`, events: ["transcript.done"] }] }
-          : {}),
       },
+      metadata: { app: "scoop", app_url: appUrl() },
     }),
   });
 }

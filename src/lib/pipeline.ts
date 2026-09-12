@@ -101,6 +101,14 @@ export async function ingestFromRecall(meetingId: string) {
   const bot = await getBot(meeting.recallBotId);
   const transcript = await fetchTranscript(bot);
   const rec = bot.recordings?.[0];
+  if (!transcript.length) {
+    // bot.done can arrive before the transcript artifact is ready; transcript.done will re-trigger us.
+    await db.meeting.update({
+      where: { id: meetingId },
+      data: { status: "processing", recordingUrl: recordingUrlFromBot(bot) ?? meeting.recordingUrl, endedAt: meeting.endedAt ?? new Date() },
+    });
+    return;
+  }
   const startedAt = rec?.started_at ? new Date(rec.started_at) : meeting.startedAt;
   const endedAt = rec?.completed_at ? new Date(rec.completed_at) : meeting.endedAt;
   await db.meeting.update({
