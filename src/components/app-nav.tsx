@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Mascot } from "@/components/mascot";
 import { Icon, type IconName } from "@/components/icons";
+import { Avatar } from "@/components/ui";
 
 export type NavItem = { href: string; label: string; icon: IconName };
 
@@ -32,8 +33,8 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
         </div>
       </form>
       {items.map((n) => (
-        <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-display font-medium ${active(n.href) ? "bg-sky text-merle-deep" : "text-ink-soft hover:bg-paper-2"}`}>
-          <Icon name={n.icon} size={18} className={active(n.href) ? "text-merle" : "text-muted"} />{n.label}
+        <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-display font-medium transition ${active(n.href) ? "bg-ink text-paper shadow-btn" : "text-ink-soft hover:bg-paper-2 hover:text-ink"}`}>
+          <Icon name={n.icon} size={18} className={active(n.href) ? "text-paper" : "text-muted"} />{n.label}
         </Link>
       ))}
       <Link href="/meetings/new" onClick={() => setOpen(false)} className="btn-accent w-full mt-3"><Icon name="mic" size={16} />Record a meeting</Link>
@@ -41,16 +42,16 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
         type="button"
         onClick={() => setSettingsOpen((v) => !v)}
         aria-expanded={showSettings}
-        className={`mt-3 w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-display font-medium ${onSettings ? "bg-sky text-merle-deep" : "text-ink-soft hover:bg-paper-2"}`}
+        className={`mt-3 w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-display font-medium transition ${onSettings ? "bg-paper-2 text-ink" : "text-ink-soft hover:bg-paper-2 hover:text-ink"}`}
       >
-        <Icon name="settings" size={18} className={onSettings ? "text-merle" : "text-muted"} />
+        <Icon name="settings" size={18} className={onSettings ? "text-ink" : "text-muted"} />
         Settings
         <Icon name="chevron" size={16} className="ml-auto text-muted transition-transform" style={{ transform: showSettings ? "rotate(180deg)" : "none" }} />
       </button>
       {showSettings && (
         <div className="ml-4 mt-1 border-l edge pl-2 space-y-0.5">
           {settings.map((n) => (
-            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-1.5 text-sm ${active(n.href) ? "text-merle font-semibold bg-sky-soft" : "text-ink-soft hover:bg-paper-2"}`}>{n.label}</Link>
+            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-1.5 text-sm ${active(n.href) ? "text-ink font-semibold bg-paper-2" : "text-ink-soft hover:bg-paper-2"}`}>{n.label}</Link>
           ))}
         </div>
       )}
@@ -81,23 +82,31 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-60 shrink-0 border-r edge bg-paper flex-col sticky top-0 h-screen">
-        <div className="p-4 border-b edge flex items-center gap-3">
-          <Mascot pose="listen" size={44} />
-          <div className="min-w-0"><div className="font-display font-bold text-lg tracking-tight leading-tight">scoop</div><div className="text-xs text-muted truncate">{orgName}</div></div>
+      <aside className="hidden md:flex w-64 shrink-0 border-r edge bg-paper flex-col sticky top-0 h-screen">
+        <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+          <Mascot pose="listen" size={40} className="!animate-none" />
+          <div className="min-w-0">
+            <div className="font-display font-bold text-lg tracking-tight leading-tight">scoop</div>
+            <div className="text-xs text-muted truncate flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-copper" />{orgName}</div>
+          </div>
         </div>
-        <nav className="p-2 flex-1 overflow-y-auto">{links}</nav>
-        <div className="p-4 border-t edge text-sm bg-paper-2">
-          <div className="truncate font-medium">{user.name}</div>
-          <div className="truncate text-xs text-muted">{user.email}</div>
-          <form action={signOut}><button className="text-xs text-muted hover:text-ink mt-2">Sign out</button></form>
+        <nav className="px-3 pb-3 flex-1 overflow-y-auto">{links}</nav>
+        <div className="px-3 py-3 border-t edge">
+          <div className="flex items-center gap-3 rounded-xl px-2 py-1.5">
+            <Avatar name={user.name} size="md" />
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-medium leading-tight">{user.name}</div>
+              <div className="truncate text-[11px] text-muted">{user.email}</div>
+            </div>
+            <form action={signOut}><button className="btn-ghost !px-2 !py-1.5 text-xs" title="Sign out" aria-label="Sign out"><Icon name="close" size={16} /></button></form>
+          </div>
         </div>
       </aside>
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-paper border-t edge grid grid-cols-5 text-[11px] font-display">
         {items.slice(0, 5).map((n) => (
-          <Link key={n.href} href={n.href} className={`flex flex-col items-center gap-0.5 py-2 ${active(n.href) ? "text-merle font-semibold" : "text-muted"}`}><Icon name={n.icon} size={20} />{n.label}</Link>
+          <Link key={n.href} href={n.href} className={`flex flex-col items-center gap-0.5 py-2 ${active(n.href) ? "text-ink font-semibold" : "text-muted"}`}><Icon name={n.icon} size={20} />{n.label}</Link>
         ))}
       </nav>
     </>

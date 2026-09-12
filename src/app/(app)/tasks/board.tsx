@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
 import { updateTaskAction } from "@/app/actions/tasks";
-import { DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
+import { Avatar, DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import { STATUS_LABEL } from "@/lib/utils";
 
 export type TaskRow = {
@@ -31,14 +31,17 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
     });
 
   const controls = (t: TaskRow) => (
-    <div className="flex gap-2">
-      <select value={t.status} onChange={(e) => setStatus(t.id, e.target.value)} className="!w-auto !py-1 text-xs">
+    <div className="flex items-center gap-2">
+      <select value={t.status} onChange={(e) => setStatus(t.id, e.target.value)} className="!w-auto !py-1 !rounded-lg text-xs font-medium" aria-label="Status">
         {COLUMNS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
       </select>
-      <select value={t.assignee?.id ?? ""} onChange={(e) => setAssignee(t.id, e.target.value)} className="!w-auto !py-1 text-xs">
-        <option value="">Unassigned</option>
-        {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-      </select>
+      <span className="inline-flex items-center gap-1.5">
+        {t.assignee && <Avatar name={t.assignee.name} size="sm" />}
+        <select value={t.assignee?.id ?? ""} onChange={(e) => setAssignee(t.id, e.target.value)} className="!w-auto !py-1 !rounded-lg text-xs font-medium" aria-label="Assignee">
+          <option value="">Unassigned</option>
+          {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+        </select>
+      </span>
     </div>
   );
 
@@ -50,8 +53,8 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
             <div className="flex items-center justify-between mb-2"><StatusBadge status={col} /><span className="text-xs text-muted">{rows.filter((t) => t.status === col).length}</span></div>
             <div className="space-y-2">
               {rows.filter((t) => t.status === col).map((t) => (
-                <div key={t.id} className="card p-3 space-y-2">
-                  <Link href={`/tasks/${t.id}`} className="text-sm font-medium hover:text-merle block">{t.title}</Link>
+                <div key={t.id} className="card p-3 space-y-2 hover:shadow-lift transition">
+                  <Link href={`/tasks/${t.id}`} className="text-sm font-medium hover:underline block">{t.title}</Link>
                   <div className="flex flex-wrap items-center gap-2"><ProjectChip project={t.project} /><DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} /><PriorityBadge priority={t.priority} /></div>
                   {controls(t)}
                 </div>
@@ -66,9 +69,17 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
   return (
     <ul className="card divide-y divide-line/60">
       {rows.map((t) => (
-        <li key={t.id} className="p-4 flex flex-wrap items-center gap-4">
+        <li key={t.id} className="p-4 flex flex-wrap items-center gap-4 row-hover">
+          <button
+            type="button"
+            onClick={() => setStatus(t.id, t.status === "done" ? "todo" : "done")}
+            aria-label={t.status === "done" ? "Mark as to do" : "Mark as done"}
+            className={`h-5 w-5 shrink-0 rounded-full border-2 flex items-center justify-center transition ${t.status === "done" ? "bg-grass border-grass text-paper" : "border-dust hover:border-ink"}`}
+          >
+            {t.status === "done" && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5 9.5 17 19 7" /></svg>}
+          </button>
           <div className="flex-1 min-w-60">
-            <Link href={`/tasks/${t.id}`} className={`font-medium hover:text-merle ${t.status === "done" ? "line-through text-muted" : ""}`}>{t.title}</Link>
+            <Link href={`/tasks/${t.id}`} className={`font-medium hover:underline ${t.status === "done" ? "line-through text-muted" : ""}`}>{t.title}</Link>
             <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
               <ProjectChip project={t.project} />
               <DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} />

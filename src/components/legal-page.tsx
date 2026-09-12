@@ -5,7 +5,7 @@ import { LEGAL } from "@/lib/legal";
 /** Public, print-friendly layout for legal documents. */
 export default function LegalPage({ title, effective, intro, children }: { title: string; effective: string; intro: string; children: React.ReactNode }) {
   return (
-    <main className="flex-1 bg-[#f7f6f3] text-ink">
+    <main className="theme-landing flex-1 bg-[#f7f6f3] text-ink">
       <header className="sticky top-0 z-30 bg-[#f7f6f3]/85 backdrop-blur border-b edge">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2"><Mascot pose="listen" size={40} className="!animate-none" /><span className="font-display font-bold text-xl tracking-tight">scoop</span></Link>

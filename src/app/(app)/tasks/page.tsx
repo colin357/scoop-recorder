@@ -2,7 +2,8 @@ import Link from "next/link";
 import { endOfDay, startOfDay, endOfWeek } from "date-fns";
 import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
-import { Empty } from "@/components/ui";
+import { Empty, PageHeader } from "@/components/ui";
+import { Icon } from "@/components/icons";
 import TaskBoard from "./board";
 import { createTaskAction } from "@/app/actions/tasks";
 
@@ -59,13 +60,17 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-        <div className="flex gap-1 rounded-xl border edge bg-paper p-0.5 text-sm shadow-soft">
-          <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded-lg font-display ${view === "list" ? "bg-merle text-paper" : ""}`}>List</Link>
-          <Link href={qs({ view: "board" })} className={`px-3 py-1 rounded-lg font-display ${view === "board" ? "bg-merle text-paper" : ""}`}>Board</Link>
-        </div>
-      </div>
+      <PageHeader
+        title="Tasks"
+        count={tasks.length}
+        description="Everything Rocky pulled out of your meetings, plus anything you added by hand."
+        actions={
+          <div className="flex gap-0.5 rounded-xl border edge bg-paper p-0.5 text-sm shadow-soft">
+            <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded-lg font-display font-medium ${view === "list" ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2"}`}>List</Link>
+            <Link href={qs({ view: "board" })} className={`px-3 py-1 rounded-lg font-display font-medium ${view === "board" ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2"}`}>Board</Link>
+          </div>
+        }
+      />
 
       <div className="flex flex-wrap gap-4 items-end">
         <FilterGroup label="Project">
@@ -84,7 +89,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       </div>
 
       {tasks.length === 0 ? (
-        <Empty title="No tasks match these filters." pose="think">Record a meeting and the AI will create tasks here, or add one manually below.</Empty>
+        <Empty title="No tasks match these filters." pose="think" action={<Link href="/meetings/new" className="btn-primary"><Icon name="mic" size={16} />Record a meeting</Link>}>Record a meeting and Rocky will create tasks here, or add one manually below.</Empty>
       ) : (
         <TaskBoard
           view={view}
@@ -101,8 +106,8 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         />
       )}
 
-      <details className="card p-4">
-        <summary className="cursor-pointer text-sm font-medium">+ Add a task manually</summary>
+      <details className="card p-4 group">
+        <summary className="cursor-pointer text-sm font-medium flex items-center gap-2 list-none"><span className="h-6 w-6 rounded-lg bg-paper-2 inline-flex items-center justify-center text-ink-soft group-open:rotate-45 transition"><Icon name="close" size={14} className="rotate-45" /></span>Add a task manually</summary>
         <form action={createTaskAction} className="grid sm:grid-cols-2 gap-3 mt-4">
           <div className="sm:col-span-2"><label>Title</label><input name="title" required /></div>
           <div className="sm:col-span-2"><label>Description</label><textarea name="description" rows={2} /></div>
@@ -128,7 +133,7 @@ function FilterGroup({ label, children }: { label: string; children: React.React
 
 function Pill({ href, active, dot, children }: { href: string; active: boolean; dot?: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${active ? "bg-merle text-paper border-merle" : "bg-paper text-ink-soft edge hover:bg-sky-soft"}`}>
+    <Link href={href} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition ${active ? "bg-ink text-paper border-ink" : "bg-paper text-ink-soft edge hover:bg-paper-2 hover:text-ink"}`}>
       {dot && <span className="h-2 w-2 rounded-full" style={{ background: dot }} />}
       {children}
     </Link>

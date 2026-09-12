@@ -1,12 +1,62 @@
 @import "tailwindcss";
 
 /* =====================================================================
-   Scoop design language — "Sticker"
-   Derived from Rocky's artwork: ink outlines, flat fills, merle blue,
-   copper points, cream paper, a pink accent. Cards and buttons carry a
-   2px ink border with a hard offset shadow, like a die-cut sticker.
+   Scoop design language
+
+   App palette (product screens): Blazing Flame #F15025, White, Alabaster
+   Grey #E6E8E6, Dust Grey #CED0CE, Carbon Black #191919. Carbon for text
+   and primary actions, flame for the one accent that matters, greys for
+   ground and lines. Functional green/red are muted so flame stays the
+   only loud colour.
+
+   The public landing and legal pages keep the original Rocky palette via
+   the .theme-landing scope below. Token names are shared so components
+   work in both.
    ===================================================================== */
 @theme {
+  --color-ink: #191919;
+  --color-ink-soft: #3f3f3f;
+  --color-muted: #6b6e6b;
+  --color-line: #ced0ce;
+  --color-cream: #e6e8e6;
+  --color-paper: #ffffff;
+  --color-paper-2: #f2f3f2;
+  --color-merle: #191919;
+  --color-merle-deep: #000000;
+  --color-sky: #e6e8e6;
+  --color-sky-soft: #f2f3f2;
+  --color-copper: #f15025;
+  --color-copper-deep: #d13d14;
+  --color-butter: #fde0d6;
+  --color-butter-soft: #fef0eb;
+  --color-pink: #f15025;
+  --color-pink-soft: #fde0d6;
+  --color-grass: #1f8a4c;
+  --color-grass-soft: #e4f2e9;
+  --color-clay: #b42318;
+  --color-clay-soft: #fbe9e7;
+  --color-flame: #f15025;
+  --color-flame-deep: #d13d14;
+  --color-flame-soft: #fde0d6;
+  --color-carbon: #191919;
+  --color-alabaster: #e6e8e6;
+  --color-dust: #ced0ce;
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+
+  --color-edge: rgba(25, 25, 25, 0.10);
+  --color-edge-strong: rgba(25, 25, 25, 0.18);
+
+  --shadow-soft: 0 1px 2px rgba(25, 25, 25, 0.04), 0 2px 8px -2px rgba(25, 25, 25, 0.06);
+  --shadow-lift: 0 2px 4px rgba(25, 25, 25, 0.05), 0 12px 28px -8px rgba(25, 25, 25, 0.16);
+  --shadow-btn: 0 1px 2px rgba(25, 25, 25, 0.10), 0 2px 6px -2px rgba(25, 25, 25, 0.12);
+}
+
+:root { --ring: rgba(241, 80, 37, 0.22); --ring-border: #191919; }
+
+/* Original Rocky palette, scoped to the marketing site. */
+.theme-landing {
   --color-ink: #171b26;
   --color-ink-soft: #3d4454;
   --color-muted: #7a8394;
@@ -28,16 +78,11 @@
   --color-grass-soft: #e2f4e9;
   --color-clay: #d9574b;
   --color-clay-soft: #fbe5e2;
-
-  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
-
   --color-edge: rgba(23, 27, 38, 0.10);
   --color-edge-strong: rgba(23, 27, 38, 0.18);
-
-  --shadow-soft: 0 1px 2px rgba(23, 27, 38, 0.06), 0 4px 14px -4px rgba(23, 27, 38, 0.10);
-  --shadow-lift: 0 2px 4px rgba(23, 27, 38, 0.06), 0 12px 28px -8px rgba(23, 27, 38, 0.18);
-  --shadow-btn: 0 1px 2px rgba(23, 27, 38, 0.10), 0 3px 8px -2px rgba(23, 27, 38, 0.15);
+  --ring: #dce7f5;
+  --ring-border: #3b5b85;
+  color: var(--color-ink);
 }
 
 body {
@@ -54,11 +99,21 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
     border-color: var(--color-edge-strong);
     box-shadow: 0 1px 2px rgba(23, 27, 38, 0.04);
   }
-  input:focus, textarea:focus, select:focus { border-color: var(--color-merle); box-shadow: 0 0 0 3px var(--color-sky); }
+  input:focus, textarea:focus, select:focus { border-color: var(--ring-border); box-shadow: 0 0 0 3px var(--ring); }
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b6e6b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 16px;
+    padding-right: 2.1rem;
+  }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--ring-border); outline-offset: 2px; border-radius: 6px; }
   input:disabled, textarea:disabled, select:disabled { @apply bg-paper-2 text-muted; box-shadow: none; }
   input[type="checkbox"], input[type="radio"] { @apply accent-merle; box-shadow: none; }
   label { @apply block text-sm font-medium text-ink-soft mb-1; }
   ::selection { background: var(--color-butter); }
+  h1, h2, h3 { text-wrap: balance; }
 }
 
 /* --- buttons --- */
@@ -78,7 +133,7 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
   font-family: var(--font-display);
 }
 @utility btn-accent {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-copper text-ink hover:bg-copper-deep hover:text-paper;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-copper text-paper hover:bg-copper-deep;
   box-shadow: var(--shadow-btn);
   font-family: var(--font-display);
 }
@@ -93,6 +148,8 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 @utility card-flat { @apply rounded-2xl border bg-paper; border-color: var(--color-edge); }
 @utility badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4; font-family: var(--font-display); }
 @utility hero { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-sky-soft) 100%); }
+@utility hero-dark { background: radial-gradient(120% 140% at 100% 0%, #2a2a2a 0%, var(--color-ink) 55%); }
+@utility row-hover { @apply transition hover:bg-paper-2; }
 @utility edge { border-color: var(--color-edge); }
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
 @utility shadow-lift { box-shadow: var(--shadow-lift); }
@@ -100,6 +157,10 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 @utility hero-landing { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-cream) 55%, var(--color-butter-soft) 100%); }
 @utility brand-mark { background: linear-gradient(135deg, var(--color-merle), var(--color-pink)); }
 @utility eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-copper-deep; font-family: var(--font-display); }
+
+/* --- skeletons --- */
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+.skeleton { background: linear-gradient(90deg, var(--color-paper-2) 25%, var(--color-alabaster) 50%, var(--color-paper-2) 75%); background-size: 800px 100%; animation: shimmer 1.4s linear infinite; border-radius: 8px; }
 
 /* --- playful bits --- */
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
