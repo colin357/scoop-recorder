@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Scoop — meeting recorder that turns calls into assigned tasks
 
-## Getting Started
+Multi-tenant SaaS that records Google Meet, Zoom and Microsoft Teams meetings, summarizes them, and turns every action item into a task with an owner, a deadline, and a step-by-step guide.
 
-First, run the development server:
+Production: https://www.scooprecorder.com
+
+## What it does
+
+- **Record any meeting.** Paste a Meet / Zoom / Teams link, or connect a calendar. A notetaker bot (via [Recall.ai](https://recall.ai)) joins now or at the scheduled time, records the call, and produces a transcript. Transcripts can also be imported by hand.
+- **Calendar auto-record.** Connect Google Calendar or Microsoft 365. A cron syncs upcoming meetings that have a video link. Per-org policy: record everything automatically, ask first (dashboard list plus an in-app pop-up before the meeting), or off.
+- **Summarize automatically.** When the call ends, the AI produces a summary, key points, and decisions.
+- **Create and assign tasks.** Each commitment in the transcript becomes a task. The AI assigns it to the team member whose role and responsibilities fit best, explains why, sets a deadline (explicit dates from the call, otherwise an estimate), and writes a 2-6 step guide where each step has its own due date.
+- **Project guessing.** The business description gathered during onboarding lets the AI propose projects up front, file each meeting under the right one, create a new project when a meeting is clearly about a new client or initiative, and suggest missing projects from the Projects page.
+- **Context on demand.** Every task links to the recording at the second it was discussed, shows the verbatim quote, and has an "Ask AI" chat that answers from the transcript with jumpable timestamps.
+- **Track work.** List and board views, filterable by project, assignee ("me"), and due date (overdue / today / this week / later / none). Steps can be ticked off individually.
+- **Chat onboarding.** Scoop, the mascot, walks new users through setup in a conversation, dropping in mini-forms for the team roster and for confirming proposed projects. A classic form wizard is at `/onboarding/form`.
+
+## Stack
+
+Next.js 16 (App Router, server actions), TypeScript, Tailwind v4, Prisma 7 on Postgres, Recall.ai for the meeting bot. AI runs on xAI Grok or Anthropic Claude behind a small provider layer (`src/lib/llm.ts`), both using schema-validated JSON output.
+
+## Run locally
 
 ```bash
+cp .env.example .env         # DATABASE_URL (Postgres), XAI_API_KEY or ANTHROPIC_API_KEY, RECALL_API_KEY for live recording
+npm install
+npx prisma migrate deploy    # applies migrations to DATABASE_URL
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+You need a Postgres database. A Neon branch or `docker run -p 5432:5432 -e POSTGRES_PASSWORD=pw postgres:16` both work. Open http://localhost:3000, sign up, complete onboarding, then **Record a meeting → Import a transcript → Use sample** to see the pipeline without a live call.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploying on Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Attach a Postgres store (Storage → Neon) so `DATABASE_URL` is set.
+2. Environment variables: `APP_URL=https://www.scooprecorder.com` (the apex redirects to www, so the www form is canonical), `XAI_API_KEY` or `ANTHROPIC_API_KEY`, `RECALL_API_KEY`, `RECALL_WEBHOOK_SECRET`, `TOKEN_ENCRYPTION_KEY`, `CRON_SECRET`, plus the calendar OAuth values below.
+3. Deploy. The build command is `prisma migrate deploy && next build`, so migrations run on every deploy.
+4. Requests that arrive on the `*.vercel.app` production alias are redirected to `APP_URL` by `src/proxy.ts`.
 
-## Learn More
+## AI provider
 
-To learn more about Next.js, take a look at the following resources:
+Set `XAI_API_KEY` to use Grok (default model `grok-4`, override with `XAI_MODEL`) or `ANTHROPIC_API_KEY` to use Claude. If both are set, xAI is used unless `AI_PROVIDER=anthropic`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Live recording setup (Recall.ai)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Set `RECALL_API_KEY` (and `RECALL_REGION` if not `us-west-2`).
+2. Bots are created with a `transcript.done` realtime webhook pointing at `<APP_URL>/api/webhooks/recall`.
+3. In the Recall dashboard, also add `https://www.scooprecorder.com/api/webhooks/recall` as a webhook for bot status changes so meeting pages show joining / recording / done.
+4. Optionally set `RECALL_WEBHOOK_SECRET` and configure Recall to send it as `x-webhook-secret` or `?secret=`.
 
-## Deploy on Vercel
+## Calendar auto-record setup
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Google:** in Google Cloud Console create an OAuth client (Web application) with redirect URI `https://www.scooprecorder.com/api/calendar/google/callback`, enable the Google Calendar API, add scopes `calendar.readonly` and `userinfo.email` on the consent screen, and set `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
+2. **Microsoft:** in Entra ID register a multitenant + personal accounts app with Web redirect URI `https://www.scooprecorder.com/api/calendar/microsoft/callback`, delegated permissions `Calendars.Read`, `User.Read`, `offline_access`, and set `MICROSOFT_CLIENT_ID` / `MICROSOFT_CLIENT_SECRET`.
+3. Set `TOKEN_ENCRYPTION_KEY` (any long random string) so stored tokens are encrypted at rest, and `CRON_SECRET` so only Vercel Cron can call `/api/cron/sync-calendars`.
+4. `vercel.json` schedules the sync every 10 minutes. Users connect their calendar under **Calendar** in the app and pick a policy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Layout
+
+```
+prisma/schema.prisma        Organization, User, Session, Membership, Project, Meeting, Task, TaskStep,
+                            TaskMessage, CalendarConnection, CalendarEvent, OnboardingDraft
+src/lib/urls.ts             appUrl(): the one place the public origin is defined
+src/lib/llm.ts              provider layer: xAI (Grok) or Anthropic (Claude)
+src/lib/ai.ts               analyzeMeeting (summary + tasks + project guess) and askAboutTask
+src/lib/onboarding-ai.ts    conversational onboarding turns + project suggestions
+src/lib/recall.ts           Recall.ai client + transcript parsing
+src/lib/calendar.ts         Google / Microsoft OAuth, event sync, auto-record scheduling
+src/lib/pipeline.ts         processMeeting / ingestFromRecall
+src/lib/auth.ts             cookie sessions, signUp / signIn, requireOrg
+src/components/mascot.tsx   Scoop the mascot (inline SVG, several poses)
+src/app/actions/*           server actions (auth, onboarding, meetings, tasks, team, calendar)
+src/app/(app)/*             dashboard, meetings, tasks, projects, calendar and team settings
+src/app/api/webhooks/recall Recall webhook
+src/app/api/calendar/*      OAuth start/callback, upcoming-meetings feed
+src/app/api/cron/*          calendar sync (Vercel Cron)
+src/app/api/tasks/[id]/ask  Ask-AI endpoint
+src/proxy.ts                redirect *.vercel.app → APP_URL
+```
+
+## Notes for production
+
+- Move `processMeeting` / `ingestFromRecall` onto a job queue; they currently run inline (import) or via `after()` (webhook).
+- Add email invites. The data model already supports invited members who link on signup.

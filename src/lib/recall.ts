@@ -1,3 +1,5 @@
+import { appUrl } from "./urls";
+
 /**
  * Recall.ai client. Recall runs a bot that joins Google Meet / Zoom / Teams
  * calls by URL, records them, and produces a transcript. We use it as the
@@ -48,7 +50,7 @@ export type RecallBot = {
 
 /** Send a bot to a meeting. `joinAt` schedules it; omit to join now. */
 export async function createBot(input: { meetingUrl: string; botName: string; joinAt?: Date }) {
-  const webhookBase = process.env.APP_URL;
+  const webhookBase = appUrl();
   return recallFetch<RecallBot>("/bot/", {
     method: "POST",
     body: JSON.stringify({
@@ -58,7 +60,7 @@ export async function createBot(input: { meetingUrl: string; botName: string; jo
       recording_config: {
         transcript: { provider: { meeting_captions: {} } },
         video_mixed_mp4: {},
-        ...(webhookBase
+        ...(webhookBase.startsWith("https://")
           ? { realtime_endpoints: [{ type: "webhook", url: `${webhookBase}/api/webhooks/recall`, events: ["transcript.done"] }] }
           : {}),
       },

@@ -10,6 +10,7 @@ import { db } from "./db";
 import { decrypt, encrypt } from "./crypto";
 import { createBot, recallConfigured, removeBot } from "./recall";
 import { detectPlatform } from "./utils";
+import { appUrl } from "./urls";
 
 export type CalendarProvider = "google" | "microsoft";
 
@@ -24,10 +25,6 @@ type NormalizedEvent = {
 };
 
 const SYNC_WINDOW_DAYS = 7;
-
-function appUrl() {
-  return (process.env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
-}
 
 export function calendarProviderConfigured(provider: CalendarProvider) {
   return provider === "google"

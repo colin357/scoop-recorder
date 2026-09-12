@@ -4,12 +4,13 @@ import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { exchangeCode, syncConnection, type CalendarProvider } from "@/lib/calendar";
 import { encrypt } from "@/lib/crypto";
+import { appUrl } from "@/lib/urls";
 
 export const maxDuration = 60;
 
 export async function GET(req: Request, { params }: RouteContext<"/api/calendar/[provider]/callback">) {
   const { provider } = await params;
-  const base = process.env.APP_URL ?? "http://localhost:3000";
+  const base = appUrl();
   const back = (q: string) => NextResponse.redirect(new URL(`/settings/calendar?${q}`, base));
   if (provider !== "google" && provider !== "microsoft") return back("error=unknown_provider");
 
