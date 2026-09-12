@@ -13,7 +13,7 @@ Production: https://www.scooprecorder.com
 - **Project guessing.** The business description gathered during onboarding lets the AI propose projects up front, file each meeting under the right one, create a new project when a meeting is clearly about a new client or initiative, and suggest missing projects from the Projects page.
 - **Context on demand.** Every task links to the recording at the second it was discussed, shows the verbatim quote, and has an "Ask AI" chat that answers from the transcript with jumpable timestamps.
 - **Track work.** List and board views, filterable by project, assignee ("me"), and due date (overdue / today / this week / later / none). Steps can be ticked off individually.
-- **Chat onboarding.** Scoop, the mascot, walks new users through setup in a conversation, dropping in mini-forms for the team roster and for confirming proposed projects. A classic form wizard is at `/onboarding/form`.
+- **Chat onboarding.** Rocky, the Aussie mascot, walks new users through setup in a conversation, dropping in mini-forms for the team roster and for confirming proposed projects. A classic form wizard is at `/onboarding/form`.
 
 ## Stack
 
@@ -68,7 +68,7 @@ src/lib/recall.ts           Recall.ai client + transcript parsing
 src/lib/calendar.ts         Google / Microsoft OAuth, event sync, auto-record scheduling
 src/lib/pipeline.ts         processMeeting / ingestFromRecall
 src/lib/auth.ts             cookie sessions, signUp / signIn, requireOrg
-src/components/mascot.tsx   Scoop the mascot (inline SVG, several poses)
+src/components/mascot.tsx   Rocky the Aussie mascot (inline SVG, several poses)
 src/app/actions/*           server actions (auth, onboarding, meetings, tasks, team, calendar)
 src/app/(app)/*             dashboard, meetings, tasks, projects, calendar and team settings
 src/app/api/webhooks/recall Recall webhook

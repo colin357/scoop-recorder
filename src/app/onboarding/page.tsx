@@ -19,7 +19,7 @@ export default async function OnboardingPage() {
           <Mascot pose="wave" size={40} />
           <div>
             <div className="font-semibold">Let&apos;s set up Scoop</div>
-            <div className="text-xs text-slate-500">Chat with Scoop, or <Link href="/onboarding/form" className="text-indigo-600">fill in a form instead</Link>.</div>
+            <div className="text-xs text-slate-500">Chat with Rocky, or <Link href="/onboarding/form" className="text-indigo-600">fill in a form instead</Link>.</div>
           </div>
         </div>
       </header>

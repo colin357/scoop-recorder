@@ -94,7 +94,7 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
       </div>
 
       <aside className="hidden lg:block border-l border-slate-200 bg-white p-5 overflow-y-auto">
-        <h2 className="font-semibold text-sm mb-3">What Scoop has so far</h2>
+        <h2 className="font-semibold text-sm mb-3">What Rocky has so far</h2>
         <Field label="Company" value={d.orgName} />
         <Field label="About the business" value={d.businessDescription} />
         <div className="mt-3">

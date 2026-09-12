@@ -90,7 +90,7 @@ export async function getOnboardingState(): Promise<ChatState> {
   return loadState(user.id, user.name, user.email);
 }
 
-/** Send a user message (or a form submission) and get Scoop's reply. */
+/** Send a user message (or a form submission) and get Rocky's reply. */
 export async function onboardingChatAction(userMessage: string, draftPatch?: Partial<OnboardingDraftData>): Promise<ChatState> {
   const user = await getCurrentUser();
   if (!user) redirect("/login");

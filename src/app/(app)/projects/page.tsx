@@ -38,7 +38,7 @@ export default async function ProjectsPage() {
       )}
       <form action={updateBusinessDescriptionAction} className="card p-5 space-y-3">
         <h2 className="font-semibold">About your business</h2>
-        <p className="text-sm text-slate-500">What you do, who your clients are, what you&apos;re working on. Scoop uses this to guess projects and to file meetings under the right one.</p>
+        <p className="text-sm text-slate-500">What you do, who your clients are, what you&apos;re working on. Rocky uses this to guess projects and to file meetings under the right one.</p>
         <textarea name="businessDescription" rows={3} defaultValue={org.businessDescription ?? ""} placeholder="We're a 6-person marketing agency. Clients: Acme, Globex, Initech. We also build our own scheduling app on the side." />
         <button className="btn-secondary">Save</button>
       </form>

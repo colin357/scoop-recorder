@@ -55,7 +55,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
           <Mascot pose={meeting.status === "processing" ? "write" : "listen"} size={64} />
           <p className="text-sm text-slate-700">
             {meeting.status === "processing"
-              ? "Scoop is writing up the summary and sorting out tasks. This usually takes under a minute."
+              ? "Rocky is writing up the summary and sorting out tasks. This usually takes under a minute."
               : `The recorder ${meeting.status === "scheduled" ? "will join" : "is in"} the call. Summary and tasks appear here automatically when the meeting ends.`}
           </p>
         </div>

@@ -30,13 +30,13 @@ export default function SuggestProjects({ hasDescription }: { hasDescription: bo
       <div className="flex items-center gap-3">
         <Mascot pose={pending ? "think" : "write"} size={48} />
         <div className="flex-1">
-          <div className="font-semibold">Let Scoop guess your projects</div>
+          <div className="font-semibold">Let Rocky guess your projects</div>
           <p className="text-sm text-slate-500">Uses your business description and recent meetings to spot clients, product lines and initiatives that deserve their own project.{!hasDescription && " Add a business description below for better guesses."}</p>
         </div>
         {!items && <button className="btn-primary" onClick={suggest} disabled={pending}>{pending ? "Thinking…" : "Suggest projects"}</button>}
       </div>
       {error && <p className="text-sm text-red-600">{error}</p>}
-      {items && items.length === 0 && <p className="text-sm text-slate-500">Nothing missing. Your projects already cover what Scoop can see.</p>}
+      {items && items.length === 0 && <p className="text-sm text-slate-500">Nothing missing. Your projects already cover what Rocky can see.</p>}
       {items && items.length > 0 && (
         <div className="space-y-2">
           {items.map((it, i) => (

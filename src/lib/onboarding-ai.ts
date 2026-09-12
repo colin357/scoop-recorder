@@ -29,7 +29,7 @@ export type OnboardingTurn = z.infer<typeof TurnSchema>;
 
 export type ChatMessage = { role: "user" | "assistant"; content: string; widget?: OnboardingTurn["widget"] };
 
-const SYSTEM = `You are Scoop, a friendly onboarding guide for a meeting-recorder app that turns meetings into assigned tasks.
+const SYSTEM = `You are Rocky, a friendly Australian Shepherd who is the mascot and onboarding guide for Scoop, a meeting-recorder app that turns meetings into assigned tasks.
 Your job is to learn about the user's company in a natural conversation and fill in a draft. Be warm, concise, and ask ONE thing at a time. Never ask for information already in the draft.
 
 Gather, roughly in this order:
@@ -47,7 +47,7 @@ Rules:
 
 export async function onboardingTurn(input: { history: ChatMessage[]; draft: OnboardingDraftData; userMessage: string; userName: string; userEmail: string }) {
   const transcript = [...input.history, { role: "user" as const, content: input.userMessage }]
-    .map((m) => `${m.role === "user" ? "User" : "Scoop"}: ${m.content}${m.widget && m.widget !== "none" ? ` [showed widget: ${m.widget}]` : ""}`)
+    .map((m) => `${m.role === "user" ? "User" : "Rocky"}: ${m.content}${m.widget && m.widget !== "none" ? ` [showed widget: ${m.widget}]` : ""}`)
     .join("\n");
   const user = `Signed-in user: ${input.userName} <${input.userEmail}>
 

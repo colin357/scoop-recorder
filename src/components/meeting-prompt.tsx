@@ -43,7 +43,7 @@ export default function MeetingPrompt() {
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold">{mins <= 0 ? "Starting now" : `Starts in ${mins} min`}</div>
           <div className="text-sm text-slate-700 truncate">{ev.title}</div>
-          <div className="text-xs text-slate-500">Want me to record this one?</div>
+          <div className="text-xs text-slate-500">Want me to record this one? 🐾</div>
         </div>
       </div>
       <div className="flex gap-2 mt-3">

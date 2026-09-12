@@ -23,7 +23,7 @@ export default async function CalendarSettingsPage({ searchParams }: PageProps<"
         <Mascot pose="listen" size={72} />
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Calendar &amp; auto-record</h1>
-          <p className="text-sm text-slate-500">Connect a calendar and Scoop will spot meetings with a video link and send the recorder for you.</p>
+          <p className="text-sm text-slate-500">Connect a calendar and Rocky will spot meetings with a video link and send the recorder for you.</p>
         </div>
       </div>
 
