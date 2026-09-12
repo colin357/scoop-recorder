@@ -4,6 +4,8 @@
  * facing the viewer with layered fur, shading and marbled merle.
  * Poses change the paws, eyes, mouth and accessories.
  */
+import { MASCOT_IMAGES } from "@/generated/mascot-images";
+
 export type MascotPose = "wave" | "listen" | "think" | "celebrate" | "sleep" | "write";
 
 const INK = "#0f172a";
@@ -35,6 +37,26 @@ const SPECKLES: [number, number][] = [
 ];
 
 export function Mascot({ pose = "wave", size = 96, className = "" }: { pose?: MascotPose; size?: number; className?: string }) {
+  // Custom artwork in public/mascot/ takes precedence over the drawn SVG.
+  const image = MASCOT_IMAGES[pose] ?? MASCOT_IMAGES.wave;
+  if (image) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={image}
+        width={size}
+        height={size}
+        alt={`Rocky the Aussie mascot, ${pose}`}
+        className={`mascot mascot-${pose} ${className}`}
+        style={{ width: size, height: size, objectFit: "contain" }}
+        draggable={false}
+      />
+    );
+  }
+  return <DrawnMascot pose={pose} size={size} className={className} />;
+}
+
+function DrawnMascot({ pose, size, className }: { pose: MascotPose; size: number; className: string }) {
   const eyesClosed = pose === "sleep";
   const leftPawUp = pose === "wave" || pose === "celebrate";
   const rightPawUp = pose === "celebrate";

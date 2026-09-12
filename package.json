@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && next build",
+    "build": "node scripts/sync-mascot.mjs && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && node scripts/sync-mascot.mjs",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "prisma migrate dev"
+    "db:migrate": "prisma migrate dev",
+    "mascot:sync": "node scripts/sync-mascot.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
