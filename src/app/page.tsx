@@ -35,7 +35,7 @@ export default async function Home() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
         <div>
-          <h1 className="font-display font-bold tracking-[-0.03em] leading-[0.98] text-[42px] sm:text-6xl lg:text-[72px]">The meeting ends.<br />The work is<br />already assigned.</h1>
+          <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[64px] [text-wrap:balance]">The meeting ends.<br />The work is already assigned.</h1>
           <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-xl leading-relaxed">Rocky learns how your team works: who owns what, and what each person handles. After every call he assigns the action items to the right people, with the context they need, so nothing gets lost between meetings and messages.</p>
           <div className="mt-7"><CtaLinks big /></div>
           <div className="mt-8"><UseCaseChips /></div>
