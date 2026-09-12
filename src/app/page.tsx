@@ -75,7 +75,7 @@ export default async function Home() {
       <section className="max-w-6xl mx-auto px-6 py-16 text-center">
         <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-4xl">Connected to where you already work.</h2>
         <p className="text-ink-soft mt-3 max-w-2xl mx-auto">Nothing new to adopt. Rocky joins the calls you already have and reports back where your team already looks.</p>
-        <div className="grid sm:grid-cols-3 gap-6 mt-10 max-w-3xl mx-auto text-left">
+        <div className="grid sm:grid-cols-2 gap-6 mt-10 max-w-2xl mx-auto text-left">
           {tools.map((g) => (
             <div key={g.group} className="rounded-2xl border edge bg-paper p-5">
               <div className="eyebrow">{g.group}</div>
