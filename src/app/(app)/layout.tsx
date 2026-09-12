@@ -3,6 +3,7 @@ import { signOutAction } from "@/app/actions/auth";
 import MeetingPrompt from "@/components/meeting-prompt";
 import AppNav, { type NavItem } from "@/components/app-nav";
 import CommandK from "@/components/command-k";
+import BillingBanner from "@/components/billing-banner";
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: "home" },
@@ -19,7 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex-1 flex flex-col md:flex-row min-h-screen">
       <AppNav items={NAV} orgName={org.name} user={{ name: user.name, email: user.email }} signOut={signOutAction} isAdmin={membership.isAdmin} superAdmin={superAdmin} />
-      <main className="flex-1 p-4 pb-20 md:p-8 md:pb-8 max-w-6xl w-full min-w-0">{children}</main>
+      <main className="flex-1 p-4 pb-20 md:p-8 md:pb-8 max-w-6xl w-full min-w-0"><BillingBanner org={org} isAdmin={membership.isAdmin} />{children}</main>
       <MeetingPrompt />
       <CommandK />
     </div>

@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { requireAdmin, requireOrg } from "@/lib/auth";
 import { logActivity } from "@/lib/audit";
+import { syncSeats } from "@/lib/billing";
 import { sendEmail, templates } from "@/lib/email";
 import { appUrl } from "@/lib/urls";
 
@@ -58,6 +59,7 @@ export async function removeMemberAction(memberId: string) {
   if (!m) return;
   await db.membership.delete({ where: { id: memberId } });
   await logActivity({ orgId: org.id, actorId: membership.id, action: "member.removed", entityType: "member", entityId: memberId, summary: `${membership.name} removed ${m.name}` });
+  await syncSeats(org.id);
   revalidatePath("/settings/team");
 }
 
@@ -68,6 +70,7 @@ export async function acceptInvite(token: string, userId: string, email: string)
   if (m.email !== email.toLowerCase()) return { error: `This invitation was sent to ${m.email}. Sign in with that address to accept it.` };
   await db.membership.update({ where: { id: m.id }, data: { userId, inviteToken: null } });
   await logActivity({ orgId: m.orgId, actorId: m.id, action: "member.joined", entityType: "member", entityId: m.id, summary: `${m.name} accepted the invitation` });
+  await syncSeats(m.orgId);
   return { ok: true };
 }
 

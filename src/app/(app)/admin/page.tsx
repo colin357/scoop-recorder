@@ -3,6 +3,7 @@ import { subDays } from "date-fns";
 import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { fmtRelative } from "@/lib/utils";
+import { setCompedAction } from "@/app/actions/billing";
 
 /** Operator dashboard across all organizations. Restricted to SUPERADMIN_EMAILS. */
 export default async function AdminPage() {
@@ -44,12 +45,16 @@ export default async function AdminPage() {
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-xs text-muted border-b border-line">
-            <tr><th className="p-3">Organization</th><th className="p-3">Members</th><th className="p-3">Calendars</th><th className="p-3">Meetings</th><th className="p-3">Last 30d</th><th className="p-3">Failed</th><th className="p-3">Hours</th><th className="p-3">Tasks</th><th className="p-3">Tokens in/out</th><th className="p-3">AI cost</th><th className="p-3">Last activity</th></tr>
+            <tr><th className="p-3">Organization</th><th className="p-3">Plan</th><th className="p-3">Members</th><th className="p-3">Calendars</th><th className="p-3">Meetings</th><th className="p-3">Last 30d</th><th className="p-3">Failed</th><th className="p-3">Hours</th><th className="p-3">Tasks</th><th className="p-3">Tokens in/out</th><th className="p-3">AI cost</th><th className="p-3">Last activity</th></tr>
           </thead>
           <tbody className="divide-y divide-line/60">
             {rows.map(({ o, recent, tokIn, tokOut, hours, cost, failed, last }) => (
               <tr key={o.id}>
                 <td className="p-3 font-medium">{o.name}<div className="text-xs text-muted">{fmtRelative(o.createdAt)}</div></td>
+                <td className="p-3">
+                  <div>{o.billingStatus}{o.billingInterval ? ` · ${o.billingInterval === "year" ? "annual" : "monthly"}` : ""} · {o.seats} seat{o.seats === 1 ? "" : "s"}</div>
+                  <form action={setCompedAction.bind(null, o.id, o.billingStatus !== "comped")}><button className="text-xs underline text-muted">{o.billingStatus === "comped" ? "Remove comp" : "Comp"}</button></form>
+                </td>
                 <td className="p-3">{o._count.members}</td><td className="p-3">{o._count.calendarConnections}</td><td className="p-3">{o._count.meetings}</td><td className="p-3">{recent}</td>
                 <td className={`p-3 ${failed ? "text-clay" : ""}`}>{failed}</td><td className="p-3">{hours.toFixed(1)}</td><td className="p-3">{o._count.tasks}</td>
                 <td className="p-3 text-muted">{tokIn.toLocaleString()} / {tokOut.toLocaleString()}</td><td className="p-3">${cost.toFixed(2)}</td>

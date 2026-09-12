@@ -16,7 +16,7 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
   const active = (href: string) => (href === "/dashboard" ? path === href : path.startsWith(href));
   const settings = [
     { href: "/settings/profile", label: "Profile" },
-    ...(isAdmin ? [{ href: "/settings/organization", label: "Organization" }, { href: "/settings/audit", label: "Audit log" }] : []),
+    ...(isAdmin ? [{ href: "/settings/organization", label: "Organization" }, { href: "/settings/billing", label: "Billing" }, { href: "/settings/audit", label: "Audit log" }] : []),
     ...(superAdmin ? [{ href: "/admin", label: "Usage (operator)" }] : []),
   ];
   const onSettings = settings.some((s) => active(s.href));

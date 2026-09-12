@@ -8,6 +8,7 @@ import { logActivity } from "@/lib/audit";
 import { consentNotice, createBot, parsePlainTranscript, recallConfigured } from "@/lib/recall";
 import { detectPlatform } from "@/lib/utils";
 import { approveDrafts, ingestFromRecall, processMeeting } from "@/lib/pipeline";
+import { recordingAllowed } from "@/lib/billing";
 
 export type MeetingFormState = { error?: string };
 
@@ -22,6 +23,8 @@ export async function scheduleBotAction(_: MeetingFormState, form: FormData): Pr
 
   if (!/^https?:\/\//.test(meetingUrl)) return { error: "Paste a valid meeting link." };
   if (!recallConfigured()) return { error: "Recording bot is not configured (RECALL_API_KEY missing). Use the transcript upload below to test." };
+  const gate = await recordingAllowed(org);
+  if (!gate.ok) return { error: gate.reason };
 
   let botId: string;
   try {

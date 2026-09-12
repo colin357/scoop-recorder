@@ -9,6 +9,7 @@ import { addDays, subMinutes } from "date-fns";
 import { db } from "./db";
 import { decrypt, encrypt } from "./crypto";
 import { consentNotice, createBot, recallConfigured, removeBot } from "./recall";
+import { recordingAllowed } from "./billing";
 import { detectPlatform } from "./utils";
 import { appUrl } from "./urls";
 
@@ -254,6 +255,7 @@ export async function syncConnection(connId: string) {
 export async function scheduleDecidedEvents(orgId: string) {
   if (!recallConfigured()) return;
   const org = await db.organization.findUniqueOrThrow({ where: { id: orgId } });
+  if (!(await recordingAllowed(org)).ok) return; // trial allowance used up or subscription ended
   const pending = await db.calendarEvent.findMany({
     where: { orgId, decision: "record", meetingId: null, endAt: { gt: new Date() } },
   });

@@ -28,6 +28,16 @@ model Organization {
   slackWebhookUrl     String?
   teamsWebhookUrl     String?
   onboardedAt         DateTime?
+  // Billing (Stripe). billingStatus: none | trialing | active | past_due | canceled | unpaid | comped
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  billingStatus        String    @default("none")
+  billingInterval      String?   // month | year
+  seats                Int       @default(1)
+  trialEndsAt          DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  overageBilledThrough String?   // "YYYY-MM" of the last calendar month whose overage was invoiced
   createdAt           DateTime @default(now())
 
   members             Membership[]
