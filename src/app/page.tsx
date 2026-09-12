@@ -45,7 +45,7 @@ export default async function Home() {
         </div>
         <div className="relative lg:pt-6">
           <HeroScene />
-          <div className="absolute left-6 -bottom-24 hidden md:block"><PromptVignette /></div>
+          <div className="absolute left-6 -bottom-[8.75rem] hidden md:block"><PromptVignette /></div>
         </div>
       </section>
 
