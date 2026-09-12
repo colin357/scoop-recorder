@@ -5,8 +5,8 @@ import { appUrl } from "./urls";
 import type { Organization } from "@/generated/prisma/client";
 
 /**
- * Billing: one Stripe subscription per organization, priced per seat with
- * volume tiers, plus a pooled monthly recording allowance. Overage is invoiced
+ * Billing: one Stripe subscription per organization, priced per seat on one
+ * of two flat plans, each with a pooled monthly recording allowance. Overage is invoiced
  * once a month (see /api/cron/bill-overage) so it works the same on monthly
  * and annual plans.
  *
@@ -14,16 +14,16 @@ import type { Organization } from "@/generated/prisma/client";
  * are created in the connected Stripe account on first use and found again by
  * lookup key / metadata.
  */
+export type PlanKey = "starter" | "team";
+export type Interval = "month" | "year";
+
+export const PLANS: { key: PlanKey; name: string; monthly: number; hoursPerSeat: number; blurb: string }[] = [
+  { key: "starter", name: "Starter", monthly: 15, hoursPerSeat: 10, blurb: "For small teams with a few meetings a week." },
+  { key: "team", name: "Team", monthly: 25, hoursPerSeat: 20, blurb: "For teams that live in meetings." },
+];
+
 export const PRICING = {
-  /** Monthly USD per seat by seat-count band (volume pricing: the band applies to every seat). */
-  tiers: [
-    { upTo: 5, monthly: 25 },
-    { upTo: 20, monthly: 22 },
-    { upTo: 50, monthly: 20 },
-    { upTo: null as number | null, monthly: 18 },
-  ],
   annualDiscount: 0.2,
-  includedHoursPerSeat: 20,
   overagePerHour: 1.5,
   trialDays: 14,
   trialHours: 5,
@@ -43,10 +43,14 @@ export function stripe() {
   return client;
 }
 
-/** Monthly price per seat for a given seat count. */
-export function seatPrice(seats: number, interval: "month" | "year" = "month") {
-  const tier = PRICING.tiers.find((t) => t.upTo === null || seats <= t.upTo)!;
-  return interval === "year" ? tier.monthly * (1 - PRICING.annualDiscount) : tier.monthly;
+export function planFor(key: string | null | undefined) {
+  return PLANS.find((p) => p.key === key) ?? PLANS[PLANS.length - 1];
+}
+
+/** Per-seat price per month for a plan and billing interval. */
+export function seatPrice(plan: PlanKey, interval: Interval = "month") {
+  const p = planFor(plan);
+  return interval === "year" ? annualPerSeatPerMonth(p.monthly) : p.monthly;
 }
 
 export function annualPerSeatPerMonth(monthly: number) {
@@ -61,8 +65,8 @@ export function fmtUsd(n: number) {
 // ---------------------------------------------------------------------------
 // Catalog (product, prices, portal configuration), created on demand.
 
-const LOOKUP = { month: "scoop_seat_monthly", year: "scoop_seat_annual" } as const;
-type Catalog = { productId: string; month: string; year: string; portalConfigId: string };
+const lookupKey = (plan: PlanKey, interval: Interval) => `scoop_${plan}_${interval === "month" ? "monthly" : "annual"}`;
+type Catalog = { productId: string; prices: Record<`${PlanKey}:${Interval}`, string>; portalConfigId: string };
 let catalog: Catalog | null = null;
 
 export async function ensureCatalog(): Promise<Catalog> {
@@ -72,33 +76,35 @@ export async function ensureCatalog(): Promise<Catalog> {
   let product = (await s.products.search({ query: "active:'true' AND metadata['scoop']:'seat'" })).data[0];
   product ??= await s.products.create({
     name: "Scoop",
-    description: "Per seat. 20 pooled recording hours per seat per month; overage $1.50/hour, invoiced monthly.",
+    description: "Per seat. Starter: 10 pooled recording hours per seat per month. Team: 20. Overage $1.50/hour, invoiced monthly.",
     metadata: { scoop: "seat" },
   });
 
-  const existing = await s.prices.list({ lookup_keys: [LOOKUP.month, LOOKUP.year], active: true, limit: 10 });
+  const keys = PLANS.flatMap((p) => (["month", "year"] as const).map((i) => lookupKey(p.key, i)));
+  const existing = await s.prices.list({ lookup_keys: keys, active: true, limit: 20 });
   const byKey = new Map(existing.data.map((p) => [p.lookup_key, p.id]));
-  const tiersFor = (interval: "month" | "year"): Stripe.PriceCreateParams.Tier[] =>
-    PRICING.tiers.map((t) => ({
-      up_to: t.upTo ?? "inf",
-      unit_amount: interval === "month" ? t.monthly * 100 : Math.round(t.monthly * (1 - PRICING.annualDiscount) * 12 * 100),
-    }));
-  for (const interval of ["month", "year"] as const) {
-    if (byKey.has(LOOKUP[interval])) continue;
-    const price = await s.prices.create({
-      product: product.id,
-      currency: "usd",
-      nickname: interval === "month" ? "Seat, monthly" : "Seat, annual (20% off)",
-      lookup_key: LOOKUP[interval],
-      recurring: { interval },
-      billing_scheme: "tiered",
-      tiers_mode: "volume",
-      tiers: tiersFor(interval),
-    });
-    byKey.set(LOOKUP[interval], price.id);
+  const prices = {} as Catalog["prices"];
+  for (const plan of PLANS) {
+    for (const interval of ["month", "year"] as const) {
+      const key = lookupKey(plan.key, interval);
+      let id = byKey.get(key);
+      if (!id) {
+        const price = await s.prices.create({
+          product: product.id,
+          currency: "usd",
+          nickname: `${plan.name} seat, ${interval === "month" ? "monthly" : "annual (20% off)"}`,
+          lookup_key: key,
+          recurring: { interval },
+          unit_amount: interval === "month" ? plan.monthly * 100 : Math.round(annualPerSeatPerMonth(plan.monthly) * 12 * 100),
+          metadata: { plan: plan.key, hoursPerSeat: String(plan.hoursPerSeat) },
+        });
+        id = price.id;
+      }
+      prices[`${plan.key}:${interval}`] = id;
+    }
   }
 
-  let portal = (await s.billingPortal.configurations.list({ active: true, limit: 100 })).data.find((c) => c.metadata?.scoop === "1");
+  let portal = (await s.billingPortal.configurations.list({ active: true, limit: 100 })).data.find((c) => c.metadata?.scoop === "2");
   portal ??= await s.billingPortal.configurations.create({
     business_profile: { headline: "Scoop billing" },
     features: {
@@ -110,13 +116,13 @@ export async function ensureCatalog(): Promise<Catalog> {
         enabled: true,
         default_allowed_updates: ["price"],
         proration_behavior: "create_prorations",
-        products: [{ product: product.id, prices: [byKey.get(LOOKUP.month)!, byKey.get(LOOKUP.year)!] }],
+        products: [{ product: product.id, prices: Object.values(prices) }],
       },
     },
-    metadata: { scoop: "1" },
+    metadata: { scoop: "2" },
   });
 
-  catalog = { productId: product.id, month: byKey.get(LOOKUP.month)!, year: byKey.get(LOOKUP.year)!, portalConfigId: portal.id };
+  catalog = { productId: product.id, prices, portalConfigId: portal.id };
   return catalog;
 }
 
@@ -138,7 +144,9 @@ export async function recordedHours(orgId: string, from: Date, to: Date) {
 export type BillingSnapshot = {
   configured: boolean;
   status: string;
-  interval: "month" | "year" | null;
+  plan: PlanKey;
+  planName: string;
+  interval: Interval | null;
   seats: number;
   includedHours: number;
   usedHours: number;
@@ -154,11 +162,14 @@ export async function billingSnapshot(org: Organization): Promise<BillingSnapsho
   const now = new Date();
   const usedHours = await recordedHours(org.id, startOfMonth(now), endOfMonth(now));
   const seats = Math.max(1, org.seats);
-  const includedHours = seats * PRICING.includedHoursPerSeat;
+  const plan = planFor(org.billingPlan);
+  const includedHours = seats * plan.hoursPerSeat;
   return {
     configured: stripeConfigured(),
     status: org.billingStatus,
-    interval: (org.billingInterval as "month" | "year" | null) ?? null,
+    plan: plan.key,
+    planName: plan.name,
+    interval: (org.billingInterval as Interval | null) ?? null,
     seats,
     includedHours,
     usedHours,
@@ -209,14 +220,14 @@ async function ensureCustomer(org: Organization, email: string) {
   return customer.id;
 }
 
-export async function createCheckoutUrl(org: Organization, opts: { interval: "month" | "year"; email: string }) {
+export async function createCheckoutUrl(org: Organization, opts: { plan: PlanKey; interval: Interval; email: string }) {
   const [cat, customer, seats] = await Promise.all([ensureCatalog(), ensureCustomer(org, opts.email), seatCount(org.id)]);
   const trialing = org.billingStatus === "none"; // one trial per organization
   const session = await stripe().checkout.sessions.create({
     mode: "subscription",
     customer,
     client_reference_id: org.id,
-    line_items: [{ price: cat[opts.interval], quantity: seats }],
+    line_items: [{ price: cat.prices[`${opts.plan}:${opts.interval}`], quantity: seats }],
     payment_method_collection: "always",
     allow_promotion_codes: true,
     billing_address_collection: "auto",
@@ -279,12 +290,14 @@ export async function applySubscription(sub: Stripe.Subscription) {
 
   const item = sub.items.data[0];
   const status = ["incomplete", "incomplete_expired"].includes(sub.status) ? "none" : sub.status === "paused" ? "canceled" : sub.status;
+  const planFromPrice = (item?.price.metadata?.plan as PlanKey | undefined) ?? (PLANS.find((p) => item?.price.lookup_key?.startsWith(`scoop_${p.key}_`))?.key ?? null);
   return db.organization.update({
     where: { id: org.id },
     data: {
       stripeCustomerId: customerId,
       stripeSubscriptionId: sub.id,
       billingStatus: org.billingStatus === "comped" ? "comped" : status,
+      billingPlan: planFromPrice ?? org.billingPlan,
       billingInterval: item?.price.recurring?.interval ?? org.billingInterval,
       seats: item?.quantity ?? org.seats,
       trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
@@ -311,7 +324,8 @@ export async function billOverageForLastMonth() {
   const results: { orgId: string; hours: number; overage: number; invoiced: boolean }[] = [];
   for (const org of orgs) {
     const hours = await recordedHours(org.id, from, to);
-    const overage = Math.max(0, hours - Math.max(1, org.seats) * PRICING.includedHoursPerSeat);
+    const included = Math.max(1, org.seats) * planFor(org.billingPlan).hoursPerSeat;
+    const overage = Math.max(0, hours - included);
     let invoiced = false;
     if (overage >= 0.05 && org.billingStatus !== "trialing") {
       const qty = Math.ceil(overage * 100) / 100;
@@ -328,7 +342,7 @@ export async function billOverageForLastMonth() {
         invoice: invoice.id,
         currency: "usd",
         amount,
-        description: `Recording overage: ${qty.toFixed(2)} h beyond ${Math.max(1, org.seats) * PRICING.includedHoursPerSeat} included h at $${PRICING.overagePerHour.toFixed(2)}/h (${format(lastMonth, "MMM yyyy")})`,
+        description: `Recording overage: ${qty.toFixed(2)} h beyond ${included} included h at $${PRICING.overagePerHour.toFixed(2)}/h (${format(lastMonth, "MMM yyyy")})`,
         metadata: { productId: cat.productId },
       });
       await s.invoices.finalizeInvoice(invoice.id);

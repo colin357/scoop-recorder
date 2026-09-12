@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
-import { PRICING, billingSnapshot, fmtUsd, seatPrice, stripeConfigured } from "@/lib/billing";
+import { PRICING, billingSnapshot, fmtUsd, planFor, seatPrice, stripeConfigured } from "@/lib/billing";
 import { openPortalAction, startPaidPlanNowAction } from "@/app/actions/billing";
 import { fmtDate } from "@/lib/utils";
 
@@ -20,7 +20,8 @@ export default async function BillingSettingsPage({ searchParams }: PageProps<"/
   const snap = await billingSnapshot(org);
   const st = STATUS[snap.status] ?? STATUS.none;
   const pct = Math.min(100, Math.round((snap.usedHours / Math.max(1, snap.includedHours)) * 100));
-  const perSeat = snap.interval ? seatPrice(snap.seats, snap.interval) : null;
+  const perSeat = snap.interval ? seatPrice(snap.plan, snap.interval) : null;
+  const plan = planFor(snap.plan);
 
   return (
     <div className="space-y-6 max-w-2xl">
@@ -39,7 +40,7 @@ export default async function BillingSettingsPage({ searchParams }: PageProps<"/
           <div>
             <h2 className="font-semibold">Plan</h2>
             <div className="text-sm text-muted mt-0.5">
-              {perSeat != null ? <>{fmtUsd(perSeat)} per seat per month, billed {snap.interval === "year" ? "annually" : "monthly"} · {snap.seats} seat{snap.seats === 1 ? "" : "s"}</> : snap.status === "comped" ? "Complimentary access" : "No subscription yet"}
+              {perSeat != null ? <><span className="font-medium text-ink">{snap.planName}</span> · {fmtUsd(perSeat)} per seat per month, billed {snap.interval === "year" ? "annually" : "monthly"} · {snap.seats} seat{snap.seats === 1 ? "" : "s"}</> : snap.status === "comped" ? "Complimentary access" : "No subscription yet"}
             </div>
           </div>
           <span className={`badge ${st.cls}`}>{st.label}</span>
@@ -57,7 +58,7 @@ export default async function BillingSettingsPage({ searchParams }: PageProps<"/
           {snap.status === "trialing" && <form action={startPaidPlanNowAction}><button className="btn-primary">Start paid plan now</button></form>}
           {(snap.status === "none" || snap.status === "canceled" || snap.status === "unpaid") && stripeConfigured() && <Link href="/billing/start" className="btn-primary">Choose a plan</Link>}
         </div>
-        <p className="text-xs text-muted">Manage billing opens Stripe&apos;s secure portal: change your card, switch monthly/annual, download invoices, or cancel.</p>
+        <p className="text-xs text-muted">Manage billing opens Stripe&apos;s secure portal: change your card, switch between Starter and Team or monthly/annual, download invoices, or cancel.</p>
       </section>
 
       <section className="card p-5 space-y-3">
@@ -68,7 +69,7 @@ export default async function BillingSettingsPage({ searchParams }: PageProps<"/
           {snap.overageHours > 0 && snap.status !== "trialing" && <span className="text-copper-deep">Overage {snap.overageHours.toFixed(1)} h · ${(snap.overageHours * PRICING.overagePerHour).toFixed(2)} so far</span>}
         </div>
         {!snap.recording.ok && <p className="text-sm text-clay">{snap.recording.reason}</p>}
-        <p className="text-xs text-muted">Each seat adds {PRICING.includedHoursPerSeat} hours to the shared pool. Hours beyond the pool are invoiced at ${PRICING.overagePerHour.toFixed(2)}/hour on the 1st of the next month. Uploaded transcripts don&apos;t count.</p>
+        <p className="text-xs text-muted">On the {plan.name} plan each seat adds {plan.hoursPerSeat} hours to the shared pool. Hours beyond the pool are invoiced at ${PRICING.overagePerHour.toFixed(2)}/hour on the 1st of the next month. Uploaded transcripts don&apos;t count.</p>
       </section>
     </div>
   );

@@ -1,22 +1,21 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireOrg, billingRequired } from "@/lib/auth";
-import { PRICING, annualPerSeatPerMonth, fmtUsd, seatCount, seatPrice } from "@/lib/billing";
+import { PLANS, PRICING, fmtUsd, seatCount, seatPrice } from "@/lib/billing";
 import { startCheckoutAction } from "@/app/actions/billing";
 import { signOutAction } from "@/app/actions/auth";
 import { Mascot } from "@/components/mascot";
 import { Icon } from "@/components/icons";
 import { db } from "@/lib/db";
 
-/** Gate after onboarding: the organization starts its 14-day trial (card required) before using the app. */
+/** Gate after onboarding: the organization picks a plan and starts its 14-day trial (card required). */
 export default async function BillingStartPage({ searchParams }: PageProps<"/billing/start">) {
   const sp = await searchParams;
   const { org, membership } = await requireOrg({ skipBillingGate: true, skipCalendarGate: true });
   if (!billingRequired(org.billingStatus)) redirect("/dashboard");
   const seats = await seatCount(org.id);
   const admins = membership.isAdmin ? [] : await db.membership.findMany({ where: { orgId: org.id, isAdmin: true }, select: { name: true, email: true } });
-  const monthly = seatPrice(seats, "month");
-  const annual = seatPrice(seats, "year");
+  const seatLabel = `${seats} seat${seats === 1 ? "" : "s"}`;
 
   return (
     <main className="flex-1 flex items-center justify-center p-6">
@@ -25,9 +24,9 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
           <Mascot pose="celebrate" size={120} className="relative shrink-0" />
           <div className="relative">
             <div className="eyebrow">Almost there</div>
-            <h1 className="text-2xl font-bold tracking-tight">Start your {PRICING.trialDays}-day free trial</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Pick a plan, start your {PRICING.trialDays}-day free trial</h1>
             <p className="text-ink-soft text-sm mt-1">
-              Add a card to unlock recording for {org.name}. You won&apos;t be charged until the trial ends, and you can cancel any time from Settings.
+              Add a card to unlock recording for {org.name}. You won&apos;t be charged until the trial ends, and you can cancel or switch plans any time from Settings.
             </p>
           </div>
         </section>
@@ -36,20 +35,34 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
         {typeof sp.error === "string" && <p className="rounded-md bg-clay-soft border border-clay text-clay text-sm p-3 mb-4">{sp.error === "admin_only" ? "Only an admin can start the subscription." : decodeURIComponent(sp.error)}</p>}
 
         {membership.isAdmin ? (
-          <form action={startCheckoutAction} className="grid gap-3 sm:grid-cols-2">
-            <button name="interval" value="month" className="card p-5 text-left hover:border-merle hover:-translate-y-0.5 transition">
-              <span className="eyebrow">Monthly</span>
-              <span className="block text-3xl font-display font-bold mt-1">${monthly}<span className="text-base font-medium text-muted"> / seat / mo</span></span>
-              <span className="block text-sm text-muted mt-1">{seats} seat{seats === 1 ? "" : "s"} · ${monthly * seats}/month after the trial</span>
-              <span className="btn-secondary mt-4 w-full">Start free trial</span>
-            </button>
-            <button name="interval" value="year" className="card p-5 text-left border-merle ring-2 ring-merle/20 hover:-translate-y-0.5 transition">
-              <span className="eyebrow flex items-center gap-2">Annual <span className="badge bg-grass-soft text-grass">Save 20%</span></span>
-              <span className="block text-3xl font-display font-bold mt-1">{fmtUsd(annual)}<span className="text-base font-medium text-muted"> / seat / mo</span></span>
-              <span className="block text-sm text-muted mt-1">{seats} seat{seats === 1 ? "" : "s"} · ${Math.round(annual * seats * 12)}/year after the trial</span>
-              <span className="btn-primary mt-4 w-full">Start free trial</span>
-            </button>
-          </form>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {PLANS.map((plan) => {
+              const featured = plan.key === "team";
+              const monthly = seatPrice(plan.key, "month");
+              const annual = seatPrice(plan.key, "year");
+              return (
+                <form key={plan.key} action={startCheckoutAction} className={`card p-5 flex flex-col ${featured ? "border-merle ring-2 ring-merle/20" : ""}`}>
+                  <input type="hidden" name="plan" value={plan.key} />
+                  <div className="flex items-center justify-between">
+                    <span className="eyebrow">{plan.name}</span>
+                    {featured && <span className="badge bg-sky text-merle-deep">Most popular</span>}
+                  </div>
+                  <span className="block text-3xl font-display font-bold mt-1">{fmtUsd(monthly)}<span className="text-base font-medium text-muted"> / seat / mo</span></span>
+                  <span className="block text-sm text-muted mt-0.5">{plan.blurb}</span>
+                  <ul className="text-sm mt-3 space-y-1">
+                    <li className="flex gap-2"><Icon name="check" size={16} className="text-grass mt-0.5 shrink-0" />{plan.hoursPerSeat} recording hours per seat per month, pooled</li>
+                    <li className="flex gap-2"><Icon name="check" size={16} className="text-grass mt-0.5 shrink-0" />{seatLabel} · {seats * plan.hoursPerSeat} h for your team</li>
+                  </ul>
+                  <div className="mt-auto pt-4 grid gap-2">
+                    <button name="interval" value="year" className={featured ? "btn-primary w-full" : "btn-secondary w-full"}>
+                      Annual · {fmtUsd(annual)}/seat/mo <span className="opacity-70 font-normal">· save 20%</span>
+                    </button>
+                    <button name="interval" value="month" className="btn-ghost w-full text-sm">Monthly · {fmtUsd(monthly)}/seat/mo</button>
+                  </div>
+                </form>
+              );
+            })}
+          </div>
         ) : (
           <div className="card p-5">
             <h2 className="font-semibold">An admin needs to start the subscription</h2>
@@ -57,33 +70,14 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
           </div>
         )}
 
-        <div className="card p-5 mt-4 grid sm:grid-cols-2 gap-4 text-sm">
-          <ul className="space-y-1.5">
-            {[
-              `${PRICING.includedHoursPerSeat} recording hours per seat per month, pooled across your team`,
-              `Overage $${PRICING.overagePerHour.toFixed(2)}/hour, invoiced monthly`,
-              `${PRICING.trialHours} recording hours during the trial`,
-              "Unlimited members can read summaries and tasks",
-            ].map((t) => <li key={t} className="flex gap-2"><Icon name="check" size={16} className="text-grass mt-0.5 shrink-0" />{t}</li>)}
-          </ul>
-          <div>
-            <div className="eyebrow mb-1">Volume pricing, per seat</div>
-            <table className="w-full text-xs">
-              <tbody>
-                {PRICING.tiers.map((t, i) => {
-                  const from = i === 0 ? 1 : (PRICING.tiers[i - 1].upTo ?? 0) + 1;
-                  return (
-                    <tr key={String(t.upTo)} className="border-t border-line/60">
-                      <td className="py-1 text-muted">{t.upTo ? `${from}–${t.upTo} seats` : `${from}+ seats`}</td>
-                      <td className="py-1 text-right">${t.monthly}/mo</td>
-                      <td className="py-1 text-right text-muted">{fmtUsd(annualPerSeatPerMonth(t.monthly))} annual</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <ul className="card p-5 mt-4 text-sm grid sm:grid-cols-2 gap-x-6 gap-y-1.5">
+          {[
+            `${PRICING.trialHours} recording hours during the trial, on either plan`,
+            `Extra hours $${PRICING.overagePerHour.toFixed(2)} each, invoiced monthly`,
+            "Unlimited summaries, tasks and Ask Rocky",
+            "Switch plans or cancel any time",
+          ].map((t) => <li key={t} className="flex gap-2"><Icon name="check" size={16} className="text-grass mt-0.5 shrink-0" />{t}</li>)}
+        </ul>
 
         <p className="text-xs text-muted mt-4">By starting a trial you agree to the <Link href="/terms" className="text-merle underline">Terms of Service</Link>, including automatic renewal after the trial unless you cancel.</p>
         <form action={signOutAction} className="text-xs text-muted mt-6">

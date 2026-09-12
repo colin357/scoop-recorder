@@ -32,6 +32,7 @@ model Organization {
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
   billingStatus        String    @default("none")
+  billingPlan          String?   // starter | team
   billingInterval      String?   // month | year
   seats                Int       @default(1)
   trialEndsAt          DateTime?

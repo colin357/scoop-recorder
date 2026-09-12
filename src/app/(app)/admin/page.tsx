@@ -52,7 +52,7 @@ export default async function AdminPage() {
               <tr key={o.id}>
                 <td className="p-3 font-medium">{o.name}<div className="text-xs text-muted">{fmtRelative(o.createdAt)}</div></td>
                 <td className="p-3">
-                  <div>{o.billingStatus}{o.billingInterval ? ` · ${o.billingInterval === "year" ? "annual" : "monthly"}` : ""} · {o.seats} seat{o.seats === 1 ? "" : "s"}</div>
+                  <div>{o.billingStatus}{o.billingPlan ? ` · ${o.billingPlan}` : ""}{o.billingInterval ? ` · ${o.billingInterval === "year" ? "annual" : "monthly"}` : ""} · {o.seats} seat{o.seats === 1 ? "" : "s"}</div>
                   <form action={setCompedAction.bind(null, o.id, o.billingStatus !== "comped")}><button className="text-xs underline text-muted">{o.billingStatus === "comped" ? "Remove comp" : "Comp"}</button></form>
                 </td>
                 <td className="p-3">{o._count.members}</td><td className="p-3">{o._count.calendarConnections}</td><td className="p-3">{o._count.meetings}</td><td className="p-3">{recent}</td>

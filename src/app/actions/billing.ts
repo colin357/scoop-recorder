@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin, requireOrg } from "@/lib/auth";
-import { createCheckoutUrl, createPortalUrl, endTrialNow, stripeConfigured } from "@/lib/billing";
+import { createCheckoutUrl, createPortalUrl, endTrialNow, stripeConfigured, PLANS, type PlanKey } from "@/lib/billing";
 import { logActivity } from "@/lib/audit";
 
 /** Start Checkout (trial on first subscription). Admins only. */
@@ -13,9 +13,11 @@ export async function startCheckoutAction(form: FormData) {
   if (!membership.isAdmin) redirect("/billing/start?error=admin_only");
   if (!stripeConfigured()) redirect("/dashboard");
   const interval = form.get("interval") === "year" ? "year" : "month";
+  const planRaw = String(form.get("plan") ?? "team");
+  const plan: PlanKey = PLANS.some((p) => p.key === planRaw) ? (planRaw as PlanKey) : "team";
   let url: string;
   try {
-    url = await createCheckoutUrl(org, { interval, email: user.email });
+    url = await createCheckoutUrl(org, { plan, interval, email: user.email });
   } catch (e) {
     console.error("checkout failed", e);
     redirect(`/billing/start?error=${encodeURIComponent(e instanceof Error ? e.message : "Could not start checkout")}`);

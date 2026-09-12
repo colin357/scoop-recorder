@@ -64,10 +64,10 @@ Set `XAI_API_KEY` to use Grok (default model `grok-4`, override with `XAI_MODEL`
 
 ## Billing (Stripe)
 
-1. Set `STRIPE_SECRET_KEY` (test key first) and deploy. On first use the app creates a "Scoop" product, monthly and annual per-seat prices with volume tiers, and a Customer Portal configuration in that Stripe account. Nothing else to configure in the dashboard.
+1. Set `STRIPE_SECRET_KEY` (test key first) and deploy. On first use the app creates a "Scoop" product, monthly and annual per-seat prices for the Starter and Team plans, and a Customer Portal configuration in that Stripe account. Nothing else to configure in the dashboard.
 2. Add a webhook in Stripe → Developers → Webhooks pointing at `https://www.scooprecorder.com/api/webhooks/stripe` with `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, and set `STRIPE_WEBHOOK_SECRET`.
-3. Flow: after onboarding the admin lands on `/billing/start`, picks monthly or annual, and Stripe Checkout starts a 14-day trial with a card on file. Seats = members who have joined; the quantity is updated on invite acceptance and removal. Each seat adds 20 pooled recording hours per calendar month; `/api/cron/bill-overage` invoices the previous month's overage at $1.50/hour on the 1st.
-4. Operators can mark an organization complimentary from `/admin`. Prices and allowances live in `src/lib/billing.ts` (`PRICING`); change them there before the prices are created, or create new prices with new lookup keys.
+3. Flow: after onboarding the admin lands on `/billing/start`, picks monthly or annual, and Stripe Checkout starts a 14-day trial with a card on file. Seats = members who have joined; the quantity is updated on invite acceptance and removal. Each seat adds pooled recording hours per calendar month (Starter 10, Team 20); `/api/cron/bill-overage` invoices the previous month's overage at $1.50/hour on the 1st.
+4. Operators can mark an organization complimentary from `/admin`. Plans, prices and allowances live in `src/lib/billing.ts` (`PLANS`, `PRICING`); change them there before the prices are created, or create new prices with new lookup keys.
 
 ## Layout
 

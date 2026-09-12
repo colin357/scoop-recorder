@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/legal-page";
 import { LEGAL } from "@/lib/legal";
-import { PRICING } from "@/lib/billing";
+import { PLANS, PRICING } from "@/lib/billing";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Scoop",
@@ -72,9 +72,9 @@ export default function TermsPage() {
       <section>
         <h2>7. Plans, trials and payment</h2>
         <ul>
-          <li><strong>Per-seat pricing.</strong> Subscriptions are priced per seat, where a seat is a team member who has joined the workspace. Volume rates apply to every seat once your team reaches the relevant size. Current prices are shown on our website and at checkout.</li>
+          <li><strong>Per-seat pricing.</strong> Subscriptions are priced per seat, where a seat is a team member who has joined the workspace. We offer {PLANS.map((p) => p.name).join(" and ")} plans, billed monthly or annually. Current prices are shown on our website and at checkout.</li>
           <li><strong>Seats update automatically.</strong> When a teammate joins or is removed, the seat count on your subscription changes and the difference is prorated on your next invoice.</li>
-          <li><strong>Recording allowance.</strong> Each seat includes {PRICING.includedHoursPerSeat} hours of recording per calendar month, pooled across the workspace. Hours beyond the pool are billed at ${PRICING.overagePerHour.toFixed(2)} per hour, rounded up to the nearest hundredth of an hour, and invoiced on or about the first day of the following month to the payment method on file. Uploaded transcripts do not count.</li>
+          <li><strong>Recording allowance.</strong> Each seat includes a number of recording hours per calendar month that depends on your plan ({PLANS.map((p) => `${p.name}: ${p.hoursPerSeat} hours`).join("; ")}), pooled across the workspace. Hours beyond the pool are billed at ${PRICING.overagePerHour.toFixed(2)} per hour, rounded up to the nearest hundredth of an hour, and invoiced on or about the first day of the following month to the payment method on file. Uploaded transcripts do not count.</li>
           <li><strong>Free trial.</strong> New workspaces get a {PRICING.trialDays}-day free trial that includes {PRICING.trialHours} recording hours. A payment method is required to start it. Unless you cancel before the trial ends, your subscription begins automatically and you will be charged for the plan you selected. One trial per company.</li>
           <li><strong>Renewal and cancellation.</strong> Plans renew automatically monthly or annually until cancelled. You can cancel any time from Settings → Billing; access continues until the end of the period you have paid for. Fees already paid are non-refundable except where the law requires otherwise or we say so in writing.</li>
           <li><strong>Failed payments.</strong> If a charge fails we will retry and notify your admins. If it remains unpaid, recording is paused; your summaries and tasks stay readable so you can export them.</li>
