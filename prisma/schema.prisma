@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// Swap provider to "postgresql" for production. The schema is provider-neutral.
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------- Tenancy & auth ----------
+
+model Organization {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  onboardedAt  DateTime?
+  createdAt    DateTime @default(now())
+
+  members   Membership[]
+  projects  Project[]
+  meetings  Meeting[]
+  tasks     Task[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String?
+  createdAt    DateTime @default(now())
+
+  sessions    Session[]
+  memberships Membership[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+// A person on a company's team. Roles/responsibilities drive AI task assignment.
+model Membership {
+  id               String   @id @default(cuid())
+  orgId            String
+  org              Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email            String
+  name             String
+  role             String   // e.g. "Account Manager", "Designer"
+  responsibilities String   // free text: what tasks they typically handle
+  isAdmin          Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  projects      ProjectMember[]
+  assignedTasks Task[]
+
+  @@unique([orgId, email])
+}
+
+// ---------- Projects ----------
+
+model Project {
+  id          String   @id @default(cuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  color       String   @default("#6366f1")
+  createdAt   DateTime @default(now())
+
+  members  ProjectMember[]
+  meetings Meeting[]
+  tasks    Task[]
+}
+
+model ProjectMember {
+  projectId String
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Membership @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, memberId])
+}
+
+// ---------- Meetings ----------
+
+model Meeting {
+  id           String   @id @default(cuid())
+  orgId        String
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  projectId    String?
+  project      Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title        String
+  platform     String   // google_meet | zoom | teams | other
+  meetingUrl   String?
+  scheduledAt  DateTime?
+  startedAt    DateTime?
+  endedAt      DateTime?
+  durationSec  Int?
+  // scheduled | joining | recording | processing | done | failed
+  status       String   @default("scheduled")
+  recallBotId  String?  @unique
+  recordingUrl String?
+  transcript   String?  // JSON: TranscriptSegment[]
+  summary      String?
+  keyPoints    String?  // JSON: string[]
+  decisions    String?  // JSON: string[]
+  error        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  attendees MeetingAttendee[]
+  tasks     Task[]
+}
+
+model MeetingAttendee {
+  id        String  @id @default(cuid())
+  meetingId String
+  meeting   Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  name      String
+  email     String?
+}
+
+// ---------- Tasks ----------
+
+model Task {
+  id            String   @id @default(cuid())
+  orgId         String
+  org           Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  projectId     String?
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  meetingId     String?
+  meeting       Meeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  assigneeId    String?
+  assignee      Membership? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  title         String
+  description   String
+  // todo | in_progress | blocked | done
+  status        String   @default("todo")
+  // low | medium | high | urgent
+  priority      String   @default("medium")
+  dueDate       DateTime?
+  // Why the AI assigned it to this person / picked this deadline
+  assignmentReason String?
+  // Seconds into the recording where this task was discussed
+  sourceTimestampSec Int?
+  // Verbatim snippet from the transcript that produced the task
+  sourceQuote   String?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  steps    TaskStep[]
+  messages TaskMessage[]
+}
+
+model TaskStep {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  order       Int
+  title       String
+  details     String?
+  dueDate     DateTime?
+  completedAt DateTime?
+}
+
+// "Ask AI about this task" chat history
+model TaskMessage {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  role      String   // user | assistant
+  content   String
+  createdAt DateTime @default(now())
+}
