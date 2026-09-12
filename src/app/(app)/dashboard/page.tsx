@@ -34,7 +34,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
           Calendar connected. Rocky is syncing your upcoming meetings now and will ask before recording each one. Change that under Calendar settings.
         </p>
       )}
-      <section className="hero relative overflow-hidden rounded-2xl border-2 border-ink shadow-[4px_4px_0_0_#171b26] p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+      <section className="hero relative overflow-hidden rounded-2xl border edge shadow-soft p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
         <Mascot pose={pose} size={120} className="relative shrink-0" />
         <div className="relative flex-1">
           <div className="eyebrow mb-1">Today</div>
@@ -127,8 +127,8 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
 
 function Stat({ label, value, href, tone, icon }: { label: string; value: number; href: string; tone?: "danger"; icon: IconName }) {
   return (
-    <Link href={href} className="card p-4 hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_#171b26] transition flex items-center gap-4">
-      <span className={`h-11 w-11 rounded-xl border-2 border-ink flex items-center justify-center ${tone === "danger" ? "bg-clay-soft text-clay" : "bg-sky text-merle"}`}><Icon name={icon} size={22} /></span>
+    <Link href={href} className="card p-4 hover:-translate-y-0.5 hover:shadow-lift transition flex items-center gap-4">
+      <span className={`h-11 w-11 rounded-xl flex items-center justify-center ${tone === "danger" ? "bg-clay-soft text-clay" : "bg-sky text-merle"}`}><Icon name={icon} size={22} /></span>
       <div>
         <div className="text-sm text-muted">{label}</div>
         <div className={`text-3xl font-display font-bold leading-none ${tone === "danger" ? "text-clay" : ""}`}>{value}</div>

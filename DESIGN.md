@@ -1,6 +1,6 @@
-# Scoop design language — "Sticker"
+# Scoop design language
 
-Everything visual derives from Rocky, the blue merle Aussie mascot: flat fills, thick ink outlines, a warm paper background. The UI should feel like die-cut stickers on cream paper: friendly, tactile, unmistakably ours.
+Everything visual derives from Rocky, the blue merle Aussie mascot: his merle blue, copper points, cream and pink, set on warm paper. The construction is modern and quiet (hairline edges, soft layered shadows, generous radii) so the illustration and the copper accent do the talking.
 
 ## Palette (Tailwind tokens in `src/app/globals.css`)
 
@@ -20,11 +20,11 @@ Everything visual derives from Rocky, the blue merle Aussie mascot: flat fills, 
 
 ## Shape and depth
 
-- Cards: `card` = 2px ink border, 16px radius, hard 4px offset shadow. No blur, no gradients on surfaces.
-- Buttons: `btn-primary` (merle), `btn-accent` (copper, for the one action we most want), `btn-secondary` (paper), `btn-ghost`. All have the 2px border + 3px offset shadow and press down 2px on click.
-- Inputs: 2px ink border, 2px offset shadow, merle on focus.
-- Badges: pill, thin ink border, display font, filled with a soft token.
-- Hover on cards: lift 2px and grow the shadow to 6px.
+- Cards: `card` = 16px radius, 1px `edge` border (ink at 10%), soft layered shadow (`shadow-soft`). Hover on interactive cards: lift 2px with `shadow-lift`.
+- Buttons: `btn-primary` (merle), `btn-accent` (copper, for the one action we most want on a screen), `btn-secondary` (paper with a hairline edge), `btn-ghost`. Soft shadow, 1px press on click. No black frames.
+- Inputs: hairline edge, merle border with a sky focus ring.
+- Badges: pill, no border, display font, soft-token fill. Solid fills only for terminal states (done, recording, urgent).
+- Heroes: flat sky-to-sky-soft gradient. No blobs or dot grids on product screens; the landing page keeps its pastel shapes.
 
 ## Type
 

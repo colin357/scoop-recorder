@@ -62,7 +62,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
       {meeting.recordingDeletedAt && <p className="rounded-md bg-paper-2 border border-line text-ink-soft text-sm p-3">The recording and transcript were deleted under your retention policy on {fmtDate(meeting.recordingDeletedAt)}. Summary and tasks are kept.</p>}
       {meeting.error && <p className="rounded-md bg-clay-soft border border-clay text-clay text-sm p-3">{meeting.error}</p>}
       {["scheduled", "joining", "recording", "processing"].includes(meeting.status) && (
-        <div className="hero rounded-2xl border-2 border-ink p-4 flex items-center gap-4">
+        <div className="hero rounded-2xl border edge p-4 flex items-center gap-4">
           <Mascot pose={meeting.status === "processing" ? "write" : "listen"} size={64} />
           <p className="text-sm text-ink-soft">
             {meeting.status === "processing"

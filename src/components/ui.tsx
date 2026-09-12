@@ -47,7 +47,7 @@ export function ProjectChip({ project }: { project: { id: string; name: string; 
 export function Avatar({ name, size = 6 }: { name: string; size?: number }) {
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
   return (
-    <span className={`inline-flex h-${size} w-${size} items-center justify-center rounded-full border-2 border-ink bg-butter text-[10px] font-bold text-ink`} title={name}>
+    <span className={`inline-flex h-${size} w-${size} items-center justify-center rounded-full bg-butter text-[10px] font-bold text-ink`} title={name}>
       {initials}
     </span>
   );

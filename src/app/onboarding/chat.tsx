@@ -56,13 +56,13 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
           {state.messages.map((m, i) => (
             <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
               {m.role === "assistant" && <Mascot pose={i === state.messages.length - 1 && pending ? "think" : "wave"} size={36} className="shrink-0 mt-1" />}
-              <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line border-2 border-ink ${m.role === "user" ? "bg-merle text-paper rounded-br-sm shadow-[2px_2px_0_0_#171b26]" : "bg-paper rounded-bl-sm shadow-[2px_2px_0_0_#171b26]"}`}>{m.content}</div>
+              <div className={`max-w-[70%] rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line border edge ${m.role === "user" ? "bg-merle text-paper rounded-br-sm " : "bg-paper rounded-bl-sm "}`}>{m.content}</div>
             </div>
           ))}
           {pending && (
             <div className="flex gap-3">
               <Mascot pose="think" size={36} className="shrink-0" />
-              <div className="rounded-2xl bg-paper border-2 border-ink px-4 py-3 text-sm text-muted">
+              <div className="rounded-2xl bg-paper border edge px-4 py-3 text-sm text-muted">
                 <span className="inline-flex gap-1"><i className="dot" /><i className="dot" /><i className="dot" /></span>
               </div>
             </div>
@@ -94,13 +94,13 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
           {error && <p className="text-sm text-clay">{error}</p>}
           <div ref={bottom} />
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="border-t-2 border-ink bg-paper p-4 flex gap-2">
+        <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="border-t edge bg-paper p-4 flex gap-2">
           <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Type your answer…" disabled={pending} autoFocus />
           <button className="btn-primary" disabled={pending || !input.trim()}>Send</button>
         </form>
       </div>
 
-      <aside className="hidden lg:block border-l-2 border-ink bg-paper p-5 overflow-y-auto">
+      <aside className="hidden lg:block border-l edge bg-paper p-5 overflow-y-auto">
         <h2 className="eyebrow mb-3">What Rocky has so far</h2>
         <Field label="Company" value={d.orgName} />
         <Field label="About the business" value={d.businessDescription} />

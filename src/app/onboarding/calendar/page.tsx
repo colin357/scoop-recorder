@@ -15,7 +15,7 @@ export default async function OnboardingCalendarPage({ searchParams }: PageProps
   return (
     <main className="flex-1 flex items-center justify-center p-6">
       <div className="w-full max-w-xl">
-        <section className="hero relative overflow-hidden rounded-2xl border-2 border-ink shadow-[4px_4px_0_0_#171b26] p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6">
+        <section className="hero relative overflow-hidden rounded-2xl border edge shadow-soft p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6">
           <Mascot pose="listen" size={120} className="relative shrink-0" />
           <div className="relative">
             <div className="eyebrow">Last step</div>
@@ -34,14 +34,14 @@ export default async function OnboardingCalendarPage({ searchParams }: PageProps
 
         <div className="grid gap-3 sm:grid-cols-2">
           <a href="/api/calendar/google/start" className={`card p-5 flex items-center gap-4 hover:border-merle hover:-translate-y-0.5 transition ${google ? "" : "opacity-50 pointer-events-none"}`}>
-            <span className="h-11 w-11 rounded-xl border-2 border-ink bg-sky flex items-center justify-center text-merle"><Icon name="calendar" size={22} /></span>
+            <span className="h-11 w-11 rounded-xl bg-sky flex items-center justify-center text-merle"><Icon name="calendar" size={22} /></span>
             <span>
               <span className="block font-semibold">Google Calendar</span>
               <span className="block text-xs text-muted">Google Workspace or Gmail</span>
             </span>
           </a>
           <a href="/api/calendar/microsoft/start" className={`card p-5 flex items-center gap-4 hover:border-merle hover:-translate-y-0.5 transition ${microsoft ? "" : "opacity-50 pointer-events-none"}`}>
-            <span className="h-11 w-11 rounded-xl border-2 border-ink bg-butter flex items-center justify-center text-ink"><Icon name="mail" size={22} /></span>
+            <span className="h-11 w-11 rounded-xl bg-butter-soft flex items-center justify-center text-copper-deep"><Icon name="mail" size={22} /></span>
             <span>
               <span className="block font-semibold">Outlook / Microsoft 365</span>
               <span className="block text-xs text-muted">Work, school or personal account</span>

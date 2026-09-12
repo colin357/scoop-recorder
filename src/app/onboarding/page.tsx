@@ -14,7 +14,7 @@ export default async function OnboardingPage() {
   const state = await getOnboardingState();
   return (
     <main className="flex-1 flex flex-col">
-      <header className="border-b-2 border-ink bg-paper px-6 py-3 flex items-center justify-between">
+      <header className="border-b edge bg-paper px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Mascot pose="wave" size={40} />
           <div>

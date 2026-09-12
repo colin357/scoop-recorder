@@ -38,7 +38,7 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
       <ol className="flex gap-4 text-sm mb-6">
         {["Company", "Team", "Projects"].map((s, i) => (
           <li key={s} className={`flex items-center gap-2 ${i === step ? "text-merle font-medium" : "text-muted"}`}>
-            <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs border ${i <= step ? "bg-merle text-paper border-ink" : "border-ink/40"}`}>{i + 1}</span>
+            <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs border ${i <= step ? "bg-merle text-paper border-merle" : "edge"}`}>{i + 1}</span>
             {s}
           </li>
         ))}

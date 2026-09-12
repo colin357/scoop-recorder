@@ -32,16 +32,16 @@
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
 
-  --radius-sticker: 16px;
-  --shadow-sticker: 4px 4px 0 0 #171b26;
-  --shadow-sticker-sm: 2px 2px 0 0 #171b26;
-  --shadow-sticker-copper: 4px 4px 0 0 #e19a46;
+  --color-edge: rgba(23, 27, 38, 0.10);
+  --color-edge-strong: rgba(23, 27, 38, 0.18);
+
+  --shadow-soft: 0 1px 2px rgba(23, 27, 38, 0.06), 0 4px 14px -4px rgba(23, 27, 38, 0.10);
+  --shadow-lift: 0 2px 4px rgba(23, 27, 38, 0.06), 0 12px 28px -8px rgba(23, 27, 38, 0.18);
+  --shadow-btn: 0 1px 2px rgba(23, 27, 38, 0.10), 0 3px 8px -2px rgba(23, 27, 38, 0.15);
 }
 
 body {
   background-color: var(--color-cream);
-  background-image: radial-gradient(rgba(23, 27, 38, 0.07) 1px, transparent 1px);
-  background-size: 22px 22px;
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
@@ -50,11 +50,12 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 
 @layer base {
   input, textarea, select {
-    @apply w-full rounded-xl border-2 border-ink bg-paper px-3 py-2 text-sm text-ink outline-none transition;
-    box-shadow: 2px 2px 0 0 var(--color-ink);
+    @apply w-full rounded-xl border bg-paper px-3 py-2 text-sm text-ink outline-none transition;
+    border-color: var(--color-edge-strong);
+    box-shadow: 0 1px 2px rgba(23, 27, 38, 0.04);
   }
-  input:focus, textarea:focus, select:focus { @apply border-merle; box-shadow: 2px 2px 0 0 var(--color-merle); }
-  input:disabled, textarea:disabled, select:disabled { @apply bg-paper-2 text-muted border-line; box-shadow: none; }
+  input:focus, textarea:focus, select:focus { border-color: var(--color-merle); box-shadow: 0 0 0 3px var(--color-sky); }
+  input:disabled, textarea:disabled, select:disabled { @apply bg-paper-2 text-muted; box-shadow: none; }
   input[type="checkbox"], input[type="radio"] { @apply accent-merle; box-shadow: none; }
   label { @apply block text-sm font-medium text-ink-soft mb-1; }
   ::selection { background: var(--color-butter); }
@@ -62,36 +63,39 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 
 /* --- buttons --- */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed;
-  box-shadow: 3px 3px 0 0 var(--color-ink);
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed;
   font-family: var(--font-display);
 }
 @utility btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed bg-merle text-paper hover:bg-merle-deep;
-  box-shadow: 3px 3px 0 0 var(--color-ink);
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-merle text-paper hover:bg-merle-deep;
+  box-shadow: var(--shadow-btn);
   font-family: var(--font-display);
 }
 @utility btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed bg-paper text-ink hover:bg-sky-soft;
-  box-shadow: 3px 3px 0 0 var(--color-ink);
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-paper text-ink hover:bg-sky-soft;
+  border-color: var(--color-edge-strong);
+  box-shadow: 0 1px 2px rgba(23, 27, 38, 0.05);
   font-family: var(--font-display);
 }
 @utility btn-accent {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed bg-copper text-ink hover:bg-butter;
-  box-shadow: 3px 3px 0 0 var(--color-ink);
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed bg-copper text-ink hover:bg-copper-deep hover:text-paper;
+  box-shadow: var(--shadow-btn);
   font-family: var(--font-display);
 }
 @utility btn-ghost {
   @apply inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-paper-2 disabled:opacity-50 disabled:cursor-not-allowed;
   font-family: var(--font-display);
 }
-.btn:active, .btn-primary:active, .btn-secondary:active, .btn-accent:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 0 var(--color-ink); }
+.btn-primary:active, .btn-secondary:active, .btn-accent:active { transform: translateY(1px); }
 
 /* --- surfaces --- */
-@utility card { @apply rounded-2xl border-2 border-ink bg-paper; box-shadow: 4px 4px 0 0 var(--color-ink); }
-@utility card-flat { @apply rounded-2xl border-2 border-line bg-paper; }
-@utility badge { @apply inline-flex items-center rounded-full border border-ink/70 px-2 py-0.5 text-[11px] font-semibold leading-4; font-family: var(--font-display); }
-@utility hero { background-color: var(--color-sky); background-image: radial-gradient(rgba(23, 27, 38, 0.10) 1px, transparent 1px); background-size: 14px 14px; }
+@utility card { @apply rounded-2xl border bg-paper; border-color: var(--color-edge); box-shadow: var(--shadow-soft); }
+@utility card-flat { @apply rounded-2xl border bg-paper; border-color: var(--color-edge); }
+@utility badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold leading-4; font-family: var(--font-display); }
+@utility hero { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-sky-soft) 100%); }
+@utility edge { border-color: var(--color-edge); }
+@utility shadow-soft { box-shadow: var(--shadow-soft); }
+@utility shadow-lift { box-shadow: var(--shadow-lift); }
 @utility hero-landing { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-cream) 55%, var(--color-butter-soft) 100%); }
 @utility brand-mark { background: linear-gradient(135deg, var(--color-merle), var(--color-pink)); }
 @utility eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-copper-deep; font-family: var(--font-display); }

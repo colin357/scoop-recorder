@@ -61,9 +61,9 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-        <div className="flex gap-1 rounded-xl border-2 border-ink bg-paper p-0.5 text-sm">
-          <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded-lg font-display ${view === "list" ? "bg-ink text-paper" : ""}`}>List</Link>
-          <Link href={qs({ view: "board" })} className={`px-3 py-1 rounded-lg font-display ${view === "board" ? "bg-ink text-paper" : ""}`}>Board</Link>
+        <div className="flex gap-1 rounded-xl border edge bg-paper p-0.5 text-sm shadow-soft">
+          <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded-lg font-display ${view === "list" ? "bg-merle text-paper" : ""}`}>List</Link>
+          <Link href={qs({ view: "board" })} className={`px-3 py-1 rounded-lg font-display ${view === "board" ? "bg-merle text-paper" : ""}`}>Board</Link>
         </div>
       </div>
 
@@ -128,7 +128,7 @@ function FilterGroup({ label, children }: { label: string; children: React.React
 
 function Pill({ href, active, dot, children }: { href: string; active: boolean; dot?: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${active ? "bg-ink text-paper border-ink" : "bg-paper text-ink-soft border-ink/60 hover:bg-sky-soft"}`}>
+    <Link href={href} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${active ? "bg-merle text-paper border-merle" : "bg-paper text-ink-soft edge hover:bg-sky-soft"}`}>
       {dot && <span className="h-2 w-2 rounded-full" style={{ background: dot }} />}
       {children}
     </Link>

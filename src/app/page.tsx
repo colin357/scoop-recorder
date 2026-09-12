@@ -27,7 +27,7 @@ export default async function Home() {
         </nav>
       </header>
 
-      <section className="hero-landing relative overflow-hidden border-y-2 border-ink">
+      <section className="hero-landing relative overflow-hidden border-y edge">
         <Blobs />
         <div className="relative max-w-6xl mx-auto px-6 py-16 md:py-24 grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div>
@@ -47,7 +47,7 @@ export default async function Home() {
       <section className="max-w-6xl mx-auto px-6 py-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {features.map((f) => (
           <div key={f.title} className="card p-6">
-            <span className="h-11 w-11 rounded-xl border-2 border-ink bg-butter flex items-center justify-center text-ink"><Icon name={f.icon} size={22} /></span>
+            <span className="h-11 w-11 rounded-xl bg-butter-soft flex items-center justify-center text-copper-deep"><Icon name={f.icon} size={22} /></span>
             <h3 className="font-semibold text-lg mt-4">{f.title}</h3>
             <p className="text-sm text-ink-soft mt-1">{f.text}</p>
           </div>
@@ -61,7 +61,7 @@ export default async function Home() {
             ["2", "Connect your calendar", "Rocky spots meetings with a video link and asks whether to record, or just records if you prefer."],
             ["3", "Get the follow-through", "Summary, decisions, and assigned tasks land in the app, your inbox and Slack before you've refilled your coffee."],
           ].map(([n, t, d]) => (
-            <div key={n}><div className="h-9 w-9 rounded-full border-2 border-ink bg-pink text-ink font-display font-bold flex items-center justify-center shadow-[2px_2px_0_0_#171b26]">{n}</div><h3 className="font-semibold text-lg mt-3">{t}</h3><p className="text-sm text-ink-soft mt-1">{d}</p></div>
+            <div key={n}><div className="h-9 w-9 rounded-full bg-pink text-ink font-display font-bold flex items-center justify-center">{n}</div><h3 className="font-semibold text-lg mt-3">{t}</h3><p className="text-sm text-ink-soft mt-1">{d}</p></div>
           ))}
         </div>
       </section>
@@ -73,7 +73,7 @@ export default async function Home() {
         <Link href="/signup" className="btn-accent !px-5 !py-3 text-base mt-6 inline-flex">Create your account</Link>
       </section>
 
-      <footer className="border-t-2 border-ink py-6 text-center text-xs text-muted bg-paper">© {new Date().getFullYear()} Scoop · scooprecorder.com</footer>
+      <footer className="border-t edge py-6 text-center text-xs text-muted bg-paper">© {new Date().getFullYear()} Scoop · scooprecorder.com</footer>
     </main>
   );
 }

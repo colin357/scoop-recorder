@@ -62,7 +62,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
                 {task.steps.map((s, i) => (
                   <li key={s.id} className="flex gap-3">
                     <form action={toggleStepAction.bind(null, s.id, !s.completedAt)}>
-                      <button className={`mt-0.5 h-5 w-5 rounded-md border-2 flex items-center justify-center text-xs ${s.completedAt ? "bg-grass border-ink text-paper" : "border-ink bg-paper hover:bg-sky-soft"}`} aria-label="Toggle step">
+                      <button className={`mt-0.5 h-5 w-5 rounded-md border flex items-center justify-center text-xs ${s.completedAt ? "bg-grass border-grass text-paper" : "border-muted bg-paper hover:bg-sky-soft"}`} aria-label="Toggle step">
                         {s.completedAt ? "✓" : ""}
                       </button>
                     </form>
