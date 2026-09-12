@@ -65,6 +65,15 @@ export async function deleteWorkspaceAction(form: FormData) {
   const confirm = String(form.get("confirm") ?? "").trim();
   if (confirm.toLowerCase() !== org.name.trim().toLowerCase()) redirect("/settings/organization?error=confirm");
 
+  console.info(`workspace deleted: ${org.slug} by ${membership.email}`);
+  await tearDownOrg(org);
+  await db.onboardingDraft.deleteMany({ where: { userId: user.id } });
+
+  const remaining = await db.membership.count({ where: { userId: user.id } });
+  redirect(remaining > 0 ? "/dashboard" : "/onboarding?deleted=workspace");
+}
+
+async function tearDownOrg(org: { id: string; stripeSubscriptionId: string | null; billingStatus: string }) {
   const { stripe, stripeConfigured } = await import("@/lib/billing");
   if (stripeConfigured() && org.stripeSubscriptionId && !["canceled", "none"].includes(org.billingStatus)) {
     await stripe().subscriptions.cancel(org.stripeSubscriptionId, { prorate: false }).catch((e) => console.error("cancel subscription on delete", e));
@@ -74,18 +83,14 @@ export async function deleteWorkspaceAction(form: FormData) {
     const bots = await db.meeting.findMany({ where: { orgId: org.id, recallBotId: { not: null }, recordingDeletedAt: null }, select: { recallBotId: true } });
     for (const b of bots) await deleteBotMedia(b.recallBotId!).catch((e) => console.error("deleteBotMedia on delete", e));
   }
-  console.info(`workspace deleted: ${org.slug} by ${membership.email}`);
   await db.organization.delete({ where: { id: org.id } });
-  await db.onboardingDraft.deleteMany({ where: { userId: user.id } });
-
-  const remaining = await db.membership.count({ where: { userId: user.id } });
-  redirect(remaining > 0 ? "/dashboard" : "/onboarding?deleted=workspace");
 }
 
 /**
- * Delete the signed-in user's account. If they are the only member of their
- * workspace the workspace goes too; if they are the only admin of a workspace
- * that has other members, they must hand off admin or delete the workspace first.
+ * Delete the signed-in user's account. Admins choose the scope:
+ *  - "me": leave the workspace. A sole admin hands admin to the longest-standing
+ *    teammate automatically; a sole member takes the workspace with them.
+ *  - "everyone": delete the workspace and every teammate's account with it.
  */
 export async function deleteAccountAction(form: FormData) {
   const { getCurrentUser, destroySession } = await import("@/lib/auth");
@@ -93,31 +98,39 @@ export async function deleteAccountAction(form: FormData) {
   if (!user) redirect("/login");
   const confirm = String(form.get("confirm") ?? "").trim().toLowerCase();
   if (confirm !== user.email.toLowerCase()) redirect("/settings/profile?error=confirm");
+  const scope = form.get("scope") === "everyone" ? "everyone" : "me";
 
-  const memberships = await db.membership.findMany({ where: { userId: user.id }, include: { org: { include: { _count: { select: { members: true } } } } } });
+  const memberships = await db.membership.findMany({ where: { userId: user.id }, include: { org: true } });
   for (const m of memberships) {
-    const others = m.org._count.members - 1;
-    if (others === 0) {
-      // Sole member: remove the workspace with it.
-      const { stripe, stripeConfigured } = await import("@/lib/billing");
-      if (stripeConfigured() && m.org.stripeSubscriptionId && !["canceled", "none"].includes(m.org.billingStatus)) {
-        await stripe().subscriptions.cancel(m.org.stripeSubscriptionId, { prorate: false }).catch((e) => console.error("cancel subscription on account delete", e));
+    const teammates = await db.membership.findMany({ where: { orgId: m.orgId, id: { not: m.id } }, orderBy: { createdAt: "asc" } });
+    const joined = teammates.filter((t) => t.userId);
+
+    if (m.isAdmin && scope === "everyone") {
+      const userIds = joined.map((t) => t.userId!);
+      await tearDownOrg(m.org);
+      // Teammates whose only workspace this was lose their sign-in too.
+      for (const uid of userIds) {
+        const remaining = await db.membership.count({ where: { userId: uid } });
+        if (remaining === 0) await db.user.delete({ where: { id: uid } }).catch((e) => console.error("delete teammate user", e));
       }
-      const { deleteBotMedia, recallConfigured } = await import("@/lib/recall");
-      if (recallConfigured()) {
-        const bots = await db.meeting.findMany({ where: { orgId: m.orgId, recallBotId: { not: null }, recordingDeletedAt: null }, select: { recallBotId: true } });
-        for (const b of bots) await deleteBotMedia(b.recallBotId!).catch((e) => console.error("deleteBotMedia on account delete", e));
-      }
-      await db.organization.delete({ where: { id: m.orgId } });
-    } else if (m.isAdmin) {
-      const otherAdmins = await db.membership.count({ where: { orgId: m.orgId, isAdmin: true, id: { not: m.id } } });
-      if (otherAdmins === 0) redirect("/settings/profile?error=sole_admin");
-      await db.membership.delete({ where: { id: m.id } });
-      await logActivity({ orgId: m.orgId, action: "member.left", entityType: "member", entityId: m.id, summary: `${m.name} deleted their account` });
-    } else {
-      await db.membership.delete({ where: { id: m.id } });
-      await logActivity({ orgId: m.orgId, action: "member.left", entityType: "member", entityId: m.id, summary: `${m.name} deleted their account` });
+      continue;
     }
+
+    if (joined.length === 0) {
+      // Nobody else has an account here: the workspace would be orphaned, so it goes too.
+      await tearDownOrg(m.org);
+      continue;
+    }
+
+    if (m.isAdmin && !joined.some((t) => t.isAdmin)) {
+      const heir = joined[0];
+      await db.membership.update({ where: { id: heir.id }, data: { isAdmin: true } });
+      await logActivity({ orgId: m.orgId, action: "member.promoted", entityType: "member", entityId: heir.id, summary: `${heir.name} became an admin because ${m.name} deleted their account` });
+    }
+    await db.membership.delete({ where: { id: m.id } });
+    await logActivity({ orgId: m.orgId, action: "member.left", entityType: "member", entityId: m.id, summary: `${m.name} deleted their account` });
+    const { syncSeats } = await import("@/lib/billing");
+    await syncSeats(m.orgId);
   }
   await db.user.delete({ where: { id: user.id } });
   await destroySession();
