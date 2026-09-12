@@ -16,6 +16,9 @@ export default async function CalendarSettingsPage({ searchParams }: PageProps<"
   ]);
   const google = calendarProviderConfigured("google");
   const microsoft = calendarProviderConfigured("microsoft");
+  const mine = new Set(connections.filter((c) => c.memberId === membership.id).map((c) => c.provider));
+  const showGoogle = !mine.has("google");
+  const showMicrosoft = !mine.has("microsoft");
 
   return (
     <div className="space-y-6">
@@ -53,13 +56,13 @@ export default async function CalendarSettingsPage({ searchParams }: PageProps<"
           ))}
         </ul>
         <div className="flex flex-wrap gap-2 pt-1">
-          <a href="/api/calendar/google/start" className={`btn-secondary ${google ? "" : "opacity-50 pointer-events-none"}`}>Connect Google Calendar</a>
-          <a href="/api/calendar/microsoft/start" className={`btn-secondary ${microsoft ? "" : "opacity-50 pointer-events-none"}`}>Connect Microsoft 365</a>
+          {showGoogle && <a href="/api/calendar/google/start" className={`btn-secondary ${google ? "" : "opacity-50 pointer-events-none"}`}>Connect Google Calendar</a>}
+          {showMicrosoft && <a href="/api/calendar/microsoft/start" className={`btn-secondary ${microsoft ? "" : "opacity-50 pointer-events-none"}`}>Connect Microsoft 365</a>}
           {connections.length > 0 && <form action={syncNowAction}><button className="btn-ghost">Sync now</button></form>}
         </div>
-        {(!google || !microsoft) && (
+        {((showGoogle && !google) || (showMicrosoft && !microsoft)) && (
           <p className="text-xs text-muted">
-            Missing: {[!google && "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET", !microsoft && "MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET"].filter(Boolean).join(" and ")}. See README for setup.
+            Missing: {[showGoogle && !google && "GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET", showMicrosoft && !microsoft && "MICROSOFT_CLIENT_ID / MICROSOFT_CLIENT_SECRET"].filter(Boolean).join(" and ")}. See README for setup.
           </p>
         )}
       </section>
