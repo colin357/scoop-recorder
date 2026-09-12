@@ -1,9 +1,10 @@
 import { requireAdmin } from "@/lib/auth";
-import { updateOrgSettingsAction } from "@/app/actions/org";
+import { deleteWorkspaceAction, updateOrgSettingsAction } from "@/app/actions/org";
 import { emailConfigured } from "@/lib/email";
 import WebhookTest from "./webhook-test";
 
-export default async function OrganizationSettingsPage() {
+export default async function OrganizationSettingsPage({ searchParams }: PageProps<"/settings/organization">) {
+  const sp = await searchParams;
   const { org } = await requireAdmin();
   return (
     <div className="space-y-6 max-w-2xl">
@@ -11,6 +12,7 @@ export default async function OrganizationSettingsPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Organization</h1>
         <p className="text-sm text-muted">Admins only. Recording behaviour, review, retention, and where notifications go.</p>
       </div>
+      {sp.error === "confirm" && <p className="rounded-md bg-clay-soft border border-clay text-clay text-sm p-3">The name you typed didn&apos;t match, so nothing was deleted.</p>}
       <form action={updateOrgSettingsAction} className="space-y-6">
         <section className="card p-5 grid gap-3">
           <h2 className="font-semibold">Basics</h2>
@@ -61,6 +63,20 @@ export default async function OrganizationSettingsPage() {
           <WebhookTest hasSlack={Boolean(org.slackWebhookUrl)} hasTeams={Boolean(org.teamsWebhookUrl)} />
         </div>
       </form>
+
+      <section className="card p-5 grid gap-3 border-clay/40">
+        <h2 className="font-semibold text-clay">Delete this workspace</h2>
+        <p className="text-sm text-muted">
+          Permanently deletes <span className="font-medium text-ink">{org.name}</span>: every meeting, recording, transcript, summary, task, project, calendar connection and team membership. Any subscription is cancelled immediately. This cannot be undone. Export your data first from the audit log page if you need it.
+        </p>
+        <form action={deleteWorkspaceAction} className="grid gap-3 sm:grid-cols-[1fr_auto] items-end">
+          <div>
+            <label>Type the workspace name to confirm</label>
+            <input name="confirm" placeholder={org.name} autoComplete="off" required />
+          </div>
+          <button className="btn-secondary !border-clay !text-clay hover:!bg-clay-soft">Delete workspace</button>
+        </form>
+      </section>
     </div>
   );
 }
