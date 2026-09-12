@@ -9,7 +9,7 @@ import UpcomingList from "@/components/upcoming-list";
 
 export default async function CalendarSettingsPage({ searchParams }: PageProps<"/settings/calendar">) {
   const sp = await searchParams;
-  const { org } = await requireOrg();
+  const { org, membership } = await requireOrg();
   const [connections, events] = await Promise.all([
     db.calendarConnection.findMany({ where: { orgId: org.id }, include: { member: true }, orderBy: { createdAt: "asc" } }),
     db.calendarEvent.findMany({ where: { orgId: org.id, endAt: { gt: new Date() } }, orderBy: { startAt: "asc" }, include: { meeting: { select: { id: true, status: true } } } }),
@@ -77,7 +77,7 @@ export default async function CalendarSettingsPage({ searchParams }: PageProps<"
               <span><span className="font-medium text-slate-900 block">{o.t}</span><span className="text-sm text-slate-500">{o.d}</span></span>
             </label>
           ))}
-          <button className="btn-primary">Save</button>
+          {membership.isAdmin ? <button className="btn-primary">Save</button> : <p className="text-xs text-slate-500">Only admins can change this policy.</p>}
         </form>
       </section>
 

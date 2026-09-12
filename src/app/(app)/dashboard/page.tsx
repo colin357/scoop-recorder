@@ -11,14 +11,14 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
   const { org, membership } = await requireOrg();
   const [myTasks, overdueCount, recentMeetings, openCount, upcoming, calendarCount] = await Promise.all([
     db.task.findMany({
-      where: { orgId: org.id, assigneeId: membership.id, status: { not: "done" } },
+      where: { orgId: org.id, assigneeId: membership.id, status: { notIn: ["done", "draft"] } },
       include: { project: true },
       orderBy: [{ dueDate: "asc" }],
       take: 8,
     }),
-    db.task.count({ where: { orgId: org.id, status: { not: "done" }, dueDate: { lt: new Date() } } }),
+    db.task.count({ where: { orgId: org.id, status: { notIn: ["done", "draft"] }, dueDate: { lt: new Date() } } }),
     db.meeting.findMany({ where: { orgId: org.id }, orderBy: { createdAt: "desc" }, take: 5, include: { _count: { select: { tasks: true } } } }),
-    db.task.count({ where: { orgId: org.id, status: { not: "done" } } }),
+    db.task.count({ where: { orgId: org.id, status: { notIn: ["done", "draft"] } } }),
     db.calendarEvent.findMany({ where: { orgId: org.id, endAt: { gt: new Date() } }, orderBy: { startAt: "asc" }, take: 6, include: { meeting: { select: { id: true, status: true } } } }),
     db.calendarConnection.count({ where: { orgId: org.id } }),
   ]);

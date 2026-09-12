@@ -8,6 +8,7 @@ import { slugify } from "@/lib/utils";
 export type OnboardingInput = {
   orgName: string;
   businessDescription?: string | null;
+  reviewBeforeAssign?: boolean;
   members: { name: string; email: string; role: string; responsibilities: string }[];
   projects: { name: string; description: string }[];
 };
@@ -31,6 +32,7 @@ export async function completeOnboarding(input: OnboardingInput) {
       name: input.orgName.trim(),
       slug,
       businessDescription: input.businessDescription?.trim() || null,
+      reviewBeforeAssign: Boolean(input.reviewBeforeAssign),
       onboardedAt: new Date(),
       members: {
         create: [
@@ -121,7 +123,7 @@ export async function resetOnboardingAction() {
   await db.onboardingDraft.deleteMany({ where: { userId: user.id } });
 }
 
-export async function finishFromDraftAction() {
+export async function finishFromDraftAction(reviewBeforeAssign = false) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const { draft } = await loadState(user.id, user.name, user.email);
@@ -129,6 +131,7 @@ export async function finishFromDraftAction() {
   await completeOnboarding({
     orgName: draft.orgName,
     businessDescription: draft.businessDescription,
+    reviewBeforeAssign,
     members: draft.members.map((m) => ({ name: m.name, email: m.email ?? "", role: m.role, responsibilities: m.responsibilities })),
     projects: draft.projects.filter((p) => p.confirmed).map((p) => ({ name: p.name, description: p.description })),
   });

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requireOrg } from "@/lib/auth";
+import { requireAdmin, requireOrg } from "@/lib/auth";
 import { setEventDecision, syncConnection } from "@/lib/calendar";
 
 export async function decideEventAction(eventId: string, decision: "record" | "skip") {
@@ -15,7 +15,7 @@ export async function decideEventAction(eventId: string, decision: "record" | "s
 }
 
 export async function setRecordPolicyAction(form: FormData) {
-  const { org } = await requireOrg();
+  const { org } = await requireAdmin();
   const policy = String(form.get("policy"));
   if (!["auto", "ask", "off"].includes(policy)) return;
   await db.organization.update({ where: { id: org.id }, data: { autoRecordPolicy: policy } });

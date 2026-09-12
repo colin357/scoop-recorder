@@ -12,6 +12,7 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const [review, setReview] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
   const started = useRef(false);
 
@@ -75,13 +76,19 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
             />
           )}
           {!pending && (widget === "finish" || ready) && (
-            <div className="card p-4 flex items-center gap-4 border-emerald-200 bg-emerald-50/40">
-              <Mascot pose="celebrate" size={56} />
-              <div className="flex-1 text-sm">
-                <div className="font-semibold">Almost there</div>
-                <div className="text-slate-600">{d.orgName} · {d.members.length} team member{d.members.length === 1 ? "" : "s"} · {d.projects.filter((p) => p.confirmed).length} projects</div>
+            <div className="card p-4 border-emerald-200 bg-emerald-50/40 space-y-3">
+              <div className="flex items-center gap-4">
+                <Mascot pose="celebrate" size={56} />
+                <div className="flex-1 text-sm">
+                  <div className="font-semibold">Almost there</div>
+                  <div className="text-slate-600">{d.orgName} · {d.members.length} team member{d.members.length === 1 ? "" : "s"} · {d.projects.filter((p) => p.confirmed).length} projects</div>
+                </div>
+                <button className="btn-primary" onClick={() => run(() => finishFromDraftAction(review))}>Next: connect calendar</button>
               </div>
-              <button className="btn-primary" onClick={() => run(finishFromDraftAction)}>Next: connect calendar</button>
+              <label className="flex items-start gap-3 text-sm font-normal rounded-lg border border-emerald-200 bg-white p-3 cursor-pointer">
+                <input type="checkbox" className="!w-auto mt-0.5" checked={review} onChange={(e) => setReview(e.target.checked)} />
+                <span><span className="font-medium text-slate-900 block">Let me review AI tasks before my team is notified</span><span className="text-slate-500">Tasks stay as drafts on the meeting page until an admin approves them. You can change this later in Organization settings.</span></span>
+              </label>
             </div>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}

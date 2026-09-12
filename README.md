@@ -12,6 +12,9 @@ Production: https://www.scooprecorder.com
 - **Create and assign tasks.** Each commitment in the transcript becomes a task. The AI assigns it to the team member whose role and responsibilities fit best, explains why, sets a deadline (explicit dates from the call, otherwise an estimate), and writes a 2-6 step guide where each step has its own due date.
 - **Project guessing.** The business description gathered during onboarding lets the AI propose projects up front, file each meeting under the right one, create a new project when a meeting is clearly about a new client or initiative, and suggest missing projects from the Projects page.
 - **Context on demand.** Every task links to the recording at the second it was discussed, shows the verbatim quote, and has an "Ask AI" chat that answers from the transcript with jumpable timestamps.
+- **Team features.** Email invites with magic links, task assignment and summary emails (Resend), Slack and Teams channel posts via incoming webhooks, admin vs member roles, an optional "review AI tasks before teammates are notified" mode, task comments, and a per-task activity trail.
+- **Governance.** Recording consent announcement when the bot joins, configurable bot name, retention limit that purges recordings and transcripts nightly, an org-wide audit log, and full JSON export. Operators get a cross-organization usage dashboard at `/admin` (gated by `SUPERADMIN_EMAILS`).
+- **Search.** Full-text across meeting titles, summaries, transcripts and tasks, with jump-to-moment links. ⌘K opens it.
 - **Track work.** List and board views, filterable by project, assignee ("me"), and due date (overdue / today / this week / later / none). Steps can be ticked off individually.
 - **Chat onboarding.** Rocky, the Aussie mascot, walks new users through setup in a conversation, dropping in mini-forms for the team roster and for confirming proposed projects. A classic form wizard is at `/onboarding/form`.
 
@@ -36,6 +39,10 @@ You need a Postgres database. A Neon branch or `docker run -p 5432:5432 -e POSTG
 2. Environment variables: `APP_URL=https://www.scooprecorder.com` (the apex redirects to www, so the www form is canonical), `XAI_API_KEY` or `ANTHROPIC_API_KEY`, `RECALL_API_KEY`, `RECALL_WEBHOOK_SECRET`, `TOKEN_ENCRYPTION_KEY`, `CRON_SECRET`, plus the calendar OAuth values below.
 3. Deploy. The build command is `prisma migrate deploy && next build`, so migrations run on every deploy.
 4. Requests that arrive on the `*.vercel.app` production alias are redirected to `APP_URL` by `src/proxy.ts`.
+
+## Email and chat notifications
+
+Set `RESEND_API_KEY` and `EMAIL_FROM` for invites, task assignments, summaries and password resets; without a key, emails are printed to the server log. Admins add a Slack incoming webhook and/or a Microsoft Teams workflow webhook under **Settings → Organization**; members can add their Slack member ID on their profile to be @mentioned.
 
 ## AI provider
 

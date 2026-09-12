@@ -16,6 +16,9 @@ import { z } from "zod";
 
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
+export type Usage = { inputTokens: number; outputTokens: number };
+export let lastUsage: Usage | null = null;
+
 export type LLM = {
   name: string;
   model: string;
@@ -73,6 +76,7 @@ function xaiProvider(): LLM {
           json_schema: { name: schemaName, strict: true, schema: jsonSchema },
         },
       });
+      lastUsage = { inputTokens: res.usage?.prompt_tokens ?? 0, outputTokens: res.usage?.completion_tokens ?? 0 };
       const choice = res.choices[0];
       const text = choice?.message?.content;
       if (!text) throw new Error(`Grok returned no content (finish_reason=${choice?.finish_reason ?? "unknown"})`);
@@ -123,6 +127,7 @@ function anthropicProvider(): LLM {
         messages: [{ role: "user", content: user }],
         output_config: { format: zodOutputFormat(schema) },
       });
+      lastUsage = { inputTokens: response.usage.input_tokens, outputTokens: response.usage.output_tokens };
       if (response.stop_reason === "refusal") throw new Error("The model declined to analyze this transcript.");
       if (!response.parsed_output) throw new Error("Could not parse model output.");
       return response.parsed_output;

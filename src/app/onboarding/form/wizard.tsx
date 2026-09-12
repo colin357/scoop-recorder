@@ -14,6 +14,7 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
     { name: "", email: "", role: "", responsibilities: "" },
   ]);
   const [projects, setProjects] = useState<Project[]>([{ name: "", description: "" }]);
+  const [review, setReview] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -26,7 +27,7 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
     start(async () => {
       setError(null);
       try {
-        await completeOnboarding({ orgName, members, projects });
+        await completeOnboarding({ orgName, members, projects, reviewBeforeAssign: review });
       } catch (e) {
         setError(e instanceof Error ? e.message : "Something went wrong.");
       }
@@ -95,6 +96,10 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
             </div>
           ))}
           <button className="btn-secondary" onClick={() => setProjects((ps) => [...ps, { name: "", description: "" }])}>+ Add project</button>
+          <label className="flex items-start gap-3 text-sm font-normal rounded-lg border border-slate-200 p-3 cursor-pointer">
+            <input type="checkbox" className="!w-auto mt-0.5" checked={review} onChange={(e) => setReview(e.target.checked)} />
+            <span><span className="font-medium text-slate-900 block">Let me review AI tasks before my team is notified</span><span className="text-slate-500">Tasks stay as drafts until an admin approves them.</span></span>
+          </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-between">
             <button className="btn-ghost" onClick={() => setStep(1)}>Back</button>

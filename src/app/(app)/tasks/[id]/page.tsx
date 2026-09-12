@@ -6,20 +6,23 @@ import { fmtDate, fmtTimestamp, PLATFORM_LABEL } from "@/lib/utils";
 import { DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import TaskEditor from "./editor";
 import TaskChat from "./chat";
-import { deleteTaskAction, toggleStepAction } from "@/app/actions/tasks";
+import { addCommentAction, deleteTaskAction, toggleStepAction } from "@/app/actions/tasks";
+import { fmtRelative } from "@/lib/utils";
 
 export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
   const { id } = await params;
-  const { org } = await requireOrg();
-  const [task, projects, members] = await Promise.all([
+  const { org, membership } = await requireOrg();
+  const [task, projects, members, activity] = await Promise.all([
     db.task.findFirst({
       where: { id, orgId: org.id },
-      include: { project: true, assignee: true, meeting: true, steps: { orderBy: { order: "asc" } }, messages: { orderBy: { createdAt: "asc" } } },
+      include: { project: true, assignee: true, meeting: true, steps: { orderBy: { order: "asc" } }, messages: { orderBy: { createdAt: "asc" } }, comments: { include: { member: true }, orderBy: { createdAt: "asc" } } },
     }),
     db.project.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } }),
     db.membership.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } }),
+    db.activityLog.findMany({ where: { orgId: org.id, entityType: "task", entityId: id }, orderBy: { createdAt: "desc" }, take: 30, include: { actor: true } }),
   ]);
   if (!task) notFound();
+  const canDelete = membership.isAdmin || task.assigneeId === membership.id;
 
   const recordingHref = task.meeting ? `/meetings/${task.meeting.id}${task.sourceTimestampSec != null ? `?t=${task.sourceTimestampSec}` : ""}` : null;
 
@@ -29,7 +32,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
         <Link href="/tasks" className="text-sm text-slate-500 hover:text-slate-900">← Tasks</Link>
         <div className="flex items-start justify-between gap-4 mt-1">
           <h1 className="text-2xl font-semibold tracking-tight">{task.title}</h1>
-          <form action={deleteTaskAction.bind(null, task.id)}><button className="btn-ghost text-red-600">Delete</button></form>
+          {canDelete && <form action={deleteTaskAction.bind(null, task.id)}><button className="btn-ghost text-red-600">Delete</button></form>}
         </div>
         <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
           <StatusBadge status={task.status} />
@@ -73,6 +76,33 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
               </ol>
             )}
           </section>
+
+          <section className="card p-5 space-y-4">
+            <h2 className="font-semibold">Comments</h2>
+            {task.comments.length === 0 ? <p className="text-sm text-slate-500">No comments yet. Blocked on something? Say so here.</p> : (
+              <ul className="space-y-3">
+                {task.comments.map((c) => (
+                  <li key={c.id} className="text-sm">
+                    <div className="text-xs text-slate-500"><span className="font-medium text-slate-700">{c.member?.name ?? "Former member"}</span> · {fmtRelative(c.createdAt)}</div>
+                    <p className="whitespace-pre-line text-slate-800 mt-0.5">{c.body}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <form action={addCommentAction.bind(null, task.id)} className="flex gap-2">
+              <input name="body" placeholder="Write a comment…" required />
+              <button className="btn-secondary">Post</button>
+            </form>
+          </section>
+
+          {activity.length > 0 && (
+            <section className="card p-5">
+              <h2 className="font-semibold mb-2">Activity</h2>
+              <ul className="space-y-1.5 text-sm">
+                {activity.map((a) => <li key={a.id} className="text-slate-600"><span className="text-xs text-slate-400 mr-2">{fmtRelative(a.createdAt)}</span>{a.summary}</li>)}
+              </ul>
+            </section>
+          )}
 
           {task.meeting && (
             <section className="card p-5 space-y-3">

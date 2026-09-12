@@ -1,6 +1,9 @@
 import { addDays } from "date-fns";
 import { db } from "./db";
 import { analyzeMeeting } from "./ai";
+import { lastUsage } from "./llm";
+import { notifyMeetingProcessed } from "./notify";
+import { logActivity } from "./audit";
 import { fetchTranscript, getBot, recordingUrlFromBot, type TranscriptSegment } from "./recall";
 
 const PALETTE = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
@@ -46,9 +49,11 @@ export async function processMeeting(meetingId: string) {
       projectId = created.id;
     }
 
+    const usage = lastUsage;
+    const draft = org.reviewBeforeAssign;
     await db.$transaction(async (tx) => {
       // Re-running analysis replaces previously generated (still-untouched) tasks.
-      await tx.task.deleteMany({ where: { meetingId, status: "todo" } });
+      await tx.task.deleteMany({ where: { meetingId, status: { in: ["todo", "draft"] } } });
       await tx.meeting.update({
         where: { id: meetingId },
         data: {
@@ -57,6 +62,9 @@ export async function processMeeting(meetingId: string) {
           summary: analysis.summary,
           keyPoints: JSON.stringify(analysis.keyPoints),
           decisions: JSON.stringify(analysis.decisions),
+          reviewedAt: draft ? null : new Date(),
+          aiInputTokens: usage?.inputTokens ?? null,
+          aiOutputTokens: usage?.outputTokens ?? null,
         },
       });
       for (const t of analysis.tasks) {
@@ -68,6 +76,7 @@ export async function processMeeting(meetingId: string) {
             assigneeId: t.assigneeId,
             title: t.title,
             description: t.description,
+            status: draft ? "draft" : "todo",
             priority: t.priority,
             dueDate: addDays(meetingDate, t.dueInDays),
             assignmentReason: t.assignmentReason,
@@ -85,12 +94,25 @@ export async function processMeeting(meetingId: string) {
         });
       }
     });
+    await logActivity({ orgId: meeting.orgId, action: "meeting.processed", entityType: "meeting", entityId: meetingId, summary: `Summary and ${analysis.tasks.length} task(s) generated for “${meeting.title}”${draft ? " (awaiting review)" : ""}` });
+    await notifyMeetingProcessed(meetingId).catch((e) => console.error("notify failed", e));
   } catch (err) {
     await db.meeting.update({
       where: { id: meetingId },
       data: { status: "failed", error: err instanceof Error ? err.message : String(err) },
     });
     throw err;
+  }
+}
+
+/** Approve drafted tasks (all, or a subset) and notify assignees. */
+export async function approveDrafts(meetingId: string, taskIds?: string[]) {
+  const where = { meetingId, status: "draft", ...(taskIds ? { id: { in: taskIds } } : {}) };
+  await db.task.updateMany({ where, data: { status: "todo" } });
+  const remaining = await db.task.count({ where: { meetingId, status: "draft" } });
+  if (remaining === 0) {
+    await db.meeting.update({ where: { id: meetingId }, data: { reviewedAt: new Date() } });
+    await notifyMeetingProcessed(meetingId).catch((e) => console.error("notify failed", e));
   }
 }
 

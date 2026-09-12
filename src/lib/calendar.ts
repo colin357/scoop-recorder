@@ -8,7 +8,7 @@
 import { addDays, subMinutes } from "date-fns";
 import { db } from "./db";
 import { decrypt, encrypt } from "./crypto";
-import { createBot, recallConfigured, removeBot } from "./recall";
+import { consentNotice, createBot, recallConfigured, removeBot } from "./recall";
 import { detectPlatform } from "./utils";
 import { appUrl } from "./urls";
 
@@ -260,7 +260,7 @@ export async function scheduleDecidedEvents(orgId: string) {
   for (const ev of pending) {
     const joinAt = ev.startAt > new Date() ? ev.startAt : undefined;
     try {
-      const bot = await createBot({ meetingUrl: ev.meetingUrl, botName: `${org.name} Notetaker`, joinAt });
+      const bot = await createBot({ meetingUrl: ev.meetingUrl, botName: org.botName ?? `${org.name} Notetaker`, joinAt, notice: org.recordingNotice ? consentNotice(org.name, org.botName) : null });
       const meeting = await db.meeting.create({
         data: {
           orgId,

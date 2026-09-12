@@ -4,6 +4,7 @@ import { Mascot, type MascotPose } from "@/components/mascot";
 
 export function StatusBadge({ status }: { status: string }) {
   const tone: Record<string, string> = {
+    draft: "bg-violet-100 text-violet-700",
     todo: "bg-slate-100 text-slate-700",
     in_progress: "bg-blue-100 text-blue-700",
     blocked: "bg-red-100 text-red-700",

@@ -67,6 +67,48 @@ export const calendarRequired = cache(async (memberId: string) => {
   return count === 0;
 });
 
+/** Like requireOrg, but the member must be an admin. */
+export async function requireAdmin() {
+  const ctx = await requireOrg();
+  if (!ctx.membership.isAdmin) redirect("/dashboard?error=admin_only");
+  return ctx;
+}
+
+/** Find or create a user for a social sign-in and start a session. */
+export async function signInWithProvider(input: { email: string; name: string }) {
+  const email = input.email.toLowerCase();
+  let user = await db.user.findUnique({ where: { email } });
+  if (!user) {
+    user = await db.user.create({ data: { email, name: input.name } });
+    await db.membership.updateMany({ where: { email, userId: null }, data: { userId: user.id } });
+  }
+  await createSession(user.id);
+  return user;
+}
+
+const RESET_HOURS = 1;
+
+export async function createPasswordReset(email: string) {
+  const user = await db.user.findUnique({ where: { email: email.trim().toLowerCase() } });
+  if (!user) return null; // don't reveal whether the account exists
+  const token = randomBytes(32).toString("hex");
+  await db.user.update({
+    where: { id: user.id },
+    data: { passwordResetToken: token, passwordResetExpires: new Date(Date.now() + RESET_HOURS * 3600_000) },
+  });
+  return { user, token };
+}
+
+export async function consumePasswordReset(token: string, newPassword: string) {
+  const user = await db.user.findUnique({ where: { passwordResetToken: token } });
+  if (!user || !user.passwordResetExpires || user.passwordResetExpires < new Date()) throw new Error("This reset link is invalid or has expired.");
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await db.user.update({ where: { id: user.id }, data: { passwordHash, passwordResetToken: null, passwordResetExpires: null } });
+  await db.session.deleteMany({ where: { userId: user.id } });
+  await createSession(user.id);
+  return user;
+}
+
 export async function signUp(input: { name: string; email: string; password: string }) {
   const email = input.email.trim().toLowerCase();
   const existing = await db.user.findUnique({ where: { email } });

@@ -1,21 +1,16 @@
-"use client";
+import { calendarProviderConfigured } from "@/lib/calendar";
+import SocialButtons from "@/components/social-buttons";
+import LoginForm from "./form";
 
-import Link from "next/link";
-import { useActionState } from "react";
-import { signInAction } from "@/app/actions/auth";
-
-export default function LoginPage() {
-  const [state, action, pending] = useActionState(signInAction, {});
+export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  const sp = await searchParams;
+  const next = typeof sp.next === "string" ? sp.next : undefined;
+  const error = typeof sp.error === "string" ? sp.error : undefined;
   return (
-    <form action={action} className="space-y-4">
-      <h1 className="text-lg font-semibold">Sign in</h1>
-      <div><label>Email</label><input name="email" type="email" required autoComplete="email" /></div>
-      <div><label>Password</label><input name="password" type="password" required autoComplete="current-password" /></div>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
-      <button className="btn-primary w-full" disabled={pending}>{pending ? "Signing in…" : "Sign in"}</button>
-      <p className="text-sm text-slate-500 text-center">
-        New here? <Link className="text-indigo-600" href="/signup">Create an account</Link>
-      </p>
-    </form>
+    <div className="space-y-4">
+      {error && <p className="text-sm text-red-600">{error === "state_mismatch" ? "Sign-in session expired. Try again." : error === "provider_unavailable" ? "That sign-in method isn't available." : decodeURIComponent(error)}</p>}
+      <LoginForm next={next} />
+      <SocialButtons google={calendarProviderConfigured("google")} microsoft={calendarProviderConfigured("microsoft")} next={next} />
+    </div>
   );
 }

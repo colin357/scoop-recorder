@@ -41,7 +41,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         ...(project && { projectId: project }),
         ...(assignee && { assigneeId: assignee }),
         ...(dueWhere !== undefined && { dueDate: dueWhere }),
-        ...(!showDone && { status: { not: "done" } }),
+        ...(showDone ? { status: { not: "draft" } } : { status: { notIn: ["done", "draft"] } }),
       },
       include: { project: true, assignee: true, meeting: { select: { id: true, title: true } }, _count: { select: { steps: true } }, steps: { select: { completedAt: true } } },
       orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],

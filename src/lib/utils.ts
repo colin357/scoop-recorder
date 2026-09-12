@@ -55,6 +55,7 @@ export const PLATFORM_LABEL: Record<string, string> = {
 };
 
 export const STATUS_LABEL: Record<string, string> = {
+  draft: "Draft",
   todo: "To do",
   in_progress: "In progress",
   blocked: "Blocked",

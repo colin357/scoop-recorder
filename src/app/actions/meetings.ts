@@ -3,10 +3,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { requireOrg } from "@/lib/auth";
-import { createBot, parsePlainTranscript, recallConfigured } from "@/lib/recall";
+import { requireAdmin, requireOrg } from "@/lib/auth";
+import { logActivity } from "@/lib/audit";
+import { consentNotice, createBot, parsePlainTranscript, recallConfigured } from "@/lib/recall";
 import { detectPlatform } from "@/lib/utils";
-import { ingestFromRecall, processMeeting } from "@/lib/pipeline";
+import { approveDrafts, ingestFromRecall, processMeeting } from "@/lib/pipeline";
 
 export type MeetingFormState = { error?: string };
 
@@ -24,7 +25,7 @@ export async function scheduleBotAction(_: MeetingFormState, form: FormData): Pr
 
   let botId: string;
   try {
-    const bot = await createBot({ meetingUrl, botName: `${org.name} Notetaker`, joinAt });
+    const bot = await createBot({ meetingUrl, botName: org.botName ?? `${org.name} Notetaker`, joinAt, notice: org.recordingNotice ? consentNotice(org.name, org.botName) : null });
     botId = bot.id;
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Could not create bot." };
@@ -87,7 +88,33 @@ export async function reprocessMeetingAction(meetingId: string) {
 }
 
 export async function deleteMeetingAction(meetingId: string) {
-  const { org } = await requireOrg();
-  await db.meeting.deleteMany({ where: { id: meetingId, orgId: org.id } });
+  const { org, membership } = await requireAdmin();
+  const m = await db.meeting.findFirst({ where: { id: meetingId, orgId: org.id } });
+  if (!m) redirect("/meetings");
+  await db.meeting.delete({ where: { id: meetingId } });
+  await logActivity({ orgId: org.id, actorId: membership.id, action: "meeting.deleted", entityType: "meeting", entityId: meetingId, summary: `${membership.name} deleted meeting “${m.title}”` });
   redirect("/meetings");
+}
+
+export async function approveTasksAction(meetingId: string, taskIds?: string[]) {
+  const { org, membership } = await requireAdmin();
+  const m = await db.meeting.findFirst({ where: { id: meetingId, orgId: org.id } });
+  if (!m) return;
+  await approveDrafts(meetingId, taskIds);
+  await logActivity({ orgId: org.id, actorId: membership.id, action: "meeting.tasks_approved", entityType: "meeting", entityId: meetingId, summary: `${membership.name} approved ${taskIds ? taskIds.length : "all"} drafted task(s) for “${m.title}”` });
+  revalidatePath(`/meetings/${meetingId}`);
+  revalidatePath("/tasks");
+}
+
+export async function discardDraftAction(taskId: string) {
+  const { org, membership } = await requireAdmin();
+  const t = await db.task.findFirst({ where: { id: taskId, orgId: org.id, status: "draft" } });
+  if (!t) return;
+  await db.task.delete({ where: { id: taskId } });
+  await logActivity({ orgId: org.id, actorId: membership.id, action: "task.draft_discarded", entityType: "task", entityId: taskId, summary: `${membership.name} discarded drafted task “${t.title}”` });
+  if (t.meetingId) {
+    const remaining = await db.task.count({ where: { meetingId: t.meetingId, status: "draft" } });
+    if (remaining === 0) await approveDrafts(t.meetingId);
+    revalidatePath(`/meetings/${t.meetingId}`);
+  }
 }

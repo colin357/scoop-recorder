@@ -18,6 +18,15 @@ model Organization {
   businessDescription String?
   // auto | ask | off — what to do with calendar meetings that have a video link
   autoRecordPolicy    String   @default("ask")
+  // Hold AI-generated tasks as drafts until an admin approves them
+  reviewBeforeAssign  Boolean  @default(false)
+  // Recording consent & retention
+  botName             String?
+  recordingNotice     Boolean  @default(true)
+  retentionDays       Int?
+  // Notifications
+  slackWebhookUrl     String?
+  teamsWebhookUrl     String?
   onboardedAt         DateTime?
   createdAt           DateTime @default(now())
 
@@ -27,14 +36,17 @@ model Organization {
   tasks               Task[]
   calendarConnections CalendarConnection[]
   calendarEvents      CalendarEvent[]
+  activity            ActivityLog[]
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  name         String
-  passwordHash String?
-  createdAt    DateTime @default(now())
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  name                 String
+  passwordHash         String?
+  passwordResetToken   String?  @unique
+  passwordResetExpires DateTime?
+  createdAt            DateTime @default(now())
 
   sessions    Session[]
   memberships Membership[]
@@ -72,11 +84,17 @@ model Membership {
   role             String   // e.g. "Account Manager", "Designer"
   responsibilities String   // free text: what tasks they typically handle
   isAdmin          Boolean  @default(false)
+  inviteToken      String?  @unique
+  invitedAt        DateTime?
+  slackUserId      String?
+  notifyByEmail    Boolean  @default(true)
   createdAt        DateTime @default(now())
 
   projects      ProjectMember[]
   assignedTasks Task[]
   calendars     CalendarConnection[]
+  comments      TaskComment[]
+  activity      ActivityLog[]
 
   @@unique([orgId, email])
 }
@@ -177,6 +195,11 @@ model Meeting {
   keyPoints    String?  // JSON: string[]
   decisions    String?  // JSON: string[]
   error        String?
+  reviewedAt   DateTime?
+  notifiedAt   DateTime?
+  recordingDeletedAt DateTime?
+  aiInputTokens  Int?
+  aiOutputTokens Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -224,6 +247,35 @@ model Task {
 
   steps    TaskStep[]
   messages TaskMessage[]
+  comments TaskComment[]
+}
+
+model TaskComment {
+  id        String   @id @default(cuid())
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  memberId  String?
+  member    Membership? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  body      String
+  createdAt DateTime @default(now())
+}
+
+// Audit trail: who did what, across the org.
+model ActivityLog {
+  id         String   @id @default(cuid())
+  orgId      String
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  actorId    String?
+  actor      Membership? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action     String   // e.g. task.status_changed, meeting.deleted, member.invited
+  entityType String   // task | meeting | member | project | org
+  entityId   String?
+  summary    String   // human-readable
+  meta       String?  // JSON
+  createdAt  DateTime @default(now())
+
+  @@index([orgId, createdAt])
+  @@index([entityType, entityId])
 }
 
 model TaskStep {

@@ -3,12 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
+import { logActivity } from "@/lib/audit";
+import { notifyTaskAssigned } from "@/lib/notify";
+import { STATUS_LABEL, fmtDate } from "@/lib/utils";
 
 async function ownedTask(taskId: string) {
-  const { org } = await requireOrg();
-  const task = await db.task.findFirst({ where: { id: taskId, orgId: org.id } });
+  const { org, membership } = await requireOrg();
+  const task = await db.task.findFirst({ where: { id: taskId, orgId: org.id }, include: { assignee: true } });
   if (!task) throw new Error("Task not found");
-  return { org, task };
+  return { org, membership, task };
 }
 
 export async function updateTaskAction(taskId: string, patch: {
@@ -20,7 +23,7 @@ export async function updateTaskAction(taskId: string, patch: {
   title?: string;
   description?: string;
 }) {
-  await ownedTask(taskId);
+  const { org, membership, task: before } = await ownedTask(taskId);
   await db.task.update({
     where: { id: taskId },
     data: {
@@ -36,9 +39,33 @@ export async function updateTaskAction(taskId: string, patch: {
       ...(patch.description !== undefined && { description: patch.description }),
     },
   });
+  // Activity + notifications for meaningful changes
+  const changes: string[] = [];
+  if (patch.status !== undefined && patch.status !== before.status) changes.push(`status → ${STATUS_LABEL[patch.status] ?? patch.status}`);
+  if (patch.assigneeId !== undefined && (patch.assigneeId || null) !== before.assigneeId) {
+    const a = patch.assigneeId ? await db.membership.findUnique({ where: { id: patch.assigneeId } }) : null;
+    changes.push(`assignee → ${a?.name ?? "Unassigned"}`);
+    if (a) notifyTaskAssigned(taskId).catch(() => {});
+  }
+  if (patch.dueDate !== undefined) changes.push(`due → ${patch.dueDate ? fmtDate(new Date(patch.dueDate)) : "none"}`);
+  if (patch.priority !== undefined && patch.priority !== before.priority) changes.push(`priority → ${patch.priority}`);
+  if (patch.title !== undefined && patch.title !== before.title) changes.push("title edited");
+  if (patch.description !== undefined && patch.description !== before.description) changes.push("description edited");
+  if (changes.length) {
+    await logActivity({ orgId: org.id, actorId: membership.id, action: "task.updated", entityType: "task", entityId: taskId, summary: `${membership.name} changed ${changes.join(", ")} on “${before.title}”`, meta: patch });
+  }
   revalidatePath("/tasks");
   revalidatePath(`/tasks/${taskId}`);
   revalidatePath("/dashboard");
+}
+
+export async function addCommentAction(taskId: string, form: FormData) {
+  const { org, membership, task } = await ownedTask(taskId);
+  const body = String(form.get("body") ?? "").trim();
+  if (!body) return;
+  await db.taskComment.create({ data: { taskId, memberId: membership.id, body } });
+  await logActivity({ orgId: org.id, actorId: membership.id, action: "task.commented", entityType: "task", entityId: taskId, summary: `${membership.name} commented on “${task.title}”` });
+  revalidatePath(`/tasks/${taskId}`);
 }
 
 export async function toggleStepAction(stepId: string, done: boolean) {
@@ -53,7 +80,7 @@ export async function createTaskAction(form: FormData) {
   const title = String(form.get("title") ?? "").trim();
   if (!title) return;
   const dueDate = String(form.get("dueDate") ?? "");
-  await db.task.create({
+  const created = await db.task.create({
     data: {
       orgId: org.id,
       title,
@@ -64,11 +91,16 @@ export async function createTaskAction(form: FormData) {
       dueDate: dueDate ? new Date(dueDate) : null,
     },
   });
+  const { membership } = await requireOrg();
+  await logActivity({ orgId: org.id, actorId: membership.id, action: "task.created", entityType: "task", entityId: created.id, summary: `${membership.name} created “${title}”` });
+  if (created.assigneeId) notifyTaskAssigned(created.id).catch(() => {});
   revalidatePath("/tasks");
 }
 
 export async function deleteTaskAction(taskId: string) {
-  await ownedTask(taskId);
+  const { org, membership, task } = await ownedTask(taskId);
+  if (!membership.isAdmin && task.assigneeId !== membership.id) throw new Error("Only admins or the assignee can delete a task");
   await db.task.delete({ where: { id: taskId } });
+  await logActivity({ orgId: org.id, actorId: membership.id, action: "task.deleted", entityType: "task", entityId: taskId, summary: `${membership.name} deleted “${task.title}”` });
   revalidatePath("/tasks");
 }

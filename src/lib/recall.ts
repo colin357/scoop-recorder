@@ -53,7 +53,7 @@ export type RecallBot = {
  * Completion events (bot.done, transcript.done) arrive via the webhook endpoint
  * configured in the Recall dashboard, not per bot.
  */
-export async function createBot(input: { meetingUrl: string; botName: string; joinAt?: Date }) {
+export async function createBot(input: { meetingUrl: string; botName: string; joinAt?: Date; notice?: string | null }) {
   return recallFetch<RecallBot>("/bot/", {
     method: "POST",
     body: JSON.stringify({
@@ -64,9 +64,20 @@ export async function createBot(input: { meetingUrl: string; botName: string; jo
         transcript: { provider: { meeting_captions: {} } },
         video_mixed_mp4: {},
       },
+      // Recording consent: announce in the meeting chat when the bot joins.
+      ...(input.notice ? { chat: { on_bot_join: { send_to: "everyone", message: input.notice } } } : {}),
       metadata: { app: "scoop", app_url: appUrl() },
     }),
   });
+}
+
+/** Delete recording/transcript media at Recall (retention). Best effort. */
+export async function deleteBotMedia(botId: string) {
+  return recallFetch<unknown>(`/bot/${botId}/delete_media/`, { method: "POST" });
+}
+
+export function consentNotice(orgName: string, botName?: string | null) {
+  return `${botName ?? `${orgName} Notetaker`} is recording this meeting for ${orgName} so the team gets a summary and action items. If you'd rather not be recorded, please say so and the host can remove the recorder.`;
 }
 
 export async function getBot(botId: string) {
