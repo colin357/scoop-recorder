@@ -15,13 +15,18 @@ const SAMPLE = `[00:00] Priya: Thanks everyone. Quick sync on the Acme onboardin
 
 type Project = { id: string; name: string };
 
-export default function NewMeetingForms({ projects, botAvailable }: { projects: Project[]; botAvailable: boolean }) {
+export default function NewMeetingForms({ projects, botAvailable, aiProvider }: { projects: Project[]; botAvailable: boolean; aiProvider: string | null }) {
   const [botState, botAction, botPending] = useActionState(scheduleBotAction, {});
   const [importState, importAction, importPending] = useActionState(importTranscriptAction, {});
   const [transcript, setTranscript] = useState("");
 
   return (
     <div className="space-y-6">
+      {!aiProvider && (
+        <p className="text-sm rounded-md bg-red-50 border border-red-200 text-red-800 p-3">
+          No AI provider configured. Set <code>XAI_API_KEY</code> (Grok) or <code>ANTHROPIC_API_KEY</code> (Claude) in <code>.env</code> so meetings can be summarized.
+        </p>
+      )}
       <form action={botAction} className="card p-6 space-y-4">
         <h2 className="font-semibold">Send the recorder to a call</h2>
         {!botAvailable && (

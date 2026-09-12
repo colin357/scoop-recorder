@@ -1,16 +1,7 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import type { TranscriptSegment } from "./recall";
 import { fmtTimestamp } from "./utils";
-
-const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-opus-5";
-
-let _client: Anthropic | null = null;
-function client() {
-  if (!_client) _client = new Anthropic();
-  return _client;
-}
+import { getLLM } from "./llm";
 
 export type TeamMemberContext = {
   id: string;
@@ -120,27 +111,21 @@ ${projectBlock(input.projects)}
 Transcript:
 ${transcriptToText(input.transcript)}`;
 
-  const response = await client().messages.parse({
-    model: MODEL,
-    max_tokens: 16000,
-    system: [{ type: "text", text: ANALYSIS_SYSTEM, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: userText }],
-    output_config: { format: zodOutputFormat(MeetingAnalysisSchema) },
+  const analysis = await getLLM().structured({
+    schema: MeetingAnalysisSchema,
+    schemaName: "meeting_analysis",
+    system: ANALYSIS_SYSTEM,
+    user: userText,
   });
-
-  if (response.stop_reason === "refusal") {
-    throw new Error("The model declined to analyze this transcript.");
-  }
-  if (!response.parsed_output) throw new Error("Could not parse meeting analysis.");
-
-  const analysis = response.parsed_output;
   const validMembers = new Set(input.team.map((m) => m.id));
   const validProjects = new Set(input.projects.map((p) => p.id));
   // The model can only assign to real IDs; scrub anything else.
   analysis.projectId = analysis.projectId && validProjects.has(analysis.projectId) ? analysis.projectId : null;
+  const clamp = (n: number) => Math.max(0, Math.min(90, Math.round(n)));
   for (const t of analysis.tasks) {
     if (t.assigneeId && !validMembers.has(t.assigneeId)) t.assigneeId = null;
-    for (const s of t.steps) s.dueInDays = Math.min(s.dueInDays, t.dueInDays);
+    t.dueInDays = clamp(t.dueInDays);
+    for (const s of t.steps) s.dueInDays = Math.min(clamp(s.dueInDays), t.dueInDays);
   }
   return analysis;
 }
@@ -180,20 +165,5 @@ ${transcriptToText(input.meeting.transcript)}`
     : "This task has no source meeting."
 }`;
 
-  const response = await client().messages.create({
-    model: MODEL,
-    max_tokens: 4000,
-    system: [
-      { type: "text", text: TASK_CHAT_SYSTEM },
-      { type: "text", text: context, cache_control: { type: "ephemeral" } },
-    ],
-    messages: [...input.history, { role: "user", content: input.question }],
-  });
-
-  if (response.stop_reason === "refusal") return "I can't help with that question.";
-  return response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("\n")
-    .trim();
+  return getLLM().chat({ system: TASK_CHAT_SYSTEM, context, history: input.history, question: input.question });
 }
