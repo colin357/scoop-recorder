@@ -37,16 +37,15 @@ export default async function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
+      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 md:pb-36 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
         <div>
-          <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[64px] [text-wrap:balance]">The meeting ends.<br />The work is already assigned.</h1>
-          <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-xl leading-relaxed">Rocky learns how your team works: who owns what, and what each person handles. After every call he assigns the action items to the right people, with the context they need, so nothing gets lost between meetings and messages.</p>
-          <div className="mt-7"><CtaLinks big /></div>
-          <p className="mt-6 text-sm text-muted">Works with Google Meet, Zoom and Microsoft Teams. Reads Google Calendar and Outlook.</p>
+          <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[56px] [text-wrap:balance]">The meeting ends.<br />The work is already assigned.</h1>
+          <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-md leading-relaxed">Scoop records the call, understands who does what on your team, and routes every follow-up to the right person with the context to act.</p>
+          <div className="mt-8"><CtaLinks big /></div>
         </div>
-        <div className="relative lg:pr-6 lg:pt-8">
+        <div className="relative lg:pt-6">
           <HeroScene />
-          <div className="absolute -left-6 top-0 hidden md:block"><PromptVignette /></div>
+          <div className="absolute left-6 -bottom-24 hidden md:block"><PromptVignette /></div>
         </div>
       </section>
 

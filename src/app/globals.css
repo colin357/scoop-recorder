@@ -118,3 +118,10 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 .mascot-celebrate .mascot-confetti { animation: confetti 1.2s ease-in-out infinite alternate; }
 .dot { display: inline-block; width: 6px; height: 6px; border-radius: 9999px; background: var(--color-muted); animation: blink 1.2s infinite; }
 .dot:nth-child(2) { animation-delay: .2s; } .dot:nth-child(3) { animation-delay: .4s; }
+
+/* --- landing hero pipeline animation --- */
+@keyframes hero-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes hero-flow { to { stroke-dashoffset: -40; } }
+.hero-in { opacity: 0; animation: hero-in .6s ease-out forwards; }
+.hero-flow { animation: hero-flow 1.6s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .hero-in { opacity: 1; animation: none; } .hero-flow { animation: none; } }

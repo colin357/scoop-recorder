@@ -104,9 +104,9 @@ export function ReviewVignette() {
 /** Small vignette: the pop-up before a meeting. */
 export function PromptVignette() {
   return (
-    <div className="rounded-2xl border edge bg-paper shadow-lift p-4 text-sm max-w-sm">
+    <div className="rounded-2xl border edge bg-paper shadow-lift p-3.5 text-sm w-72">
       <div className="flex gap-3">
-        <Mascot pose="wave" size={44} className="shrink-0 !animate-none" />
+        <Mascot pose="wave" size={40} className="shrink-0 !animate-none" />
         <div><div className="eyebrow">Starts in 8 min</div><div className="font-semibold">Acme weekly sync</div><div className="text-xs text-muted">Want me to record this one?</div></div>
       </div>
       <div className="flex gap-2 mt-3"><span className="flex-1 rounded-xl bg-ink text-paper text-center py-1.5 text-xs font-semibold">Record it</span><span className="flex-1 rounded-xl border edge text-center py-1.5 text-xs font-semibold">Skip</span></div>
