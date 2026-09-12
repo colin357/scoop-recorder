@@ -1,4 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
+
+export const maxDuration = 300;
 import { db } from "@/lib/db";
 import { ingestFromRecall } from "@/lib/pipeline";
 
@@ -33,8 +35,8 @@ export async function POST(req: Request) {
     await db.meeting.update({ where: { id: meeting.id }, data: { status: "failed", error: "The recorder could not join or was removed from the call." } });
   } else if (event === "transcript.done" || event === "bot.done" || code === "done") {
     await db.meeting.update({ where: { id: meeting.id }, data: { status: "processing", endedAt: meeting.endedAt ?? new Date() } });
-    // Fire and forget: Recall expects a fast 2xx.
-    ingestFromRecall(meeting.id).catch((err) => console.error("ingestFromRecall failed", meeting.id, err));
+    // Respond to Recall immediately; run ingestion after the response is sent.
+    after(() => ingestFromRecall(meeting.id).catch((err) => console.error("ingestFromRecall failed", meeting.id, err)));
   }
 
   return NextResponse.json({ ok: true });

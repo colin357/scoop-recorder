@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+
+export const maxDuration = 120;
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { askAboutTask } from "@/lib/ai";

@@ -4,6 +4,9 @@ import { recallConfigured } from "@/lib/recall";
 import { resolveProvider } from "@/lib/llm";
 import NewMeetingForms from "./forms";
 
+// Server actions on this page run the AI pipeline; allow long executions on Vercel.
+export const maxDuration = 300;
+
 export default async function NewMeetingPage() {
   const { org } = await requireOrg();
   const projects = await db.project.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } });

@@ -8,6 +8,9 @@ import { DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/
 import { deleteMeetingAction, reprocessMeetingAction } from "@/app/actions/meetings";
 import RecordingPlayer from "@/components/recording-player";
 
+// Server actions on this page run the AI pipeline; allow long executions on Vercel.
+export const maxDuration = 300;
+
 export default async function MeetingPage({ params, searchParams }: PageProps<"/meetings/[id]">) {
   const { id } = await params;
   const { t } = await searchParams;

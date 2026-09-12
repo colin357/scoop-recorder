@@ -3,9 +3,9 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-// Swap provider to "postgresql" for production. The schema is provider-neutral.
+// Postgres (Neon / Vercel Postgres / Supabase). DATABASE_URL comes from the environment.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ---------- Tenancy & auth ----------
