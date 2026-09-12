@@ -57,10 +57,15 @@ export const requireOrg = cache(async (opts?: { skipCalendarGate?: boolean; skip
   if (!user) redirect("/login");
   const membership = user.memberships[0];
   if (!membership) redirect("/onboarding");
-  if (!opts?.skipBillingGate && billingRequired(membership.org.billingStatus)) redirect("/billing/start");
+  if (!opts?.skipBillingGate && billingRequired(membership.org.billingStatus) && !isSuperAdmin(user.email)) redirect("/billing/start");
   if (!opts?.skipCalendarGate && (await calendarRequired(membership.id))) redirect("/onboarding/calendar");
   return { user, membership, org: membership.org };
 });
+
+/** Operator accounts (SUPERADMIN_EMAILS) are never blocked by the billing gate, so they can reach /admin and comp organizations. */
+export function isSuperAdmin(email: string) {
+  return (process.env.SUPERADMIN_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean).includes(email.toLowerCase());
+}
 
 /** With Stripe configured, an organization must start its trial before using the app. */
 export function billingRequired(billingStatus: string) {
