@@ -12,11 +12,11 @@ export default function LoginForm({ next = "" }: { next?: string }) {
       <h1 className="text-lg font-semibold">Sign in</h1>
       <div><label>Email</label><input name="email" type="email" required autoComplete="email" /></div>
       <div><label>Password</label><input name="password" type="password" required autoComplete="current-password" /></div>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-clay">{state.error}</p>}
       <button className="btn-primary w-full" disabled={pending}>{pending ? "Signing in…" : "Sign in"}</button>
-      <p className="text-sm text-center"><Link className="text-slate-500 hover:text-indigo-600" href="/forgot">Forgot your password?</Link></p>
-      <p className="text-sm text-slate-500 text-center">
-        New here? <Link className="text-indigo-600" href="/signup">Create an account</Link>
+      <p className="text-sm text-center"><Link className="text-muted hover:text-merle" href="/forgot">Forgot your password?</Link></p>
+      <p className="text-sm text-muted text-center">
+        New here? <Link className="text-merle" href="/signup">Create an account</Link>
       </p>
     </form>
   );

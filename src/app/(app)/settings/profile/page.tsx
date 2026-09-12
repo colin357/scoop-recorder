@@ -13,7 +13,7 @@ export default async function ProfilePage() {
         <div>
           <label>Slack member ID (optional)</label>
           <input name="slackUserId" defaultValue={membership.slackUserId ?? ""} placeholder="U0123ABCD" />
-          <p className="text-xs text-slate-500 mt-1">Lets Rocky @mention you in the team channel. Slack → your profile → ⋯ → Copy member ID.</p>
+          <p className="text-xs text-muted mt-1">Lets Rocky @mention you in the team channel. Slack → your profile → ⋯ → Copy member ID.</p>
         </div>
         <label className="inline-flex items-center gap-2 font-normal"><input type="checkbox" name="notifyByEmail" defaultChecked={membership.notifyByEmail} className="!w-auto" />Email me when I&apos;m assigned a task or a summary is ready</label>
         <div><button className="btn-primary">Save</button></div>

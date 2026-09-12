@@ -34,19 +34,19 @@ export default function TaskChat({ taskId, initial, hasMeeting }: { taskId: stri
   return (
     <section className="card p-5 space-y-3">
       <h2 className="font-semibold">Ask AI about this task</h2>
-      <p className="text-xs text-slate-500">Answers come from the meeting transcript, with timestamps you can jump to.</p>
+      <p className="text-xs text-muted">Answers come from the meeting transcript, with timestamps you can jump to.</p>
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {messages.map((m, i) => (
-          <div key={i} className={`text-sm rounded-lg p-3 whitespace-pre-line ${m.role === "user" ? "bg-indigo-50 text-indigo-900 ml-6" : "bg-slate-50 text-slate-800 mr-6"}`}>{m.content}</div>
+          <div key={i} className={`text-sm rounded-lg p-3 whitespace-pre-line ${m.role === "user" ? "bg-sky-soft text-merle-deep ml-6" : "bg-paper-2 text-ink-soft mr-6"}`}>{m.content}</div>
         ))}
-        {busy && <div className="text-sm text-slate-400 mr-6">Thinking…</div>}
+        {busy && <div className="text-sm text-muted mr-6">Thinking…</div>}
       </div>
       {messages.length === 0 && (
         <div className="flex flex-wrap gap-1">
-          {suggestions.map((s) => <button key={s} onClick={() => send(s)} className="text-xs rounded-full border border-slate-300 px-2.5 py-1 hover:bg-slate-50">{s}</button>)}
+          {suggestions.map((s) => <button key={s} onClick={() => send(s)} className="text-xs rounded-full border border-line px-2.5 py-1 hover:bg-paper-2">{s}</button>)}
         </div>
       )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-clay">{error}</p>}
       <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex gap-2">
         <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask anything about this task…" disabled={busy} />
         <button className="btn-primary" disabled={busy || !input.trim()}>Ask</button>

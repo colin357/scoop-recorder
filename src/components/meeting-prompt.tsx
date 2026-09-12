@@ -37,13 +37,13 @@ export default function MeetingPrompt() {
     });
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 w-80 card bg-white p-4 shadow-xl border-indigo-200 animate-[pop_.3s_ease-out]">
+    <div className="fixed bottom-20 md:bottom-5 right-5 z-50 w-80 card bg-paper p-4 animate-[pop_.3s_ease-out]">
       <div className="flex gap-3">
         <Mascot pose="wave" size={48} />
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold">{mins <= 0 ? "Starting now" : `Starts in ${mins} min`}</div>
-          <div className="text-sm text-slate-700 truncate">{ev.title}</div>
-          <div className="text-xs text-slate-500">Want me to record this one? 🐾</div>
+          <div className="eyebrow">{mins <= 0 ? "Starting now" : `Starts in ${mins} min`}</div>
+          <div className="text-sm text-ink-soft truncate">{ev.title}</div>
+          <div className="text-xs text-muted">Want me to record this one? 🐾</div>
         </div>
       </div>
       <div className="flex gap-2 mt-3">

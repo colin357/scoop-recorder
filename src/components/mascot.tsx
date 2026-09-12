@@ -298,9 +298,9 @@ function DrawnMascot({ pose, size, className }: { pose: MascotPose; size: number
 export function Blobs({ className = "" }: { className?: string }) {
   return (
     <svg className={`pointer-events-none absolute inset-0 h-full w-full ${className}`} viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden>
-      <circle cx="80" cy="40" r="90" fill="#c7d2fe" opacity="0.5" />
-      <circle cx="520" cy="160" r="110" fill="#fde68a" opacity="0.45" />
-      <circle cx="380" cy="20" r="50" fill="#f9a8d4" opacity="0.45" />
+      <circle cx="80" cy="40" r="90" fill="#dce7f5" opacity="0.9" />
+      <circle cx="520" cy="160" r="110" fill="#f6d27a" opacity="0.45" />
+      <circle cx="380" cy="20" r="50" fill="#f27daa" opacity="0.35" />
     </svg>
   );
 }

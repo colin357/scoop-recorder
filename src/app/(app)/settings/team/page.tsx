@@ -11,7 +11,7 @@ export default async function TeamPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Team</h1>
-        <p className="text-sm text-slate-500">Roles and responsibilities are what the AI reads when it decides who should own each task. Keep them specific.{!isAdmin && " Only admins can edit the team."}</p>
+        <p className="text-sm text-muted">Roles and responsibilities are what the AI reads when it decides who should own each task. Keep them specific.{!isAdmin && " Only admins can edit the team."}</p>
       </div>
       <ul className="space-y-3">
         {members.map((m) => (
@@ -22,7 +22,7 @@ export default async function TeamPage() {
               <div><label>Name</label><input name="name" defaultValue={m.name} disabled={!isAdmin} /></div>
               <div>
                 <label>Email</label><input value={m.email} disabled />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-muted mt-1">
                   {m.userId ? "Has an account" : m.invitedAt ? `Invited ${fmtRelative(m.invitedAt)}` : "Not invited yet"} · {m._count.assignedTasks} tasks{m.isAdmin ? " · admin" : ""}
                 </p>
               </div>
@@ -36,7 +36,7 @@ export default async function TeamPage() {
                   <button className="btn-secondary">Save</button>
                   <span className="flex gap-2">
                     {!m.userId && <button formAction={resendInviteAction.bind(null, m.id)} className="btn-ghost">{m.invitedAt ? "Re-send invite" : "Send invite"}</button>}
-                    {m.id !== membership.id && <button formAction={removeMemberAction.bind(null, m.id)} className="btn-ghost text-red-600">Remove</button>}
+                    {m.id !== membership.id && <button formAction={removeMemberAction.bind(null, m.id)} className="btn-ghost text-clay">Remove</button>}
                   </span>
                 </div>
               )}
@@ -47,7 +47,7 @@ export default async function TeamPage() {
       {isAdmin && (
         <form action={upsertMemberAction} className="card p-5 grid sm:grid-cols-2 gap-3">
           <h2 className="font-semibold sm:col-span-2">Invite a team member</h2>
-          <p className="text-sm text-slate-500 sm:col-span-2">They get an email with a link to join {org.name}. Once they connect their calendar, Rocky can record their meetings too.</p>
+          <p className="text-sm text-muted sm:col-span-2">They get an email with a link to join {org.name}. Once they connect their calendar, Rocky can record their meetings too.</p>
           <div><label>Name</label><input name="name" required /></div>
           <div><label>Email</label><input name="email" type="email" required /></div>
           <div><label>Role</label><input name="role" placeholder="Designer" /></div>

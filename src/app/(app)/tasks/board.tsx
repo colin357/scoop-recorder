@@ -46,12 +46,12 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
     return (
       <div className="grid gap-4 md:grid-cols-4">
         {COLUMNS.map((col) => (
-          <div key={col} className="rounded-xl bg-slate-100 p-3 min-h-40">
-            <div className="flex items-center justify-between mb-2"><StatusBadge status={col} /><span className="text-xs text-slate-500">{rows.filter((t) => t.status === col).length}</span></div>
+          <div key={col} className="rounded-xl bg-paper-2 p-3 min-h-40">
+            <div className="flex items-center justify-between mb-2"><StatusBadge status={col} /><span className="text-xs text-muted">{rows.filter((t) => t.status === col).length}</span></div>
             <div className="space-y-2">
               {rows.filter((t) => t.status === col).map((t) => (
                 <div key={t.id} className="card p-3 space-y-2">
-                  <Link href={`/tasks/${t.id}`} className="text-sm font-medium hover:text-indigo-600 block">{t.title}</Link>
+                  <Link href={`/tasks/${t.id}`} className="text-sm font-medium hover:text-merle block">{t.title}</Link>
                   <div className="flex flex-wrap items-center gap-2"><ProjectChip project={t.project} /><DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} /><PriorityBadge priority={t.priority} /></div>
                   {controls(t)}
                 </div>
@@ -64,16 +64,16 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
   }
 
   return (
-    <ul className="card divide-y divide-slate-100">
+    <ul className="card divide-y divide-line/60">
       {rows.map((t) => (
         <li key={t.id} className="p-4 flex flex-wrap items-center gap-4">
           <div className="flex-1 min-w-60">
-            <Link href={`/tasks/${t.id}`} className={`font-medium hover:text-indigo-600 ${t.status === "done" ? "line-through text-slate-400" : ""}`}>{t.title}</Link>
-            <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-slate-500">
+            <Link href={`/tasks/${t.id}`} className={`font-medium hover:text-merle ${t.status === "done" ? "line-through text-muted" : ""}`}>{t.title}</Link>
+            <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
               <ProjectChip project={t.project} />
               <DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} />
               {t.stepsTotal > 0 && <span>{t.stepsDone}/{t.stepsTotal} steps</span>}
-              {t.meeting && <Link href={`/meetings/${t.meeting.id}`} className="hover:text-slate-900">from “{t.meeting.title}”</Link>}
+              {t.meeting && <Link href={`/meetings/${t.meeting.id}`} className="hover:text-ink">from “{t.meeting.title}”</Link>}
             </div>
           </div>
           <PriorityBadge priority={t.priority} />

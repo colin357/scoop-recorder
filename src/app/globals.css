@@ -1,31 +1,101 @@
 @import "tailwindcss";
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+/* =====================================================================
+   Scoop design language — "Sticker"
+   Derived from Rocky's artwork: ink outlines, flat fills, merle blue,
+   copper points, cream paper, a pink accent. Cards and buttons carry a
+   2px ink border with a hard offset shadow, like a die-cut sticker.
+   ===================================================================== */
+@theme {
+  --color-ink: #171b26;
+  --color-ink-soft: #3d4454;
+  --color-muted: #7a8394;
+  --color-line: #d9d4c9;
+  --color-cream: #fbf7f0;
+  --color-paper: #ffffff;
+  --color-paper-2: #f4efe6;
+  --color-merle: #3b5b85;
+  --color-merle-deep: #22344f;
+  --color-sky: #dce7f5;
+  --color-sky-soft: #eef3fa;
+  --color-copper: #e19a46;
+  --color-copper-deep: #b8752b;
+  --color-butter: #f6d27a;
+  --color-butter-soft: #fdf3d6;
+  --color-pink: #f27daa;
+  --color-pink-soft: #fde4ee;
+  --color-grass: #3fa66b;
+  --color-grass-soft: #e2f4e9;
+  --color-clay: #d9574b;
+  --color-clay-soft: #fbe5e2;
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+
+  --radius-sticker: 16px;
+  --shadow-sticker: 4px 4px 0 0 #171b26;
+  --shadow-sticker-sm: 2px 2px 0 0 #171b26;
+  --shadow-sticker-copper: 4px 4px 0 0 #e19a46;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  background-color: var(--color-cream);
+  background-image: radial-gradient(rgba(23, 27, 38, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
 }
+
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.01em; }
 
 @layer base {
   input, textarea, select {
-    @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200;
+    @apply w-full rounded-xl border-2 border-ink bg-paper px-3 py-2 text-sm text-ink outline-none transition;
+    box-shadow: 2px 2px 0 0 var(--color-ink);
   }
-  label { @apply block text-sm font-medium text-slate-700 mb-1; }
+  input:focus, textarea:focus, select:focus { @apply border-merle; box-shadow: 2px 2px 0 0 var(--color-merle); }
+  input:disabled, textarea:disabled, select:disabled { @apply bg-paper-2 text-muted border-line; box-shadow: none; }
+  input[type="checkbox"], input[type="radio"] { @apply accent-merle; box-shadow: none; }
+  label { @apply block text-sm font-medium text-ink-soft mb-1; }
+  ::selection { background: var(--color-butter); }
 }
 
-@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed; }
-@utility btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed bg-indigo-600 text-white hover:bg-indigo-700; }
-@utility btn-secondary { @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed bg-white text-slate-700 border border-slate-300 hover:bg-slate-50; }
-@utility btn-ghost { @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed text-slate-600 hover:bg-slate-100; }
-@utility card { @apply rounded-xl border border-slate-200 bg-white shadow-sm; }
-@utility badge { @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium; }
+/* --- buttons --- */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed;
+  box-shadow: 3px 3px 0 0 var(--color-ink);
+  font-family: var(--font-display);
+}
+@utility btn-primary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed bg-merle text-paper hover:bg-merle-deep;
+  box-shadow: 3px 3px 0 0 var(--color-ink);
+  font-family: var(--font-display);
+}
+@utility btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed bg-paper text-ink hover:bg-sky-soft;
+  box-shadow: 3px 3px 0 0 var(--color-ink);
+  font-family: var(--font-display);
+}
+@utility btn-accent {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl border-2 border-ink px-3.5 py-2 text-sm font-semibold transition-[transform,box-shadow] duration-100 disabled:opacity-50 disabled:cursor-not-allowed bg-copper text-ink hover:bg-butter;
+  box-shadow: 3px 3px 0 0 var(--color-ink);
+  font-family: var(--font-display);
+}
+@utility btn-ghost {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-ink-soft hover:bg-paper-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  font-family: var(--font-display);
+}
+.btn:active, .btn-primary:active, .btn-secondary:active, .btn-accent:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 0 var(--color-ink); }
 
-/* ---- playful bits ---- */
+/* --- surfaces --- */
+@utility card { @apply rounded-2xl border-2 border-ink bg-paper; box-shadow: 4px 4px 0 0 var(--color-ink); }
+@utility card-flat { @apply rounded-2xl border-2 border-line bg-paper; }
+@utility badge { @apply inline-flex items-center rounded-full border border-ink/70 px-2 py-0.5 text-[11px] font-semibold leading-4; font-family: var(--font-display); }
+@utility hero { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-cream) 55%, var(--color-butter-soft) 100%); }
+@utility brand-mark { background: linear-gradient(135deg, var(--color-merle), var(--color-pink)); }
+@utility eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-copper-deep; font-family: var(--font-display); }
+
+/* --- playful bits --- */
 @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-18deg); } }
 @keyframes pulse-waves { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
@@ -40,8 +110,5 @@ body {
 .mascot-think .mascot-dots circle:nth-child(2) { animation: blink 1.2s .2s infinite; }
 .mascot-think .mascot-dots circle:nth-child(3) { animation: blink 1.2s .4s infinite; }
 .mascot-celebrate .mascot-confetti { animation: confetti 1.2s ease-in-out infinite alternate; }
-.dot { display: inline-block; width: 6px; height: 6px; border-radius: 9999px; background: #94a3b8; animation: blink 1.2s infinite; }
+.dot { display: inline-block; width: 6px; height: 6px; border-radius: 9999px; background: var(--color-muted); animation: blink 1.2s infinite; }
 .dot:nth-child(2) { animation-delay: .2s; } .dot:nth-child(3) { animation-delay: .4s; }
-
-.hero { background: linear-gradient(120deg, #eef2ff 0%, #fdf4ff 55%, #fff7ed 100%); }
-.brand-mark { background: linear-gradient(135deg, #6366f1, #ec4899); }

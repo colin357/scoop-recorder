@@ -37,8 +37,8 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
     <div className="mt-6 card p-6">
       <ol className="flex gap-4 text-sm mb-6">
         {["Company", "Team", "Projects"].map((s, i) => (
-          <li key={s} className={`flex items-center gap-2 ${i === step ? "text-indigo-600 font-medium" : "text-slate-400"}`}>
-            <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs border ${i <= step ? "bg-indigo-600 text-white border-indigo-600" : "border-slate-300"}`}>{i + 1}</span>
+          <li key={s} className={`flex items-center gap-2 ${i === step ? "text-merle font-medium" : "text-muted"}`}>
+            <span className={`h-6 w-6 rounded-full flex items-center justify-center text-xs border ${i <= step ? "bg-merle text-paper border-ink" : "border-ink/40"}`}>{i + 1}</span>
             {s}
           </li>
         ))}
@@ -58,11 +58,11 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
 
       {step === 1 && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted">
             Add everyone who might get tasks. The <b>role</b> and <b>what they typically handle</b> are what the AI reads when deciding who owns each action item. Be specific.
           </p>
           {members.map((m, i) => (
-            <div key={i} className="rounded-lg border border-slate-200 p-4 grid gap-3 sm:grid-cols-2">
+            <div key={i} className="rounded-lg border border-line p-4 grid gap-3 sm:grid-cols-2">
               <div><label>Name</label><input value={m.name} onChange={(e) => updateMember(i, { name: e.target.value })} /></div>
               <div><label>Email</label><input type="email" value={m.email} onChange={(e) => updateMember(i, { email: e.target.value })} disabled={i === 0} /></div>
               <div><label>Role</label><input value={m.role} onChange={(e) => updateMember(i, { role: e.target.value })} placeholder="Account Manager" /></div>
@@ -73,7 +73,7 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
               </div>
               {i > 0 && (
                 <div className="sm:col-span-2 text-right">
-                  <button className="btn-ghost text-red-600" onClick={() => setMembers((ms) => ms.filter((_, j) => j !== i))}>Remove</button>
+                  <button className="btn-ghost text-clay" onClick={() => setMembers((ms) => ms.filter((_, j) => j !== i))}>Remove</button>
                 </div>
               )}
             </div>
@@ -88,19 +88,19 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
 
       {step === 2 && (
         <div className="space-y-4">
-          <p className="text-sm text-slate-500">Projects let people filter their tasks. Meetings get matched to a project automatically. You can add more later.</p>
+          <p className="text-sm text-muted">Projects let people filter their tasks. Meetings get matched to a project automatically. You can add more later.</p>
           {projects.map((p, i) => (
-            <div key={i} className="rounded-lg border border-slate-200 p-4 grid gap-3">
+            <div key={i} className="rounded-lg border border-line p-4 grid gap-3">
               <div><label>Project name</label><input value={p.name} onChange={(e) => updateProject(i, { name: e.target.value })} placeholder="Website redesign" /></div>
               <div><label>Description (optional)</label><input value={p.description} onChange={(e) => updateProject(i, { description: e.target.value })} placeholder="Helps the AI route meetings to the right project" /></div>
             </div>
           ))}
           <button className="btn-secondary" onClick={() => setProjects((ps) => [...ps, { name: "", description: "" }])}>+ Add project</button>
-          <label className="flex items-start gap-3 text-sm font-normal rounded-lg border border-slate-200 p-3 cursor-pointer">
+          <label className="flex items-start gap-3 text-sm font-normal rounded-lg border border-line p-3 cursor-pointer">
             <input type="checkbox" className="!w-auto mt-0.5" checked={review} onChange={(e) => setReview(e.target.checked)} />
-            <span><span className="font-medium text-slate-900 block">Let me review AI tasks before my team is notified</span><span className="text-slate-500">Tasks stay as drafts until an admin approves them.</span></span>
+            <span><span className="font-medium text-ink block">Let me review AI tasks before my team is notified</span><span className="text-muted">Tasks stay as drafts until an admin approves them.</span></span>
           </label>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-clay">{error}</p>}
           <div className="flex justify-between">
             <button className="btn-ghost" onClick={() => setStep(1)}>Back</button>
             <button className="btn-primary" onClick={finish} disabled={pending}>{pending ? "Saving…" : "Next: connect calendar"}</button>

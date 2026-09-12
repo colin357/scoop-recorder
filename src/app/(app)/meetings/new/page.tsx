@@ -14,7 +14,7 @@ export default async function NewMeetingPage() {
     <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Record a meeting</h1>
-        <p className="text-slate-500 text-sm">
+        <p className="text-muted text-sm">
           Paste a Google Meet, Zoom or Microsoft Teams link. Our notetaker joins the call, records it, and when it ends you get a summary and assigned tasks.
         </p>
       </div>

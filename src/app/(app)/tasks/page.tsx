@@ -61,9 +61,9 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Tasks</h1>
-        <div className="flex gap-1 rounded-md border border-slate-300 bg-white p-0.5 text-sm">
-          <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded ${view === "list" ? "bg-slate-900 text-white" : ""}`}>List</Link>
-          <Link href={qs({ view: "board" })} className={`px-3 py-1 rounded ${view === "board" ? "bg-slate-900 text-white" : ""}`}>Board</Link>
+        <div className="flex gap-1 rounded-xl border-2 border-ink bg-paper p-0.5 text-sm">
+          <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded-lg font-display ${view === "list" ? "bg-ink text-paper" : ""}`}>List</Link>
+          <Link href={qs({ view: "board" })} className={`px-3 py-1 rounded-lg font-display ${view === "board" ? "bg-ink text-paper" : ""}`}>Board</Link>
         </div>
       </div>
 
@@ -80,7 +80,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         <FilterGroup label="Due">
           {DUE_FILTERS.map((d) => <Pill key={d.key} href={qs({ due: d.key })} active={due === d.key}>{d.label}</Pill>)}
         </FilterGroup>
-        <Link href={qs({ done: showDone ? "" : "1" })} className="text-xs text-slate-500 hover:text-slate-900 pb-1.5">{showDone ? "Hide done" : "Show done"}</Link>
+        <Link href={qs({ done: showDone ? "" : "1" })} className="text-xs text-muted hover:text-ink pb-1.5">{showDone ? "Hide done" : "Show done"}</Link>
       </div>
 
       {tasks.length === 0 ? (
@@ -120,7 +120,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
 function FilterGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-xs font-medium text-slate-500 mb-1">{label}</div>
+      <div className="text-xs font-medium text-muted mb-1">{label}</div>
       <div className="flex flex-wrap gap-1">{children}</div>
     </div>
   );
@@ -128,7 +128,7 @@ function FilterGroup({ label, children }: { label: string; children: React.React
 
 function Pill({ href, active, dot, children }: { href: string; active: boolean; dot?: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${active ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"}`}>
+    <Link href={href} className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs ${active ? "bg-ink text-paper border-ink" : "bg-paper text-ink-soft border-ink/60 hover:bg-sky-soft"}`}>
       {dot && <span className="h-2 w-2 rounded-full" style={{ background: dot }} />}
       {children}
     </Link>

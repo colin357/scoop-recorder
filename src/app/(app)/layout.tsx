@@ -1,16 +1,16 @@
 import { requireOrg } from "@/lib/auth";
 import { signOutAction } from "@/app/actions/auth";
 import MeetingPrompt from "@/components/meeting-prompt";
-import AppNav from "@/components/app-nav";
+import AppNav, { type NavItem } from "@/components/app-nav";
 import CommandK from "@/components/command-k";
 
-const NAV = [
-  { href: "/dashboard", label: "Home", icon: "🏠" },
-  { href: "/meetings", label: "Meetings", icon: "🎥" },
-  { href: "/tasks", label: "Tasks", icon: "✅" },
-  { href: "/projects", label: "Projects", icon: "📁" },
-  { href: "/settings/calendar", label: "Calendar", icon: "📅" },
-  { href: "/settings/team", label: "Team", icon: "👥" },
+const NAV: NavItem[] = [
+  { href: "/dashboard", label: "Home", icon: "home" },
+  { href: "/meetings", label: "Meetings", icon: "video" },
+  { href: "/tasks", label: "Tasks", icon: "check" },
+  { href: "/projects", label: "Projects", icon: "folder" },
+  { href: "/settings/calendar", label: "Calendar", icon: "calendar" },
+  { href: "/settings/team", label: "Team", icon: "users" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {

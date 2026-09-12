@@ -23,8 +23,8 @@ export default function LiveStatus({ meetingId, status }: { meetingId: string; s
   if (!LIVE.includes(status)) return null;
   const label = { scheduled: "Recorder scheduled", joining: "Joining the call", recording: "Recording", processing: "Writing up" }[status];
   return (
-    <span className="inline-flex items-center gap-2 text-xs font-medium text-red-700 bg-red-50 border border-red-200 rounded-full px-2.5 py-1">
-      <span className={`h-2 w-2 rounded-full bg-red-500 ${status === "recording" ? "animate-pulse" : ""}`} />{label}
+    <span className="inline-flex items-center gap-2 text-xs font-medium text-clay bg-clay-soft border border-clay rounded-full px-2.5 py-1">
+      <span className={`h-2 w-2 rounded-full bg-clay ${status === "recording" ? "animate-pulse" : ""}`} />{label}
     </span>
   );
 }

@@ -14,12 +14,12 @@ export default async function OnboardingPage() {
   const state = await getOnboardingState();
   return (
     <main className="flex-1 flex flex-col">
-      <header className="border-b border-slate-200 bg-white/70 backdrop-blur px-6 py-3 flex items-center justify-between">
+      <header className="border-b-2 border-ink bg-paper px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Mascot pose="wave" size={40} />
           <div>
-            <div className="font-semibold">Let&apos;s set up Scoop</div>
-            <div className="text-xs text-slate-500">Chat with Rocky, or <Link href="/onboarding/form" className="text-indigo-600">fill in a form instead</Link>.</div>
+            <div className="font-display font-semibold">Let&apos;s set up Scoop</div>
+            <div className="text-xs text-muted">Chat with Rocky, or <Link href="/onboarding/form" className="text-merle">fill in a form instead</Link>.</div>
           </div>
         </div>
       </header>

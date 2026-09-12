@@ -31,21 +31,21 @@ export default function SuggestProjects({ hasDescription }: { hasDescription: bo
         <Mascot pose={pending ? "think" : "write"} size={48} />
         <div className="flex-1">
           <div className="font-semibold">Let Rocky guess your projects</div>
-          <p className="text-sm text-slate-500">Uses your business description and recent meetings to spot clients, product lines and initiatives that deserve their own project.{!hasDescription && " Add a business description below for better guesses."}</p>
+          <p className="text-sm text-muted">Uses your business description and recent meetings to spot clients, product lines and initiatives that deserve their own project.{!hasDescription && " Add a business description below for better guesses."}</p>
         </div>
         {!items && <button className="btn-primary" onClick={suggest} disabled={pending}>{pending ? "Thinking…" : "Suggest projects"}</button>}
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      {items && items.length === 0 && <p className="text-sm text-slate-500">Nothing missing. Your projects already cover what Rocky can see.</p>}
+      {error && <p className="text-sm text-clay">{error}</p>}
+      {items && items.length === 0 && <p className="text-sm text-muted">Nothing missing. Your projects already cover what Rocky can see.</p>}
       {items && items.length > 0 && (
         <div className="space-y-2">
           {items.map((it, i) => (
-            <label key={i} className={`flex gap-3 items-start rounded-lg border p-3 cursor-pointer font-normal ${it.picked ? "border-indigo-300 bg-indigo-50/40" : "border-slate-200"}`}>
+            <label key={i} className={`flex gap-3 items-start rounded-lg border p-3 cursor-pointer font-normal ${it.picked ? "border-merle bg-sky-soft" : "border-line"}`}>
               <input type="checkbox" className="!w-auto mt-1" checked={it.picked} onChange={(e) => setItems((xs) => xs!.map((x, j) => (j === i ? { ...x, picked: e.target.checked } : x)))} />
               <div className="text-sm">
                 <div className="font-medium">{it.name}</div>
-                <div className="text-slate-600">{it.description}</div>
-                <div className="text-xs text-slate-400 mt-0.5">Why: {it.reason}</div>
+                <div className="text-ink-soft">{it.description}</div>
+                <div className="text-xs text-muted mt-0.5">Why: {it.reason}</div>
               </div>
             </label>
           ))}

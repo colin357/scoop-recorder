@@ -23,14 +23,14 @@ export default function NewMeetingForms({ projects, botAvailable, aiProvider }: 
   return (
     <div className="space-y-6">
       {!aiProvider && (
-        <p className="text-sm rounded-md bg-red-50 border border-red-200 text-red-800 p-3">
+        <p className="text-sm rounded-md bg-clay-soft border border-clay text-clay p-3">
           No AI provider configured. Set <code>XAI_API_KEY</code> (Grok) or <code>ANTHROPIC_API_KEY</code> (Claude) in <code>.env</code> so meetings can be summarized.
         </p>
       )}
       <form action={botAction} className="card p-6 space-y-4">
         <h2 className="font-semibold">Send the recorder to a call</h2>
         {!botAvailable && (
-          <p className="text-sm rounded-md bg-amber-50 border border-amber-200 text-amber-800 p-3">
+          <p className="text-sm rounded-md bg-butter-soft border border-copper text-copper-deep p-3">
             Recording bot is not configured. Set <code>RECALL_API_KEY</code> to enable live recording. You can still test the pipeline with a transcript below.
           </p>
         )}
@@ -40,7 +40,7 @@ export default function NewMeetingForms({ projects, botAvailable, aiProvider }: 
           <div><label>Join at (leave blank to join now)</label><input name="joinAt" type="datetime-local" /></div>
         </div>
         <ProjectSelect projects={projects} />
-        {botState.error && <p className="text-sm text-red-600">{botState.error}</p>}
+        {botState.error && <p className="text-sm text-clay">{botState.error}</p>}
         <button className="btn-primary" disabled={botPending || !botAvailable}>{botPending ? "Sending bot…" : "Send recorder"}</button>
       </form>
 
@@ -49,7 +49,7 @@ export default function NewMeetingForms({ projects, botAvailable, aiProvider }: 
           <h2 className="font-semibold">Or import a transcript</h2>
           <button type="button" className="btn-ghost text-xs" onClick={() => setTranscript(SAMPLE)}>Use sample</button>
         </div>
-        <p className="text-sm text-slate-500">Paste a transcript from any tool. One line per speaker, like <code>Alice: …</code>, optionally with <code>[mm:ss]</code> timestamps.</p>
+        <p className="text-sm text-muted">Paste a transcript from any tool. One line per speaker, like <code>Alice: …</code>, optionally with <code>[mm:ss]</code> timestamps.</p>
         <div className="grid sm:grid-cols-2 gap-4">
           <div><label>Title</label><input name="title" placeholder="Acme onboarding sync" /></div>
           <div>
@@ -65,7 +65,7 @@ export default function NewMeetingForms({ projects, botAvailable, aiProvider }: 
         <div><label>Recording link (optional)</label><input name="recordingUrl" placeholder="https://… (mp4 or a share link)" /></div>
         <ProjectSelect projects={projects} />
         <div><label>Transcript</label><textarea name="transcript" rows={10} value={transcript} onChange={(e) => setTranscript(e.target.value)} required /></div>
-        {importState.error && <p className="text-sm text-red-600">{importState.error}</p>}
+        {importState.error && <p className="text-sm text-clay">{importState.error}</p>}
         <button className="btn-primary" disabled={importPending}>{importPending ? "Analyzing with AI…" : "Import and analyze"}</button>
       </form>
     </div>

@@ -4,40 +4,40 @@ import { Mascot, type MascotPose } from "@/components/mascot";
 
 export function StatusBadge({ status }: { status: string }) {
   const tone: Record<string, string> = {
-    draft: "bg-violet-100 text-violet-700",
-    todo: "bg-slate-100 text-slate-700",
-    in_progress: "bg-blue-100 text-blue-700",
-    blocked: "bg-red-100 text-red-700",
-    done: "bg-emerald-100 text-emerald-700",
-    scheduled: "bg-slate-100 text-slate-700",
-    joining: "bg-amber-100 text-amber-700",
-    recording: "bg-red-100 text-red-700",
-    processing: "bg-blue-100 text-blue-700",
-    failed: "bg-red-100 text-red-700",
+    draft: "bg-pink-soft text-ink",
+    todo: "bg-paper text-ink",
+    in_progress: "bg-sky text-ink",
+    blocked: "bg-clay-soft text-ink",
+    done: "bg-grass text-paper",
+    scheduled: "bg-paper text-ink",
+    joining: "bg-butter-soft text-ink",
+    recording: "bg-clay text-paper",
+    processing: "bg-sky text-ink",
+    failed: "bg-clay-soft text-ink",
   };
-  return <span className={`badge ${tone[status] ?? "bg-slate-100 text-slate-700"}`}>{STATUS_LABEL[status] ?? status.replace("_", " ")}</span>;
+  return <span className={`badge ${tone[status] ?? "bg-paper text-ink"}`}>{STATUS_LABEL[status] ?? status.replace("_", " ")}</span>;
 }
 
 export function PriorityBadge({ priority }: { priority: string }) {
   const tone: Record<string, string> = {
-    low: "bg-slate-100 text-slate-600",
-    medium: "bg-sky-100 text-sky-700",
-    high: "bg-orange-100 text-orange-700",
-    urgent: "bg-red-100 text-red-700",
+    low: "bg-paper text-muted border-muted",
+    medium: "bg-sky text-ink",
+    high: "bg-butter text-ink",
+    urgent: "bg-clay text-paper",
   };
   return <span className={`badge ${tone[priority]}`}>{priority}</span>;
 }
 
 export function DueBadge({ date, status }: { date: Date | null; status?: string }) {
   const { label, tone } = dueLabel(date, status);
-  const cls = { muted: "text-slate-500", warn: "text-amber-700 font-medium", danger: "text-red-600 font-medium" }[tone];
+  const cls = { muted: "text-muted", warn: "text-copper-deep font-semibold", danger: "text-clay font-semibold" }[tone];
   return <span className={`text-xs ${cls}`}>{label}</span>;
 }
 
 export function ProjectChip({ project }: { project: { id: string; name: string; color: string } | null }) {
   if (!project) return null;
   return (
-    <Link href={`/tasks?project=${project.id}`} className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900">
+    <Link href={`/tasks?project=${project.id}`} className="inline-flex items-center gap-1.5 text-xs text-ink-soft hover:text-ink">
       <span className="h-2 w-2 rounded-full" style={{ background: project.color }} />
       {project.name}
     </Link>
@@ -47,7 +47,7 @@ export function ProjectChip({ project }: { project: { id: string; name: string; 
 export function Avatar({ name, size = 6 }: { name: string; size?: number }) {
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase();
   return (
-    <span className={`inline-flex h-${size} w-${size} items-center justify-center rounded-full bg-indigo-100 text-[10px] font-semibold text-indigo-700`} title={name}>
+    <span className={`inline-flex h-${size} w-${size} items-center justify-center rounded-full border-2 border-ink bg-butter text-[10px] font-bold text-ink`} title={name}>
       {initials}
     </span>
   );
@@ -57,8 +57,8 @@ export function Empty({ title, children, pose = "sleep" }: { title: string; chil
   return (
     <div className="card p-8 text-center flex flex-col items-center">
       <Mascot pose={pose} size={80} />
-      <p className="font-medium mt-3">{title}</p>
-      {children && <div className="text-sm text-slate-500 mt-1">{children}</div>}
+      <p className="font-display font-semibold mt-3">{title}</p>
+      {children && <div className="text-sm text-muted mt-1">{children}</div>}
     </div>
   );
 }

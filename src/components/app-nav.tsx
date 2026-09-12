@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Mascot } from "@/components/mascot";
+import { Icon, type IconName } from "@/components/icons";
 
-export type NavItem = { href: string; label: string; icon: string };
+export type NavItem = { href: string; label: string; icon: IconName };
 
 export default function AppNav({ items, orgName, user, signOut, isAdmin, superAdmin }: {
   items: NavItem[]; orgName: string; user: { name: string; email: string }; signOut: () => Promise<void>; isAdmin: boolean; superAdmin: boolean;
@@ -22,17 +23,20 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
   const links = (
     <>
       <form action="/search" className="px-1 pb-2">
-        <input name="q" placeholder="Search…  ⌘K" className="!py-1.5 text-sm" onKeyDown={(e) => { if (e.key === "Escape") (e.target as HTMLInputElement).blur(); }} />
+        <div className="relative">
+          <Icon name="search" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+          <input name="q" placeholder="Search  ⌘K" className="!py-1.5 !pl-9 text-sm" onKeyDown={(e) => { if (e.key === "Escape") (e.target as HTMLInputElement).blur(); }} />
+        </div>
       </form>
       {items.map((n) => (
-        <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`flex items-center gap-2.5 rounded-md px-3 py-2 text-sm ${active(n.href) ? "bg-indigo-50 text-indigo-700 font-medium" : "text-slate-700 hover:bg-slate-100"}`}>
-          <span className="text-base leading-none" aria-hidden>{n.icon}</span>{n.label}
+        <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-display font-medium border-2 ${active(n.href) ? "bg-sky border-ink text-ink shadow-[2px_2px_0_0_#171b26]" : "border-transparent text-ink-soft hover:bg-paper-2"}`}>
+          <Icon name={n.icon} size={18} className={active(n.href) ? "text-merle" : "text-muted"} />{n.label}
         </Link>
       ))}
-      <Link href="/meetings/new" onClick={() => setOpen(false)} className="btn-primary w-full mt-3 brand-mark border-0">🎙 Record a meeting</Link>
-      <div className="mt-4 px-3 text-[11px] uppercase tracking-wide text-slate-400">Settings</div>
+      <Link href="/meetings/new" onClick={() => setOpen(false)} className="btn-accent w-full mt-3"><Icon name="mic" size={16} />Record a meeting</Link>
+      <div className="mt-4 px-3 eyebrow">Settings</div>
       {settings.map((n) => (
-        <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`block rounded-md px-3 py-1.5 text-sm ${active(n.href) ? "text-indigo-700 font-medium" : "text-slate-600 hover:bg-slate-100"}`}>{n.label}</Link>
+        <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-1.5 text-sm ${active(n.href) ? "text-merle font-semibold" : "text-ink-soft hover:bg-paper-2"}`}>{n.label}</Link>
       ))}
     </>
   );
@@ -40,44 +44,44 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
   return (
     <>
       {/* Mobile top bar */}
-      <header className="md:hidden sticky top-0 z-40 bg-white border-b border-slate-200 flex items-center gap-3 px-4 py-2">
-        <button aria-label="Menu" onClick={() => setOpen((o) => !o)} className="btn-ghost !px-2 text-xl leading-none">☰</button>
+      <header className="md:hidden sticky top-0 z-40 bg-paper border-b-2 border-ink flex items-center gap-3 px-4 py-2">
+        <button aria-label="Menu" onClick={() => setOpen((o) => !o)} className="btn-ghost !px-2"><Icon name="menu" size={22} /></button>
         <Mascot pose="listen" size={32} />
-        <div className="min-w-0"><div className="font-semibold leading-tight">Scoop</div><div className="text-[11px] text-slate-500 truncate">{orgName}</div></div>
-        <Link href="/meetings/new" className="ml-auto btn-primary !py-1.5 text-xs brand-mark border-0">🎙 Record</Link>
+        <div className="min-w-0"><div className="font-display font-bold leading-tight">scoop</div><div className="text-[11px] text-muted truncate">{orgName}</div></div>
+        <Link href="/meetings/new" className="ml-auto btn-accent !py-1.5 text-xs"><Icon name="mic" size={14} />Record</Link>
       </header>
       {open && (
-        <div className="md:hidden fixed inset-0 z-50 bg-black/30" onClick={() => setOpen(false)}>
-          <nav className="absolute left-0 top-0 h-full w-72 bg-white p-3 overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-1 pb-3"><span className="font-semibold">Menu</span><button className="btn-ghost !px-2" onClick={() => setOpen(false)}>✕</button></div>
+        <div className="md:hidden fixed inset-0 z-50 bg-ink/40" onClick={() => setOpen(false)}>
+          <nav className="absolute left-0 top-0 h-full w-72 bg-paper p-3 overflow-y-auto border-r-2 border-ink" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-1 pb-3"><span className="font-display font-semibold">Menu</span><button className="btn-ghost !px-2" onClick={() => setOpen(false)}><Icon name="close" size={18} /></button></div>
             {links}
-            <div className="mt-6 border-t border-slate-200 pt-3 text-sm px-1">
+            <div className="mt-6 border-t border-line pt-3 text-sm px-1">
               <div className="truncate font-medium">{user.name}</div>
-              <div className="truncate text-xs text-slate-500">{user.email}</div>
-              <form action={signOut}><button className="text-xs text-slate-500 hover:text-slate-900 mt-2">Sign out</button></form>
+              <div className="truncate text-xs text-muted">{user.email}</div>
+              <form action={signOut}><button className="text-xs text-muted hover:text-ink mt-2">Sign out</button></form>
             </div>
           </nav>
         </div>
       )}
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-60 shrink-0 border-r border-slate-200 bg-white flex-col sticky top-0 h-screen">
-        <div className="p-4 border-b border-slate-200 flex items-center gap-3">
-          <Mascot pose="listen" size={40} />
-          <div className="min-w-0"><div className="font-semibold tracking-tight">Scoop</div><div className="text-xs text-slate-500 truncate">{orgName}</div></div>
+      <aside className="hidden md:flex w-60 shrink-0 border-r-2 border-ink bg-paper flex-col sticky top-0 h-screen">
+        <div className="p-4 border-b-2 border-ink flex items-center gap-3">
+          <Mascot pose="listen" size={44} />
+          <div className="min-w-0"><div className="font-display font-bold text-lg tracking-tight leading-tight">scoop</div><div className="text-xs text-muted truncate">{orgName}</div></div>
         </div>
         <nav className="p-2 flex-1 overflow-y-auto">{links}</nav>
-        <div className="p-4 border-t border-slate-200 text-sm">
+        <div className="p-4 border-t-2 border-ink text-sm bg-paper-2">
           <div className="truncate font-medium">{user.name}</div>
-          <div className="truncate text-xs text-slate-500">{user.email}</div>
-          <form action={signOut}><button className="text-xs text-slate-500 hover:text-slate-900 mt-2">Sign out</button></form>
+          <div className="truncate text-xs text-muted">{user.email}</div>
+          <form action={signOut}><button className="text-xs text-muted hover:text-ink mt-2">Sign out</button></form>
         </div>
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 grid grid-cols-5 text-[11px]">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-paper border-t-2 border-ink grid grid-cols-5 text-[11px] font-display">
         {items.slice(0, 5).map((n) => (
-          <Link key={n.href} href={n.href} className={`flex flex-col items-center py-2 ${active(n.href) ? "text-indigo-700" : "text-slate-500"}`}><span className="text-lg leading-none" aria-hidden>{n.icon}</span>{n.label}</Link>
+          <Link key={n.href} href={n.href} className={`flex flex-col items-center gap-0.5 py-2 ${active(n.href) ? "text-merle font-semibold" : "text-muted"}`}><Icon name={n.icon} size={20} />{n.label}</Link>
         ))}
       </nav>
     </>

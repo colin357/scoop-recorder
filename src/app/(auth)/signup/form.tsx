@@ -12,10 +12,10 @@ export default function SignupForm() {
       <div><label>Your name</label><input name="name" required autoComplete="name" /></div>
       <div><label>Work email</label><input name="email" type="email" required autoComplete="email" /></div>
       <div><label>Password</label><input name="password" type="password" required minLength={8} autoComplete="new-password" /></div>
-      {state.error && <p className="text-sm text-red-600">{state.error}</p>}
+      {state.error && <p className="text-sm text-clay">{state.error}</p>}
       <button className="btn-primary w-full" disabled={pending}>{pending ? "Creating…" : "Continue"}</button>
-      <p className="text-sm text-slate-500 text-center">
-        Already have an account? <Link className="text-indigo-600" href="/login">Sign in</Link>
+      <p className="text-sm text-muted text-center">
+        Already have an account? <Link className="text-merle" href="/login">Sign in</Link>
       </p>
     </form>
   );

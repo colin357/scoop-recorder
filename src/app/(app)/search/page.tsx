@@ -43,7 +43,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
       {meetings.length > 0 && (
         <section>
           <h2 className="font-semibold mb-2">Meetings ({meetings.length})</h2>
-          <ul className="card divide-y divide-slate-100">
+          <ul className="card divide-y divide-line/60">
             {meetings.map((m) => {
               const segs = safeJson<TranscriptSegment[]>(m.transcript, []);
               const hit = segs.find((s) => s.text.toLowerCase().includes(q.toLowerCase()));
@@ -51,12 +51,12 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
               return (
                 <li key={m.id} className="p-4">
                   <div className="flex items-center gap-3">
-                    <Link href={hit ? `/meetings/${m.id}?t=${hit.startSec}` : `/meetings/${m.id}`} className="font-medium hover:text-indigo-600">{m.title}</Link>
-                    <span className="text-xs text-slate-500">{fmtDate(m.startedAt ?? m.createdAt)}</span>
+                    <Link href={hit ? `/meetings/${m.id}?t=${hit.startSec}` : `/meetings/${m.id}`} className="font-medium hover:text-merle">{m.title}</Link>
+                    <span className="text-xs text-muted">{fmtDate(m.startedAt ?? m.createdAt)}</span>
                     <StatusBadge status={m.status} />
                   </div>
-                  {text && <p className="text-sm text-slate-600 mt-1">{snippet(text, q)}</p>}
-                  {hit && <span className="text-xs text-indigo-600">▶ jump to this moment</span>}
+                  {text && <p className="text-sm text-ink-soft mt-1">{snippet(text, q)}</p>}
+                  {hit && <span className="text-xs text-merle">▶ jump to this moment</span>}
                 </li>
               );
             })}
@@ -66,16 +66,16 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
       {tasks.length > 0 && (
         <section>
           <h2 className="font-semibold mb-2">Tasks ({tasks.length})</h2>
-          <ul className="card divide-y divide-slate-100">
+          <ul className="card divide-y divide-line/60">
             {tasks.map((t) => (
               <li key={t.id} className="p-4">
                 <div className="flex items-center gap-3">
-                  <Link href={`/tasks/${t.id}`} className="font-medium hover:text-indigo-600">{t.title}</Link>
+                  <Link href={`/tasks/${t.id}`} className="font-medium hover:text-merle">{t.title}</Link>
                   <StatusBadge status={t.status} />
-                  <span className="text-xs text-slate-500">{t.assignee?.name ?? "Unassigned"} · due {fmtDate(t.dueDate)}</span>
+                  <span className="text-xs text-muted">{t.assignee?.name ?? "Unassigned"} · due {fmtDate(t.dueDate)}</span>
                 </div>
-                <p className="text-sm text-slate-600 mt-1">{snippet(t.description || t.sourceQuote || "", q)}</p>
-                {t.meeting && <Link href={`/meetings/${t.meeting.id}`} className="text-xs text-slate-500 hover:text-slate-900">from “{t.meeting.title}”</Link>}
+                <p className="text-sm text-ink-soft mt-1">{snippet(t.description || t.sourceQuote || "", q)}</p>
+                {t.meeting && <Link href={`/meetings/${t.meeting.id}`} className="text-xs text-muted hover:text-ink">from “{t.meeting.title}”</Link>}
               </li>
             ))}
           </ul>

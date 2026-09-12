@@ -24,21 +24,21 @@ export default async function ProjectsPage() {
           {projects.map((p) => (
             <li key={p.id} className="card p-5 space-y-2">
               <div className="flex items-center justify-between">
-                <Link href={`/tasks?project=${p.id}`} className="font-semibold flex items-center gap-2 hover:text-indigo-600">
+                <Link href={`/tasks?project=${p.id}`} className="font-semibold flex items-center gap-2 hover:text-merle">
                   <span className="h-3 w-3 rounded-full" style={{ background: p.color }} />{p.name}
                 </Link>
-                <form action={deleteProjectAction.bind(null, p.id)}><button className="text-xs text-slate-400 hover:text-red-600">Delete</button></form>
+                <form action={deleteProjectAction.bind(null, p.id)}><button className="text-xs text-muted hover:text-clay">Delete</button></form>
               </div>
-              {p.description && <p className="text-sm text-slate-600">{p.description}</p>}
-              <div className="text-xs text-slate-500">{p.tasks.length} open of {p._count.tasks} tasks · {p._count.meetings} meetings</div>
-              {p.members.length > 0 && <div className="text-xs text-slate-500">Team: {p.members.map((m) => m.member.name).join(", ")}</div>}
+              {p.description && <p className="text-sm text-ink-soft">{p.description}</p>}
+              <div className="text-xs text-muted">{p.tasks.length} open of {p._count.tasks} tasks · {p._count.meetings} meetings</div>
+              {p.members.length > 0 && <div className="text-xs text-muted">Team: {p.members.map((m) => m.member.name).join(", ")}</div>}
             </li>
           ))}
         </ul>
       )}
       <form action={updateBusinessDescriptionAction} className="card p-5 space-y-3">
         <h2 className="font-semibold">About your business</h2>
-        <p className="text-sm text-slate-500">What you do, who your clients are, what you&apos;re working on. Rocky uses this to guess projects and to file meetings under the right one.</p>
+        <p className="text-sm text-muted">What you do, who your clients are, what you&apos;re working on. Rocky uses this to guess projects and to file meetings under the right one.</p>
         <textarea name="businessDescription" rows={3} defaultValue={org.businessDescription ?? ""} placeholder="We're a 6-person marketing agency. Clients: Acme, Globex, Initech. We also build our own scheduling app on the side." />
         <button className="btn-secondary">Save</button>
       </form>

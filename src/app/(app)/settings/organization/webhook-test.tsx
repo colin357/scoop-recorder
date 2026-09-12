@@ -16,7 +16,7 @@ export default function WebhookTest({ hasSlack, hasTeams }: { hasSlack: boolean;
     <span className="inline-flex items-center gap-2 text-sm">
       {hasSlack && <button type="button" className="btn-ghost" onClick={() => test("slack")} disabled={pending}>Test Slack</button>}
       {hasTeams && <button type="button" className="btn-ghost" onClick={() => test("teams")} disabled={pending}>Test Teams</button>}
-      {msg && <span className="text-slate-500">{msg}</span>}
+      {msg && <span className="text-muted">{msg}</span>}
     </span>
   );
 }

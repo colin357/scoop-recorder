@@ -29,24 +29,24 @@ export default function RecordingPlayer({ url, startAt, transcript }: { url: str
       {url && isMedia ? (
         <video ref={videoRef} src={url} controls className="w-full bg-black aspect-video" onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)} />
       ) : url ? (
-        <div className="p-4 bg-slate-900 text-white text-sm flex items-center justify-between">
+        <div className="p-4 bg-ink text-paper text-sm flex items-center justify-between">
           <span>Recording hosted externally.</span>
-          <a href={url} target="_blank" rel="noreferrer" className="btn bg-white text-slate-900">Open recording{startAt ? ` (${fmtTimestamp(startAt)})` : ""}</a>
+          <a href={url} target="_blank" rel="noreferrer" className="btn-secondary !py-1.5">Open recording{startAt ? ` (${fmtTimestamp(startAt)})` : ""}</a>
         </div>
       ) : (
-        <div className="p-4 bg-slate-900 text-slate-300 text-sm">No recording file yet.</div>
+        <div className="p-4 bg-ink text-line text-sm">No recording file yet.</div>
       )}
       {transcript.length > 0 && (
-        <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+        <div className="max-h-80 overflow-y-auto divide-y divide-line/60">
           {transcript.map((s, i) => (
             <button
               key={i}
               id={`seg-${i}`}
               onClick={() => jump(s.startSec)}
-              className={`w-full text-left px-4 py-2 text-sm flex gap-3 hover:bg-slate-50 ${i === activeIdx ? "bg-indigo-50" : ""}`}
+              className={`w-full text-left px-4 py-2 text-sm flex gap-3 hover:bg-paper-2 ${i === activeIdx ? "bg-butter-soft" : ""}`}
             >
-              <span className="text-xs text-slate-400 font-mono w-10 shrink-0 pt-0.5">{fmtTimestamp(s.startSec)}</span>
-              <span><span className="font-medium text-slate-700">{s.speaker}: </span><span className="text-slate-600">{s.text}</span></span>
+              <span className="text-xs text-muted font-mono w-10 shrink-0 pt-0.5">{fmtTimestamp(s.startSec)}</span>
+              <span><span className="font-medium text-ink-soft">{s.speaker}: </span><span className="text-ink-soft">{s.text}</span></span>
             </button>
           ))}
         </div>
