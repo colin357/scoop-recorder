@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { STATUS_LABEL, dueLabel } from "@/lib/utils";
+import { Mascot, type MascotPose } from "@/components/mascot";
 
 export function StatusBadge({ status }: { status: string }) {
   const tone: Record<string, string> = {
@@ -51,10 +52,11 @@ export function Avatar({ name, size = 6 }: { name: string; size?: number }) {
   );
 }
 
-export function Empty({ title, children }: { title: string; children?: React.ReactNode }) {
+export function Empty({ title, children, pose = "sleep" }: { title: string; children?: React.ReactNode; pose?: MascotPose }) {
   return (
-    <div className="card p-10 text-center">
-      <p className="font-medium">{title}</p>
+    <div className="card p-8 text-center flex flex-col items-center">
+      <Mascot pose={pose} size={80} />
+      <p className="font-medium mt-3">{title}</p>
       {children && <div className="text-sm text-slate-500 mt-1">{children}</div>}
     </div>
   );

@@ -19,7 +19,11 @@ export const MeetingAnalysisSchema = z.object({
   projectId: z
     .string()
     .nullable()
-    .describe("ID of the project this meeting most relates to, or null if none fit."),
+    .describe("ID of the existing project this meeting most relates to, or null if none fit."),
+  newProject: z
+    .object({ name: z.string(), description: z.string() })
+    .nullable()
+    .describe("If no existing project fits and the meeting clearly belongs to a distinct client, product, or initiative, propose a new project. Otherwise null."),
   tasks: z.array(
     z.object({
       title: z.string().describe("Short imperative title, max 80 chars."),
@@ -90,7 +94,7 @@ Produce:
 4. Deadlines: if a date or timeframe is stated, use it. Otherwise estimate a realistic deadline from scope and urgency (small follow-ups: 1-3 days; medium work: about a week; larger deliverables: 2-4 weeks).
 5. A step-by-step guide per task, with each step's own deadline spread sensibly before the task deadline.
 6. Timestamps and quotes must point at the actual place in the transcript where the item was raised.
-7. Pick the single most relevant project for the meeting, or null.`;
+7. Pick the single most relevant existing project for the meeting. If none fits and the meeting is clearly about a distinct client, product line, or initiative, propose newProject instead (short name, one-sentence description). Use the business description to judge what counts as a separate project.`;
 
 export async function analyzeMeeting(input: {
   title: string;
@@ -98,9 +102,13 @@ export async function analyzeMeeting(input: {
   transcript: TranscriptSegment[];
   team: TeamMemberContext[];
   projects: ProjectContext[];
+  businessDescription?: string | null;
 }): Promise<MeetingAnalysis> {
   const userText = `Meeting title: ${input.title}
 Meeting date: ${input.meetingDate.toISOString().slice(0, 10)}
+
+About the business:
+${input.businessDescription ?? "(no description provided)"}
 
 Team roster:
 ${teamBlock(input.team)}
@@ -121,6 +129,7 @@ ${transcriptToText(input.transcript)}`;
   const validProjects = new Set(input.projects.map((p) => p.id));
   // The model can only assign to real IDs; scrub anything else.
   analysis.projectId = analysis.projectId && validProjects.has(analysis.projectId) ? analysis.projectId : null;
+  if (analysis.projectId) analysis.newProject = null;
   const clamp = (n: number) => Math.max(0, Math.min(90, Math.round(n)));
   for (const t of analysis.tasks) {
     if (t.assigneeId && !validMembers.has(t.assigneeId)) t.assigneeId = null;

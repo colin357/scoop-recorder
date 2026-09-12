@@ -7,6 +7,7 @@ import type { TranscriptSegment } from "@/lib/recall";
 import { DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import { deleteMeetingAction, reprocessMeetingAction } from "@/app/actions/meetings";
 import RecordingPlayer from "@/components/recording-player";
+import { Mascot } from "@/components/mascot";
 
 // Server actions on this page run the AI pipeline; allow long executions on Vercel.
 export const maxDuration = 300;
@@ -49,10 +50,15 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
       </div>
 
       {meeting.error && <p className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm p-3">{meeting.error}</p>}
-      {["scheduled", "joining", "recording"].includes(meeting.status) && (
-        <p className="rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-sm p-3">
-          The recorder {meeting.status === "scheduled" ? "will join" : "is in"} the call. Summary and tasks appear here automatically when the meeting ends.
-        </p>
+      {["scheduled", "joining", "recording", "processing"].includes(meeting.status) && (
+        <div className="hero rounded-xl border border-indigo-100 p-4 flex items-center gap-4">
+          <Mascot pose={meeting.status === "processing" ? "write" : "listen"} size={64} />
+          <p className="text-sm text-slate-700">
+            {meeting.status === "processing"
+              ? "Scoop is writing up the summary and sorting out tasks. This usually takes under a minute."
+              : `The recorder ${meeting.status === "scheduled" ? "will join" : "is in"} the call. Summary and tasks appear here automatically when the meeting ends.`}
+          </p>
+        </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-5">

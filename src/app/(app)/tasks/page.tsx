@@ -84,7 +84,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       </div>
 
       {tasks.length === 0 ? (
-        <Empty title="No tasks match these filters.">Record a meeting and the AI will create tasks here, or add one manually below.</Empty>
+        <Empty title="No tasks match these filters." pose="think">Record a meeting and the AI will create tasks here, or add one manually below.</Empty>
       ) : (
         <TaskBoard
           view={view}

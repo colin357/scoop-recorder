@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
-import { createProjectAction, deleteProjectAction } from "@/app/actions/team";
+import { createProjectAction, deleteProjectAction, updateBusinessDescriptionAction } from "@/app/actions/team";
 import { Empty } from "@/components/ui";
+import SuggestProjects from "./suggest";
 
 export default async function ProjectsPage() {
   const { org } = await requireOrg();
@@ -17,7 +18,8 @@ export default async function ProjectsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Projects</h1>
-      {projects.length === 0 ? <Empty title="No projects yet." /> : (
+      <SuggestProjects hasDescription={Boolean(org.businessDescription)} />
+      {projects.length === 0 ? <Empty title="No projects yet." pose="think" /> : (
         <ul className="grid gap-4 sm:grid-cols-2">
           {projects.map((p) => (
             <li key={p.id} className="card p-5 space-y-2">
@@ -34,6 +36,12 @@ export default async function ProjectsPage() {
           ))}
         </ul>
       )}
+      <form action={updateBusinessDescriptionAction} className="card p-5 space-y-3">
+        <h2 className="font-semibold">About your business</h2>
+        <p className="text-sm text-slate-500">What you do, who your clients are, what you&apos;re working on. Scoop uses this to guess projects and to file meetings under the right one.</p>
+        <textarea name="businessDescription" rows={3} defaultValue={org.businessDescription ?? ""} placeholder="We're a 6-person marketing agency. Clients: Acme, Globex, Initech. We also build our own scheduling app on the side." />
+        <button className="btn-secondary">Save</button>
+      </form>
       <form action={createProjectAction} className="card p-5 grid sm:grid-cols-2 gap-3">
         <h2 className="font-semibold sm:col-span-2">New project</h2>
         <div><label>Name</label><input name="name" required /></div>

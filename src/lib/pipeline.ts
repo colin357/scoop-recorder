@@ -3,6 +3,8 @@ import { db } from "./db";
 import { analyzeMeeting } from "./ai";
 import { fetchTranscript, getBot, recordingUrlFromBot, type TranscriptSegment } from "./recall";
 
+const PALETTE = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+
 /**
  * Run the AI pipeline on a meeting that already has a transcript:
  * summary + key points + decisions, then tasks with assignees, deadlines and steps.
@@ -18,9 +20,10 @@ export async function processMeeting(meetingId: string) {
   await db.meeting.update({ where: { id: meetingId }, data: { status: "processing", error: null } });
 
   try {
-    const [team, projects] = await Promise.all([
+    const [team, projects, org] = await Promise.all([
       db.membership.findMany({ where: { orgId: meeting.orgId } }),
       db.project.findMany({ where: { orgId: meeting.orgId } }),
+      db.organization.findUniqueOrThrow({ where: { id: meeting.orgId } }),
     ]);
     const meetingDate = meeting.startedAt ?? meeting.scheduledAt ?? meeting.createdAt;
 
@@ -30,9 +33,18 @@ export async function processMeeting(meetingId: string) {
       transcript,
       team: team.map((m) => ({ id: m.id, name: m.name, role: m.role, responsibilities: m.responsibilities })),
       projects: projects.map((p) => ({ id: p.id, name: p.name, description: p.description })),
+      businessDescription: org.businessDescription,
     });
 
-    const projectId = meeting.projectId ?? analysis.projectId;
+    let projectId = meeting.projectId ?? analysis.projectId;
+    if (!projectId && analysis.newProject) {
+      // Reuse a same-named project if one appeared meanwhile, otherwise create it.
+      const existing = await db.project.findFirst({ where: { orgId: meeting.orgId, name: { equals: analysis.newProject.name, mode: "insensitive" } } });
+      const created = existing ?? (await db.project.create({
+        data: { orgId: meeting.orgId, name: analysis.newProject.name, description: analysis.newProject.description, color: PALETTE[projects.length % PALETTE.length] },
+      }));
+      projectId = created.id;
+    }
 
     await db.$transaction(async (tx) => {
       // Re-running analysis replaces previously generated (still-untouched) tasks.

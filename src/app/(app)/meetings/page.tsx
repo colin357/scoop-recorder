@@ -18,7 +18,7 @@ export default async function MeetingsPage() {
         <Link href="/meetings/new" className="btn-primary">+ Record a meeting</Link>
       </div>
       {meetings.length === 0 ? (
-        <Empty title="No meetings yet.">Send the recorder to your next call, or import a transcript to try it out.</Empty>
+        <Empty title="No meetings yet." pose="listen">Send the recorder to your next call, or import a transcript to try it out.</Empty>
       ) : (
         <ul className="card divide-y divide-slate-100">
           {meetings.map((m) => (

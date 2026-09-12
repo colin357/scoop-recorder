@@ -1,0 +1,46 @@
+"use client";
+
+import Link from "next/link";
+import { useOptimistic, useTransition } from "react";
+import { decideEventAction } from "@/app/actions/calendar";
+import { StatusBadge } from "@/components/ui";
+
+export type UpcomingEvent = {
+  id: string; title: string; startAt: string; platform: string; decision: string; when: string;
+  meeting: { id: string; status: string } | null;
+};
+
+export default function UpcomingList({ events }: { events: UpcomingEvent[] }) {
+  const [rows, setRows] = useOptimistic(events, (state, patch: { id: string; decision: string }) =>
+    state.map((e) => (e.id === patch.id ? { ...e, decision: patch.decision } : e)),
+  );
+  const [, start] = useTransition();
+  const decide = (id: string, decision: "record" | "skip") =>
+    start(async () => { setRows({ id, decision }); await decideEventAction(id, decision); });
+
+  return (
+    <ul className="divide-y divide-slate-100">
+      {rows.map((e) => (
+        <li key={e.id} className="py-3 flex flex-wrap items-center gap-3">
+          <div className="flex-1 min-w-48">
+            <div className="font-medium text-sm">{e.title}</div>
+            <div className="text-xs text-slate-500">{e.when} · {e.platform}</div>
+          </div>
+          {e.meeting ? (
+            <Link href={`/meetings/${e.meeting.id}`}><StatusBadge status={e.meeting.status} /></Link>
+          ) : e.decision === "record" ? (
+            <span className="badge bg-emerald-100 text-emerald-700">Will record</span>
+          ) : e.decision === "skip" ? (
+            <span className="badge bg-slate-100 text-slate-600">Skipped</span>
+          ) : (
+            <span className="badge bg-amber-100 text-amber-700">Needs decision</span>
+          )}
+          <div className="flex gap-1">
+            {e.decision !== "record" && <button onClick={() => decide(e.id, "record")} className="btn-primary !py-1 text-xs">Record</button>}
+            {e.decision !== "skip" && <button onClick={() => decide(e.id, "skip")} className="btn-secondary !py-1 text-xs">Skip</button>}
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}

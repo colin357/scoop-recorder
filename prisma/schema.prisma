@@ -11,16 +11,22 @@ datasource db {
 // ---------- Tenancy & auth ----------
 
 model Organization {
-  id           String   @id @default(cuid())
-  name         String
-  slug         String   @unique
-  onboardedAt  DateTime?
-  createdAt    DateTime @default(now())
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  // What the company does, who its clients are, current initiatives. Drives project guessing.
+  businessDescription String?
+  // auto | ask | off — what to do with calendar meetings that have a video link
+  autoRecordPolicy    String   @default("ask")
+  onboardedAt         DateTime?
+  createdAt           DateTime @default(now())
 
-  members   Membership[]
-  projects  Project[]
-  meetings  Meeting[]
-  tasks     Task[]
+  members             Membership[]
+  projects            Project[]
+  meetings            Meeting[]
+  tasks               Task[]
+  calendarConnections CalendarConnection[]
+  calendarEvents      CalendarEvent[]
 }
 
 model User {
@@ -32,6 +38,17 @@ model User {
 
   sessions    Session[]
   memberships Membership[]
+  onboarding  OnboardingDraft?
+}
+
+// Conversational onboarding state so a refresh does not lose progress.
+model OnboardingDraft {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  String   // JSON: {role, content, widget?}[]
+  draft     String   // JSON: OnboardingDraftData
+  updatedAt DateTime @updatedAt
 }
 
 model Session {
@@ -59,8 +76,56 @@ model Membership {
 
   projects      ProjectMember[]
   assignedTasks Task[]
+  calendars     CalendarConnection[]
 
   @@unique([orgId, email])
+}
+
+// ---------- Calendars ----------
+
+model CalendarConnection {
+  id           String   @id @default(cuid())
+  orgId        String
+  org          Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  memberId     String
+  member       Membership @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  provider     String   // google | microsoft
+  email        String
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  syncedAt     DateTime?
+  syncError    String?
+  createdAt    DateTime @default(now())
+
+  events CalendarEvent[]
+
+  @@unique([memberId, provider, email])
+}
+
+model CalendarEvent {
+  id             String   @id @default(cuid())
+  orgId          String
+  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  connectionId   String
+  connection     CalendarConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  externalId     String
+  title          String
+  startAt        DateTime
+  endAt          DateTime
+  meetingUrl     String
+  platform       String
+  organizerEmail String?
+  attendees      String   // JSON: {name?, email?}[]
+  // undecided | record | skip
+  decision       String   @default("undecided")
+  meetingId      String?  @unique
+  meeting        Meeting? @relation(fields: [meetingId], references: [id], onDelete: SetNull)
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@unique([connectionId, externalId])
+  @@index([orgId, startAt])
 }
 
 // ---------- Projects ----------
@@ -115,8 +180,9 @@ model Meeting {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  attendees MeetingAttendee[]
-  tasks     Task[]
+  attendees     MeetingAttendee[]
+  tasks         Task[]
+  calendarEvent CalendarEvent?
 }
 
 model MeetingAttendee {
