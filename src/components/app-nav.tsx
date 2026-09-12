@@ -102,7 +102,7 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
       )}
 
       {/* Desktop sidebar */}
-      <aside className={`hidden md:flex shrink-0 border-r edge bg-paper flex-col sticky top-0 h-screen transition-[width] duration-200 ${collapsed ? "w-[72px]" : "w-64"}`}>
+      <aside className={`hidden md:flex shrink-0 border-r edge bg-paper flex-col sticky top-0 z-30 h-screen transition-[width] duration-200 ${collapsed ? "w-[72px]" : "w-64"}`}>
         <div className={`pt-4 pb-3 flex items-center gap-3 ${collapsed ? "px-3 justify-center" : "px-4"}`}>
           <Link href="/dashboard" className="shrink-0" title="Home"><Mascot pose="listen" size={40} className="!animate-none" /></Link>
           {!collapsed && (
