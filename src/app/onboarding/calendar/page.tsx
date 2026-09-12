@@ -2,7 +2,7 @@ import { signOutAction } from "@/app/actions/auth";
 import { redirect } from "next/navigation";
 import { requireOrg, calendarRequired } from "@/lib/auth";
 import { calendarProviderConfigured } from "@/lib/calendar";
-import { Mascot, Blobs } from "@/components/mascot";
+import { Mascot } from "@/components/mascot";
 import { Icon } from "@/components/icons";
 
 export default async function OnboardingCalendarPage({ searchParams }: PageProps<"/onboarding/calendar">) {
@@ -16,7 +16,6 @@ export default async function OnboardingCalendarPage({ searchParams }: PageProps
     <main className="flex-1 flex items-center justify-center p-6">
       <div className="w-full max-w-xl">
         <section className="hero relative overflow-hidden rounded-2xl border-2 border-ink shadow-[4px_4px_0_0_#171b26] p-6 flex flex-col sm:flex-row items-start sm:items-center gap-5 mb-6">
-          <Blobs />
           <Mascot pose="listen" size={120} className="relative shrink-0" />
           <div className="relative">
             <div className="eyebrow">Last step</div>

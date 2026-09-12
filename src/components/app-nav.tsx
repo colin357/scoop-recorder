@@ -19,6 +19,9 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
     ...(isAdmin ? [{ href: "/settings/organization", label: "Organization" }, { href: "/settings/audit", label: "Audit log" }] : []),
     ...(superAdmin ? [{ href: "/admin", label: "Usage (operator)" }] : []),
   ];
+  const onSettings = settings.some((s) => active(s.href));
+  const [settingsOpen, setSettingsOpen] = useState(onSettings);
+  const showSettings = settingsOpen || onSettings;
 
   const links = (
     <>
@@ -34,10 +37,23 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
         </Link>
       ))}
       <Link href="/meetings/new" onClick={() => setOpen(false)} className="btn-accent w-full mt-3"><Icon name="mic" size={16} />Record a meeting</Link>
-      <div className="mt-4 px-3 eyebrow">Settings</div>
-      {settings.map((n) => (
-        <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-1.5 text-sm ${active(n.href) ? "text-merle font-semibold" : "text-ink-soft hover:bg-paper-2"}`}>{n.label}</Link>
-      ))}
+      <button
+        type="button"
+        onClick={() => setSettingsOpen((v) => !v)}
+        aria-expanded={showSettings}
+        className={`mt-3 w-full flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-display font-medium border-2 ${onSettings ? "bg-sky border-ink text-ink shadow-[2px_2px_0_0_#171b26]" : "border-transparent text-ink-soft hover:bg-paper-2"}`}
+      >
+        <Icon name="settings" size={18} className={onSettings ? "text-merle" : "text-muted"} />
+        Settings
+        <Icon name="chevron" size={16} className="ml-auto text-muted transition-transform" style={{ transform: showSettings ? "rotate(180deg)" : "none" }} />
+      </button>
+      {showSettings && (
+        <div className="ml-4 mt-1 border-l-2 border-line pl-2 space-y-0.5">
+          {settings.map((n) => (
+            <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`block rounded-lg px-3 py-1.5 text-sm ${active(n.href) ? "text-merle font-semibold bg-sky-soft" : "text-ink-soft hover:bg-paper-2"}`}>{n.label}</Link>
+          ))}
+        </div>
+      )}
     </>
   );
 

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { fmtDateTime, PLATFORM_LABEL } from "@/lib/utils";
 import { DueBadge, Empty, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
-import { Blobs, Mascot } from "@/components/mascot";
+import { Mascot } from "@/components/mascot";
 import UpcomingList from "@/components/upcoming-list";
 import { Icon, type IconName } from "@/components/icons";
 
@@ -35,7 +35,6 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
         </p>
       )}
       <section className="hero relative overflow-hidden rounded-2xl border-2 border-ink shadow-[4px_4px_0_0_#171b26] p-5 md:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
-        <Blobs />
         <Mascot pose={pose} size={120} className="relative shrink-0" />
         <div className="relative flex-1">
           <div className="eyebrow mb-1">Today</div>

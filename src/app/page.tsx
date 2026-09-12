@@ -27,7 +27,7 @@ export default async function Home() {
         </nav>
       </header>
 
-      <section className="hero relative overflow-hidden border-y-2 border-ink">
+      <section className="hero-landing relative overflow-hidden border-y-2 border-ink">
         <Blobs />
         <div className="relative max-w-6xl mx-auto px-6 py-16 md:py-24 grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div>

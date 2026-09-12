@@ -3,7 +3,7 @@ import type { SVGProps } from "react";
 
 export type IconName =
   | "home" | "video" | "check" | "folder" | "calendar" | "users" | "search" | "mic" | "clock" | "user"
-  | "settings" | "chart" | "menu" | "close" | "play" | "spark" | "shield" | "chat" | "mail" | "bolt" | "paw";
+  | "settings" | "chart" | "menu" | "close" | "play" | "spark" | "shield" | "chat" | "mail" | "bolt" | "paw" | "chevron";
 
 const PATHS: Record<IconName, string> = {
   home: "M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10",
@@ -26,6 +26,7 @@ const PATHS: Record<IconName, string> = {
   chat: "M4 5h16v10H9l-5 4z",
   mail: "M3 6h18v12H3zM3 7l9 6 9-6",
   bolt: "M13 2 4 14h7l-1 8 9-12h-7z",
+  chevron: "M6 9L12 15L18 9",
   paw: "M12 21c-3 0-6-1.6-6-4.2 0-2.2 2.8-3.8 6-3.8s6 1.6 6 3.8C18 19.4 15 21 12 21Zm-6.5-8.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm13 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM9 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
 };
 

@@ -91,7 +91,8 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 @utility card { @apply rounded-2xl border-2 border-ink bg-paper; box-shadow: 4px 4px 0 0 var(--color-ink); }
 @utility card-flat { @apply rounded-2xl border-2 border-line bg-paper; }
 @utility badge { @apply inline-flex items-center rounded-full border border-ink/70 px-2 py-0.5 text-[11px] font-semibold leading-4; font-family: var(--font-display); }
-@utility hero { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-cream) 55%, var(--color-butter-soft) 100%); }
+@utility hero { background-color: var(--color-sky); background-image: radial-gradient(rgba(23, 27, 38, 0.10) 1px, transparent 1px); background-size: 14px 14px; }
+@utility hero-landing { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-cream) 55%, var(--color-butter-soft) 100%); }
 @utility brand-mark { background: linear-gradient(135deg, var(--color-merle), var(--color-pink)); }
 @utility eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-copper-deep; font-family: var(--font-display); }
 
