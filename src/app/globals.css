@@ -96,6 +96,7 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 @utility edge { border-color: var(--color-edge); }
 @utility shadow-soft { box-shadow: var(--shadow-soft); }
 @utility shadow-lift { box-shadow: var(--shadow-lift); }
+@utility shadow-btn { box-shadow: var(--shadow-btn); }
 @utility hero-landing { background: linear-gradient(135deg, var(--color-sky) 0%, var(--color-cream) 55%, var(--color-butter-soft) 100%); }
 @utility brand-mark { background: linear-gradient(135deg, var(--color-merle), var(--color-pink)); }
 @utility eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-copper-deep; font-family: var(--font-display); }

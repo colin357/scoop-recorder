@@ -1,79 +1,145 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
-import { Blobs, Mascot } from "@/components/mascot";
+import { Mascot } from "@/components/mascot";
 import { Icon, type IconName } from "@/components/icons";
+import UseCaseChips from "@/components/landing/use-case-chips";
+import { AskVignette, CtaLinks, MeetingMockup, PromptVignette, ReviewVignette, SlackVignette } from "@/components/landing/mockups";
 
 export default async function Home() {
   const user = await getCurrentUser();
   if (user) redirect(user.memberships.length ? "/dashboard" : "/onboarding");
 
-  const features: { icon: IconName; title: string; text: string }[] = [
-    { icon: "video", title: "Records every meeting", text: "Rocky joins your Google Meet, Zoom and Teams calls from your calendar. Ask-first or fully automatic." },
-    { icon: "spark", title: "Writes the summary", text: "Key points and decisions, minutes after the call ends. Searchable forever, even after recordings are purged." },
-    { icon: "check", title: "Assigns the tasks", text: "Every commitment becomes a task with an owner, a deadline and a step-by-step guide, routed by each person's role." },
-    { icon: "play", title: "Keeps the receipts", text: "Each task links to the exact second it was discussed, with the quote. Or ask Rocky what was actually said." },
-    { icon: "chat", title: "Meets you in Slack", text: "Summaries and tasks post to Slack or Teams. Assignees get an email with their to-dos." },
-    { icon: "shield", title: "Built for consent", text: "Announces itself in the call, read-only calendar access, retention limits, audit log and full data export." },
+  const how: { icon: IconName; title: string; text: string }[] = [
+    { icon: "calendar", title: "Right where your meetings are", text: "Connect Google Calendar or Outlook once. Rocky spots every call with a Meet, Zoom or Teams link and asks before joining, or just joins if you prefer." },
+    { icon: "spark", title: "Turns talk into tasks", text: "Every commitment becomes a task with an owner, a due date and a step-by-step plan, routed by what each person on your team actually does." },
+    { icon: "play", title: "Keeps the receipts", text: "Each task links to the exact second it was discussed, with the quote. Ask Rocky what was really said instead of rewatching." },
   ];
+  const tools = ["Google Meet", "Zoom", "Microsoft Teams", "Google Calendar", "Outlook", "Slack", "Teams chat", "Email"];
 
   return (
-    <main className="flex-1">
-      <header className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2"><Mascot pose="listen" size={44} /><span className="font-display font-bold text-xl">scoop</span></div>
-        <nav className="flex items-center gap-3 text-sm">
-          <Link href="/login" className="btn-ghost">Sign in</Link>
-          <Link href="/signup" className="btn-primary">Start free</Link>
-        </nav>
+    <main className="flex-1 bg-[#f7f6f3] text-ink">
+      <header className="sticky top-0 z-30 bg-[#f7f6f3]/85 backdrop-blur border-b edge">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2"><Mascot pose="listen" size={40} className="!animate-none" /><span className="font-display font-bold text-xl tracking-tight">scoop</span></Link>
+          <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-ink-soft">
+            <a href="#how" className="hover:text-ink">How it works</a><a href="#team" className="hover:text-ink">For teams</a><a href="#trust" className="hover:text-ink">Trust</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link href="/login" className="hidden sm:inline-flex text-sm font-semibold text-ink-soft hover:text-ink px-3 py-2">Sign in</Link>
+            <Link href="/signup" className="inline-flex items-center rounded-full bg-ink text-paper text-sm font-semibold px-4 py-2 hover:bg-merle-deep transition" style={{ fontFamily: "var(--font-display)" }}>Start free</Link>
+          </div>
+        </div>
       </header>
 
-      <section className="hero-landing relative overflow-hidden border-y edge">
-        <Blobs />
-        <div className="relative max-w-6xl mx-auto px-6 py-16 md:py-24 grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
-          <div>
-            <div className="eyebrow mb-3">Meeting recorder · task machine</div>
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">Meetings in.<br /><span className="text-merle">Assigned tasks</span> out.</h1>
-            <p className="text-lg text-ink-soft mt-4 max-w-xl">Scoop records your team&apos;s calls, writes the summary, and turns every action item into a task with an owner, a deadline and a plan. Nobody writes notes. Nothing falls through.</p>
-            <div className="flex flex-wrap gap-3 mt-6">
-              <Link href="/signup" className="btn-accent !px-5 !py-3 text-base">Start free</Link>
-              <Link href="/login" className="btn-secondary !px-5 !py-3 text-base">Sign in</Link>
+      {/* Hero */}
+      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
+        <div>
+          <h1 className="font-display font-bold tracking-[-0.03em] leading-[0.98] text-[44px] sm:text-6xl lg:text-[76px]">Meet Rocky,<br />your meeting<br />notetaker.</h1>
+          <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-xl leading-relaxed">Rocky joins your team&apos;s calls, writes the summary, and turns every action item into a task with an owner and a deadline. Nobody takes notes. Nothing falls through.</p>
+          <div className="mt-7"><CtaLinks big /></div>
+          <div className="mt-8"><UseCaseChips /></div>
+        </div>
+        <div className="relative">
+          <div className="rounded-[28px] overflow-hidden aspect-[4/5] sm:aspect-square lg:aspect-[4/5] flex items-end justify-center" style={{ background: "radial-gradient(120% 90% at 20% 10%, #dce7f5 0%, #3b5b85 35%, #f27daa 70%, #f6d27a 100%)" }}>
+            <Mascot pose="wave" size={520} className="!animate-none w-[92%] h-auto drop-shadow-[0_24px_40px_rgba(23,27,38,0.35)] translate-y-6" />
+          </div>
+          <div className="absolute -left-4 bottom-8 hidden md:block"><PromptVignette /></div>
+        </div>
+      </section>
+
+      {/* Product mockup */}
+      <section className="max-w-6xl mx-auto px-6 pb-20">
+        <MeetingMockup />
+        <p className="text-center text-xs text-muted mt-4">A real meeting page: summary, decisions, and every task with its owner, due date and the moment it came from.</p>
+      </section>
+
+      {/* How teams use */}
+      <section id="how" className="border-t edge bg-paper">
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          <div className="eyebrow">How teams use Scoop</div>
+          <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2 max-w-2xl">The follow-through, handled.</h2>
+          <div className="grid md:grid-cols-3 gap-10 mt-12">
+            {how.map((h) => (
+              <div key={h.title}>
+                <span className="h-11 w-11 rounded-xl bg-sky text-merle flex items-center justify-center"><Icon name={h.icon} size={22} /></span>
+                <h3 className="font-semibold text-lg mt-4">{h.title}</h3>
+                <p className="text-ink-soft mt-2 leading-relaxed">{h.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Tools */}
+      <section className="max-w-6xl mx-auto px-6 py-16 text-center">
+        <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-4xl">Connected to where you already work.</h2>
+        <p className="text-ink-soft mt-3 max-w-2xl mx-auto">Records on the three big platforms, reads your calendar, and delivers to the places your team actually looks.</p>
+        <div className="flex flex-wrap justify-center gap-2.5 mt-8">
+          {tools.map((t) => <span key={t} className="rounded-full border edge bg-paper px-4 py-2 text-sm font-medium text-ink-soft">{t}</span>)}
+        </div>
+      </section>
+
+      {/* Team vignettes */}
+      <section id="team" className="border-t edge bg-paper">
+        <div className="max-w-6xl mx-auto px-6 py-20">
+          <div className="eyebrow">For teams</div>
+          <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2 max-w-2xl">A notetaker for the whole team.</h2>
+          <p className="text-ink-soft mt-4 max-w-2xl text-lg">Summaries land in Slack or Teams. Assignees get their tasks by email. Anyone can ask Rocky what was said. Admins can review before anything goes out.</p>
+          <div className="grid md:grid-cols-2 gap-6 mt-12 items-start">
+            <SlackVignette />
+            <AskVignette />
+            <ReviewVignette />
+            <div className="rounded-2xl bg-paper-2 p-6 flex items-center gap-5">
+              <Mascot pose="celebrate" size={96} className="shrink-0" />
+              <div>
+                <h3 className="font-semibold text-lg">Always accurate, never guessing.</h3>
+                <p className="text-ink-soft mt-1">Every task points at the quote and the timestamp it came from. If it wasn&apos;t said, it doesn&apos;t become a task. If it was said and nobody owned it, it&apos;s flagged, not invented.</p>
+              </div>
             </div>
-            <p className="text-xs text-muted mt-3">Works with Google Meet, Zoom and Microsoft Teams · Google Calendar and Outlook</p>
           </div>
-          <div className="flex justify-center"><Mascot pose="wave" size={300} /></div>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 py-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((f) => (
-          <div key={f.title} className="card p-6">
-            <span className="h-11 w-11 rounded-xl bg-butter-soft flex items-center justify-center text-copper-deep"><Icon name={f.icon} size={22} /></span>
-            <h3 className="font-semibold text-lg mt-4">{f.title}</h3>
-            <p className="text-sm text-ink-soft mt-1">{f.text}</p>
+      {/* Trust */}
+      <section id="trust" className="max-w-6xl mx-auto px-6 py-20">
+        <div className="grid md:grid-cols-[1fr_1.4fr] gap-10 items-start">
+          <div>
+            <div className="eyebrow">Trust</div>
+            <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-4xl mt-2">Built for consent.</h2>
+            <p className="text-ink-soft mt-3">Recording calls is a responsibility. Scoop makes the defaults safe and the controls obvious.</p>
           </div>
-        ))}
-      </section>
-
-      <section className="max-w-6xl mx-auto px-6 pb-16">
-        <div className="card p-8 grid md:grid-cols-3 gap-8">
-          {[
-            ["1", "Tell Rocky about your team", "A two-minute chat: what you do, who does what. That's how tasks get routed to the right person."],
-            ["2", "Connect your calendar", "Rocky spots meetings with a video link and asks whether to record, or just records if you prefer."],
-            ["3", "Get the follow-through", "Summary, decisions, and assigned tasks land in the app, your inbox and Slack before you've refilled your coffee."],
-          ].map(([n, t, d]) => (
-            <div key={n}><div className="h-9 w-9 rounded-full bg-pink text-ink font-display font-bold flex items-center justify-center">{n}</div><h3 className="font-semibold text-lg mt-3">{t}</h3><p className="text-sm text-ink-soft mt-1">{d}</p></div>
-          ))}
+          <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-6 text-sm">
+            {[
+              ["Announces itself", "Rocky tells the room it's recording when it joins, with a way to opt out."],
+              ["Read-only calendar", "Calendar access is read-only. Nothing is created or edited."],
+              ["Retention limits", "Purge recordings and transcripts after N days. Keep the summaries."],
+              ["Audit log and export", "Every change is logged. Your data exports in one click."],
+              ["Review mode", "Hold AI tasks as drafts until an admin approves them."],
+              ["Admin roles", "Only admins change recording policy, the team, or settings."],
+            ].map(([t, d]) => (
+              <li key={t} className="flex gap-3"><span className="mt-0.5 h-6 w-6 rounded-full bg-grass-soft text-grass flex items-center justify-center shrink-0"><Icon name="check" size={14} /></span><div><div className="font-semibold">{t}</div><div className="text-ink-soft mt-0.5">{d}</div></div></li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-20 text-center">
-        <Mascot pose="celebrate" size={120} className="mx-auto" />
-        <h2 className="text-3xl font-bold mt-4">Free while we&apos;re in beta</h2>
-        <p className="text-ink-soft mt-1">Unlimited meetings for early teams. Pricing comes later, and early teams keep a discount.</p>
-        <Link href="/signup" className="btn-accent !px-5 !py-3 text-base mt-6 inline-flex">Create your account</Link>
+      {/* Final CTA */}
+      <section className="border-t edge bg-paper">
+        <div className="max-w-6xl mx-auto px-6 py-20 text-center">
+          <Mascot pose="wave" size={120} className="mx-auto" />
+          <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-4">Free while we&apos;re in beta.</h2>
+          <p className="text-ink-soft mt-3 text-lg">Unlimited meetings for early teams. Early teams keep a discount when pricing arrives.</p>
+          <div className="flex justify-center mt-8"><CtaLinks big /></div>
+        </div>
       </section>
 
-      <footer className="border-t edge py-6 text-center text-xs text-muted bg-paper">© {new Date().getFullYear()} Scoop · scooprecorder.com</footer>
+      <footer className="border-t edge">
+        <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
+          <span>© {new Date().getFullYear()} Scoop · scooprecorder.com</span>
+          <span className="flex gap-5"><a href="#trust" className="hover:text-ink">Trust</a><Link href="/login" className="hover:text-ink">Sign in</Link><Link href="/signup" className="hover:text-ink">Start free</Link></span>
+        </div>
+      </footer>
     </main>
   );
 }

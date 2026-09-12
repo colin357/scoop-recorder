@@ -24,7 +24,8 @@ Everything visual derives from Rocky, the blue merle Aussie mascot: his merle bl
 - Buttons: `btn-primary` (merle), `btn-accent` (copper, for the one action we most want on a screen), `btn-secondary` (paper with a hairline edge), `btn-ghost`. Soft shadow, 1px press on click. No black frames.
 - Inputs: hairline edge, merle border with a sky focus ring.
 - Badges: pill, no border, display font, soft-token fill. Solid fills only for terminal states (done, recording, urgent).
-- Heroes: flat sky-to-sky-soft gradient. No blobs or dot grids on product screens; the landing page keeps its pastel shapes.
+- Heroes: flat sky-to-sky-soft gradient. No blobs or dot grids on product screens.
+- Landing page: near-white ground, oversized tightly tracked display headline, black pill CTAs, Rocky on a merle-to-pink-to-butter gradient panel, real product mockups in window frames, and short sentence headlines ("The follow-through, handled.").
 
 ## Type
 
