@@ -199,7 +199,7 @@ export default async function Home() {
       <footer className="border-t edge">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
           <span>© {new Date().getFullYear()} Scoop · scooprecorder.com</span>
-          <span className="flex gap-5"><a href="#pricing" className="hover:text-ink">Pricing</a><a href="#trust" className="hover:text-ink">Trust</a><Link href="/login" className="hover:text-ink">Sign in</Link><Link href="/signup" className="hover:text-ink">Start free</Link></span>
+          <span className="flex gap-5"><a href="#pricing" className="hover:text-ink">Pricing</a><a href="#trust" className="hover:text-ink">Trust</a><Link href="/privacy" className="hover:text-ink">Privacy</Link><Link href="/terms" className="hover:text-ink">Terms</Link><Link href="/login" className="hover:text-ink">Sign in</Link><Link href="/signup" className="hover:text-ink">Start free</Link></span>
         </div>
       </footer>
     </main>

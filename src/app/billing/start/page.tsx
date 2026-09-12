@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireOrg, billingRequired } from "@/lib/auth";
 import { PRICING, annualPerSeatPerMonth, fmtUsd, seatCount, seatPrice } from "@/lib/billing";
@@ -84,6 +85,7 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
           </div>
         </div>
 
+        <p className="text-xs text-muted mt-4">By starting a trial you agree to the <Link href="/terms" className="text-merle underline">Terms of Service</Link>, including automatic renewal after the trial unless you cancel.</p>
         <form action={signOutAction} className="text-xs text-muted mt-6">
           Signed in as {membership.email}. <button className="underline">Not you? Sign out</button>
         </form>
