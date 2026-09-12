@@ -78,14 +78,6 @@ export default function HeroScene() {
           </ul>
         </div>
       </div>
-
-      {/* footer */}
-      <div className="relative flex flex-wrap items-center gap-x-5 gap-y-1 px-5 py-3 border-t border-white/10 text-[11px] font-mono text-paper/55">
-        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-grass" />2 tasks assigned</span>
-        <span>1 decision</span>
-        <span>summary → Slack, email</span>
-        <span className="ml-auto text-paper/35">latency 41s</span>
-      </div>
     </div>
   );
 }

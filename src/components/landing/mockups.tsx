@@ -104,12 +104,16 @@ export function ReviewVignette() {
 /** Small vignette: the pop-up before a meeting. */
 export function PromptVignette() {
   return (
-    <div className="rounded-2xl border edge bg-paper shadow-lift p-3.5 text-sm w-72">
-      <div className="flex gap-3">
-        <Mascot pose="wave" size={40} className="shrink-0 !animate-none" />
-        <div><div className="eyebrow">Starts in 8 min</div><div className="font-semibold">Acme weekly sync</div><div className="text-xs text-muted">Want me to record this one?</div></div>
+    <div className="rounded-2xl bg-[#151a2b] text-paper ring-1 ring-white/15 shadow-[0_24px_48px_-12px_rgba(0,0,0,.55)] p-3.5 text-sm w-72">
+      <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-paper/40 mb-3">
+        <span className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-copper" />Starts in 8 min</span>
+        <span>Google Meet</span>
       </div>
-      <div className="flex gap-2 mt-3"><span className="flex-1 rounded-xl bg-ink text-paper text-center py-1.5 text-xs font-semibold">Record it</span><span className="flex-1 rounded-xl border edge text-center py-1.5 text-xs font-semibold">Skip</span></div>
+      <div className="flex gap-3">
+        <div className="shrink-0 rounded-full bg-white/[0.06] ring-1 ring-white/10 p-1"><Mascot pose="wave" size={32} className="!animate-none" /></div>
+        <div><div className="font-semibold leading-tight">Acme weekly sync</div><div className="text-xs text-paper/55 mt-0.5">Want me to record this one?</div></div>
+      </div>
+      <div className="flex gap-2 mt-3"><span className="flex-1 rounded-lg bg-copper text-ink text-center py-1.5 text-xs font-semibold">Record it</span><span className="flex-1 rounded-lg ring-1 ring-white/15 text-paper/80 text-center py-1.5 text-xs font-semibold">Skip</span></div>
     </div>
   );
 }

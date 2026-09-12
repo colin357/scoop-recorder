@@ -37,7 +37,7 @@ export default async function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 md:pb-36 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
+      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 md:pb-44 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
         <div>
           <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[56px] [text-wrap:balance]">The meeting ends.<br />The work is already assigned.</h1>
           <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-md leading-relaxed">Scoop records the call, understands who does what on your team, and routes every follow-up to the right person with the context to act.</p>
@@ -45,7 +45,7 @@ export default async function Home() {
         </div>
         <div className="relative lg:pt-6">
           <HeroScene />
-          <div className="absolute left-6 -bottom-[8.75rem] hidden md:block"><PromptVignette /></div>
+          <div className="absolute left-6 -bottom-[7.5rem] hidden md:block"><PromptVignette /></div>
         </div>
       </section>
 
