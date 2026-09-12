@@ -102,14 +102,14 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 @utility eyebrow { @apply text-[11px] font-bold uppercase tracking-[0.14em] text-copper-deep; font-family: var(--font-display); }
 
 /* --- playful bits --- */
-@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.5px); } }
 @keyframes wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-18deg); } }
 @keyframes pulse-waves { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 @keyframes blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; } }
 @keyframes pop { from { transform: translateY(12px) scale(0.96); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes confetti { 0% { transform: translateY(0) rotate(0); } 100% { transform: translateY(-6px) rotate(20deg); } }
 
-.mascot { animation: bob 3s ease-in-out infinite; overflow: visible; }
+.mascot { animation: bob 5s ease-in-out infinite; overflow: visible; }
 .mascot-wave .mascot-arm-left { animation: wave 1.6s ease-in-out infinite; }
 .mascot-listen .mascot-waves { animation: pulse-waves 1.4s ease-in-out infinite; }
 .mascot-think .mascot-dots circle:nth-child(1) { animation: blink 1.2s infinite; }
