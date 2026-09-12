@@ -11,9 +11,9 @@ export default async function Home() {
   if (user) redirect(user.memberships.length ? "/dashboard" : "/onboarding");
 
   const how: { icon: IconName; title: string; text: string }[] = [
-    { icon: "calendar", title: "Right where your meetings are", text: "Connect Google Calendar or Outlook once. Rocky spots every call with a Meet, Zoom or Teams link and asks before joining, or just joins if you prefer." },
-    { icon: "spark", title: "Turns talk into tasks", text: "Every commitment becomes a task with an owner, a due date and a step-by-step plan, routed by what each person on your team actually does." },
-    { icon: "play", title: "Keeps the receipts", text: "Each task links to the exact second it was discussed, with the quote. Ask Rocky what was really said instead of rewatching." },
+    { icon: "users", title: "Learns how your team works", text: "Tell Rocky once who is on the team and what each person handles. From then on he knows that pricing questions go to Dana and client emails go to Marcus." },
+    { icon: "spark", title: "Assigns the work automatically", text: "Every commitment in a call becomes a task with the right owner, a due date and a step-by-step plan. No follow-up message needed. No “who was handling that?”" },
+    { icon: "chat", title: "Shares the context, not just the task", text: "Each person gets what they need to act: the summary, the quote, the exact moment in the recording, and a way to ask Rocky what was said." },
   ];
   const tools = ["Google Meet", "Zoom", "Microsoft Teams", "Google Calendar", "Outlook", "Slack", "Teams chat", "Email"];
 
@@ -35,8 +35,8 @@ export default async function Home() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
         <div>
-          <h1 className="font-display font-bold tracking-[-0.03em] leading-[0.98] text-[44px] sm:text-6xl lg:text-[76px]">Meet Rocky,<br />your meeting<br />notetaker.</h1>
-          <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-xl leading-relaxed">Rocky joins your team&apos;s calls, writes the summary, and turns every action item into a task with an owner and a deadline. Nobody takes notes. Nothing falls through.</p>
+          <h1 className="font-display font-bold tracking-[-0.03em] leading-[0.98] text-[42px] sm:text-6xl lg:text-[72px]">The meeting ends.<br />The work is<br />already assigned.</h1>
+          <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-xl leading-relaxed">Rocky learns how your team works: who owns what, and what each person handles. After every call he assigns the action items to the right people, with the context they need, so nothing gets lost between meetings and messages.</p>
           <div className="mt-7"><CtaLinks big /></div>
           <div className="mt-8"><UseCaseChips /></div>
         </div>
@@ -58,7 +58,7 @@ export default async function Home() {
       <section id="how" className="border-t edge bg-paper">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="eyebrow">How teams use Scoop</div>
-          <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2 max-w-2xl">The follow-through, handled.</h2>
+          <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2 max-w-2xl">Fewer communication breakdowns. Zero extra messages.</h2>
           <div className="grid md:grid-cols-3 gap-10 mt-12">
             {how.map((h) => (
               <div key={h.title}>
@@ -85,7 +85,7 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="eyebrow">For teams</div>
           <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2 max-w-2xl">A notetaker for the whole team.</h2>
-          <p className="text-ink-soft mt-4 max-w-2xl text-lg">Summaries land in Slack or Teams. Assignees get their tasks by email. Anyone can ask Rocky what was said. Admins can review before anything goes out.</p>
+          <p className="text-ink-soft mt-4 max-w-2xl text-lg">The people who were in the meeting and the people who weren&apos;t end up on the same page. Summaries land in Slack or Teams, assignees get their tasks with the context attached, and anyone can ask Rocky what was actually said.</p>
           <div className="grid md:grid-cols-2 gap-6 mt-12 items-start">
             <SlackVignette />
             <AskVignette />

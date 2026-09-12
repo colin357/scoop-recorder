@@ -6,8 +6,8 @@ const display = Outfit({ variable: "--font-display", subsets: ["latin"], weight:
 const body = DM_Sans({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600"] });
 
 export const metadata: Metadata = {
-  title: "Scoop — meeting recorder that turns calls into tasks",
-  description: "Record Google Meet, Zoom and Teams calls. Get summaries and assigned, scheduled tasks automatically.",
+  title: "Scoop — the meeting ends, the work is already assigned",
+  description: "Rocky learns how your team works, records your Google Meet, Zoom and Teams calls, and assigns the action items to the right people with the context they need.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

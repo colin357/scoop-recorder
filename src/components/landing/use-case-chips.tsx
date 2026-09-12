@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const CASES = ["Prep for a client call", "Catch up after PTO", "Stop chasing action items", "Know who owns what", "Find what the client said"];
+const CASES = ["Knows who owns what", "Assigns without the follow-up", "Shares the context, not just the task", "No more “who was handling that?”", "Catch up without a recap call"];
 
 /** Cycling use-case chips under the hero, like a rotating prompt list. */
 export default function UseCaseChips() {
