@@ -17,7 +17,6 @@ export default async function Home() {
   ];
   const tools: { group: string; items: string[] }[] = [
     { group: "Records", items: ["Google Meet", "Zoom", "Microsoft Teams"] },
-    { group: "Reads", items: ["Google Calendar", "Outlook Calendar"] },
     { group: "Delivers to", items: ["Slack", "Email", "Scoop"] },
   ];
 
