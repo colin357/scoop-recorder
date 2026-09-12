@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Mascot } from "@/components/mascot";
 import { Icon, type IconName } from "@/components/icons";
-import UseCaseChips from "@/components/landing/use-case-chips";
+import HeroScene from "@/components/landing/hero-scene";
 import { AskVignette, CtaLinks, MeetingMockup, PromptVignette, ReviewVignette, SlackVignette } from "@/components/landing/mockups";
 
 export default async function Home() {
@@ -15,7 +15,11 @@ export default async function Home() {
     { icon: "spark", title: "Assigns the work automatically", text: "Every commitment in a call becomes a task with the right owner, a due date and a step-by-step plan. No follow-up message needed. No “who was handling that?”" },
     { icon: "chat", title: "Shares the context, not just the task", text: "Each person gets what they need to act: the summary, the quote, the exact moment in the recording, and a way to ask Rocky what was said." },
   ];
-  const tools = ["Google Meet", "Zoom", "Microsoft Teams", "Google Calendar", "Outlook", "Slack", "Teams chat", "Email"];
+  const tools: { group: string; items: string[] }[] = [
+    { group: "Records", items: ["Google Meet", "Zoom", "Microsoft Teams"] },
+    { group: "Reads", items: ["Google Calendar", "Outlook Calendar"] },
+    { group: "Delivers to", items: ["Slack", "Email", "Scoop"] },
+  ];
 
   return (
     <main className="flex-1 bg-[#f7f6f3] text-ink">
@@ -33,18 +37,16 @@ export default async function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-10 grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
+      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
         <div>
           <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[64px] [text-wrap:balance]">The meeting ends.<br />The work is already assigned.</h1>
           <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-xl leading-relaxed">Rocky learns how your team works: who owns what, and what each person handles. After every call he assigns the action items to the right people, with the context they need, so nothing gets lost between meetings and messages.</p>
           <div className="mt-7"><CtaLinks big /></div>
-          <div className="mt-8"><UseCaseChips /></div>
+          <p className="mt-6 text-sm text-muted">Works with Google Meet, Zoom and Microsoft Teams. Reads Google Calendar and Outlook.</p>
         </div>
-        <div className="relative">
-          <div className="rounded-[28px] overflow-hidden aspect-[4/5] sm:aspect-square lg:aspect-[4/5] flex items-end justify-center" style={{ background: "radial-gradient(120% 90% at 20% 10%, #dce7f5 0%, #3b5b85 35%, #f27daa 70%, #f6d27a 100%)" }}>
-            <Mascot pose="wave" size={520} className="!animate-none w-[92%] h-auto drop-shadow-[0_24px_40px_rgba(23,27,38,0.35)] translate-y-6" />
-          </div>
-          <div className="absolute -left-4 bottom-8 hidden md:block"><PromptVignette /></div>
+        <div className="relative lg:pr-6 lg:pt-8">
+          <HeroScene />
+          <div className="absolute -left-6 top-0 hidden md:block"><PromptVignette /></div>
         </div>
       </section>
 
@@ -74,9 +76,16 @@ export default async function Home() {
       {/* Tools */}
       <section className="max-w-6xl mx-auto px-6 py-16 text-center">
         <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-4xl">Connected to where you already work.</h2>
-        <p className="text-ink-soft mt-3 max-w-2xl mx-auto">Records on the three big platforms, reads your calendar, and delivers to the places your team actually looks.</p>
-        <div className="flex flex-wrap justify-center gap-2.5 mt-8">
-          {tools.map((t) => <span key={t} className="rounded-full border edge bg-paper px-4 py-2 text-sm font-medium text-ink-soft">{t}</span>)}
+        <p className="text-ink-soft mt-3 max-w-2xl mx-auto">Nothing new to adopt. Rocky joins the calls you already have and reports back where your team already looks.</p>
+        <div className="grid sm:grid-cols-3 gap-6 mt-10 max-w-3xl mx-auto text-left">
+          {tools.map((g) => (
+            <div key={g.group} className="rounded-2xl border edge bg-paper p-5">
+              <div className="eyebrow">{g.group}</div>
+              <ul className="mt-2 space-y-1.5">
+                {g.items.map((t) => <li key={t} className="text-sm font-medium text-ink-soft flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-merle" />{t}</li>)}
+              </ul>
+            </div>
+          ))}
         </div>
       </section>
 
