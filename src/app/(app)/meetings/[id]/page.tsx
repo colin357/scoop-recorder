@@ -4,7 +4,9 @@ import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { fmtDate, fmtDateTime, fmtTimestamp, PLATFORM_LABEL, safeJson } from "@/lib/utils";
 import type { TranscriptSegment } from "@/lib/recall";
-import { DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
+import { AvatarGroup, DueBadge, IconChip, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
+import { Icon } from "@/components/icons";
+import CopyLink from "@/components/copy-link";
 import { deleteMeetingAction, reprocessMeetingAction } from "@/app/actions/meetings";
 import RecordingPlayer from "@/components/recording-player";
 import { Mascot } from "@/components/mascot";
@@ -20,7 +22,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   const { org, membership } = await requireOrg();
   const meeting = await db.meeting.findFirst({
     where: { id, orgId: org.id },
-    include: { project: true, tasks: { include: { assignee: true, project: true }, orderBy: { dueDate: "asc" } } },
+    include: { project: true, attendees: true, tasks: { include: { assignee: true, project: true }, orderBy: { dueDate: "asc" } } },
   });
   if (!meeting) notFound();
 
@@ -32,24 +34,38 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Link href="/meetings" className="text-sm text-muted hover:text-ink">← Meetings</Link>
-          <h1 className="text-2xl font-semibold tracking-tight mt-1">{meeting.title}</h1>
-          <div className="flex items-center gap-3 text-sm text-muted mt-1">
-            <span>{PLATFORM_LABEL[meeting.platform]}</span>
-            <span>{fmtDateTime(meeting.startedAt ?? meeting.scheduledAt ?? meeting.createdAt)}</span>
-            {meeting.durationSec != null && <span>{Math.round(meeting.durationSec / 60)} min</span>}
-            <ProjectChip project={meeting.project} />
-            <StatusBadge status={meeting.status} />
-            <LiveStatus meetingId={meeting.id} status={meeting.status} />
+      <div className="space-y-4">
+        <Link href="/meetings" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink"><Icon name="chevron" size={14} className="rotate-90" />Meetings</Link>
+        <div className="card p-5 flex flex-col md:flex-row md:items-start gap-5">
+          <IconChip name="video" size={52} tone={meeting.status === "recording" ? "accent" : "neutral"} />
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{meeting.title}</h1>
+              <StatusBadge status={meeting.status} />
+              <LiveStatus meetingId={meeting.id} status={meeting.status} />
+            </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted mt-2">
+              <span className="inline-flex items-center gap-1.5"><Icon name="video" size={14} />{PLATFORM_LABEL[meeting.platform]}</span>
+              <span className="inline-flex items-center gap-1.5"><Icon name="calendar" size={14} />{fmtDateTime(meeting.startedAt ?? meeting.scheduledAt ?? meeting.createdAt)}</span>
+              {meeting.durationSec != null && <span className="inline-flex items-center gap-1.5"><Icon name="clock" size={14} />{Math.round(meeting.durationSec / 60)} min</span>}
+              <ProjectChip project={meeting.project} />
+              <span className="inline-flex items-center gap-1.5"><Icon name="check" size={14} />{meeting.tasks.length} task{meeting.tasks.length === 1 ? "" : "s"}</span>
+            </div>
+            {(meeting.attendees.length > 0 || transcript.length > 0) && (
+              <div className="flex items-center gap-2 mt-3 text-sm text-muted">
+                <AvatarGroup names={meeting.attendees.length > 0 ? meeting.attendees.map((a) => a.name) : [...new Set(transcript.map((x) => x.speaker))]} />
+                <span className="truncate">{(meeting.attendees.length > 0 ? meeting.attendees.map((a) => a.name) : [...new Set(transcript.map((x) => x.speaker))]).slice(0, 4).join(", ")}{meeting.attendees.length > 4 ? ` and ${meeting.attendees.length - 4} more` : ""}</span>
+              </div>
+            )}
           </div>
-        </div>
-        <div className="flex gap-2">
-          {(meeting.transcript || meeting.recallBotId) && (
-            <form action={reprocessMeetingAction.bind(null, meeting.id)}><button className="btn-secondary">Re-run AI</button></form>
-          )}
-          {membership.isAdmin && <form action={deleteMeetingAction.bind(null, meeting.id)}><button className="btn-ghost text-clay">Delete</button></form>}
+          <div className="flex flex-wrap gap-2 md:justify-end shrink-0">
+            <CopyLink />
+            {transcript.length > 0 && <a href={`/api/meetings/${meeting.id}/transcript`} className="btn-secondary"><Icon name="download" size={16} />Transcript</a>}
+            {(meeting.transcript || meeting.recallBotId) && (
+              <form action={reprocessMeetingAction.bind(null, meeting.id)}><button className="btn-secondary"><Icon name="refresh" size={16} />Re-run AI</button></form>
+            )}
+            {membership.isAdmin && <form action={deleteMeetingAction.bind(null, meeting.id)}><button className="btn-ghost text-clay" title="Delete meeting"><Icon name="trash" size={16} />Delete</button></form>}
+          </div>
         </div>
       </div>
 

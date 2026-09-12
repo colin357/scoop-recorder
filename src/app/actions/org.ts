@@ -23,6 +23,7 @@ export async function updateOrgSettingsAction(form: FormData) {
   await db.organization.update({ where: { id: org.id }, data });
   await logActivity({ orgId: org.id, actorId: membership.id, action: "org.settings_updated", entityType: "org", entityId: org.id, summary: `${membership.name} updated organization settings` });
   revalidatePath("/settings/organization");
+  redirect("/settings/organization?toast=Settings+saved");
 }
 
 export async function testWebhookAction(kind: "slack" | "teams") {
@@ -42,6 +43,7 @@ export async function updateProfileAction(form: FormData) {
   });
   await logActivity({ orgId: org.id, actorId: membership.id, action: "member.profile_updated", entityType: "member", entityId: membership.id, summary: `${name} updated their profile` });
   revalidatePath("/settings/profile");
+  redirect("/settings/profile?toast=Profile+saved");
 }
 
 export async function changePasswordAction(_: { error?: string; ok?: boolean }, form: FormData): Promise<{ error?: string; ok?: boolean }> {

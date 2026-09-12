@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { requireAdmin, requireOrg } from "@/lib/auth";
@@ -35,6 +36,7 @@ export async function upsertMemberAction(form: FormData) {
     if (!member.userId) await sendInvite(member.id, actor.name, org.name);
   }
   revalidatePath("/settings/team");
+  redirect(`/settings/team?toast=${id ? "Member+saved" : "Invitation+sent"}`);
 }
 
 async function sendInvite(memberId: string, inviterName: string, orgName: string) {
@@ -89,6 +91,7 @@ export async function createProjectAction(form: FormData) {
     },
   });
   revalidatePath("/projects");
+  redirect("/projects?toast=Project+created");
 }
 
 export async function deleteProjectAction(projectId: string) {
@@ -130,4 +133,5 @@ export async function updateBusinessDescriptionAction(form: FormData) {
   const { org } = await requireOrg();
   await db.organization.update({ where: { id: org.id }, data: { businessDescription: String(form.get("businessDescription") ?? "").trim() || null } });
   revalidatePath("/projects");
+  redirect("/projects?toast=Business+description+saved");
 }

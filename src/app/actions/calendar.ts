@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireAdmin, requireOrg } from "@/lib/auth";
 import { setEventDecision, syncConnection } from "@/lib/calendar";
@@ -26,6 +27,7 @@ export async function setRecordPolicyAction(form: FormData) {
   }
   revalidatePath("/settings/calendar");
   revalidatePath("/dashboard");
+  redirect("/settings/calendar?toast=Recording+policy+saved");
 }
 
 export async function syncNowAction() {

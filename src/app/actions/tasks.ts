@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { logActivity } from "@/lib/audit";
@@ -95,6 +96,7 @@ export async function createTaskAction(form: FormData) {
   await logActivity({ orgId: org.id, actorId: membership.id, action: "task.created", entityType: "task", entityId: created.id, summary: `${membership.name} created “${title}”` });
   if (created.assigneeId) notifyTaskAssigned(created.id).catch(() => {});
   revalidatePath("/tasks");
+  redirect("/tasks?toast=Task+created");
 }
 
 export async function deleteTaskAction(taskId: string) {
