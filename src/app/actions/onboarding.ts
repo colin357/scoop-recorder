@@ -60,7 +60,7 @@ export async function completeOnboarding(input: OnboardingInput) {
     },
   });
   await db.onboardingDraft.deleteMany({ where: { userId: user.id } });
-  redirect("/dashboard");
+  redirect("/onboarding/calendar");
 }
 
 // ---------- Conversational onboarding ----------

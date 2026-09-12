@@ -12,6 +12,7 @@ export async function GET(req: Request, { params }: RouteContext<"/api/calendar/
   const { provider } = await params;
   const base = appUrl();
   const back = (q: string) => NextResponse.redirect(new URL(`/settings/calendar?${q}`, base));
+  const onboardingBack = (q: string) => NextResponse.redirect(new URL(`/onboarding/calendar?${q}`, base));
   if (provider !== "google" && provider !== "microsoft") return back("error=unknown_provider");
 
   const url = new URL(req.url);
@@ -22,7 +23,8 @@ export async function GET(req: Request, { params }: RouteContext<"/api/calendar/
   jar.delete("cal_oauth_state");
   if (!code || !state || state !== expected) return back("error=state_mismatch");
 
-  const { org, membership } = await requireOrg();
+  const { org, membership } = await requireOrg({ skipCalendarGate: true });
+  const firstConnection = (await db.calendarConnection.count({ where: { memberId: membership.id } })) === 0;
   try {
     const tok = await exchangeCode(provider as CalendarProvider, code);
     const conn = await db.calendarConnection.upsert({
@@ -44,8 +46,10 @@ export async function GET(req: Request, { params }: RouteContext<"/api/calendar/
       },
     });
     await syncConnection(conn.id).catch((e) => console.error("initial sync failed", e));
+    if (firstConnection) return NextResponse.redirect(new URL("/dashboard?calendar=connected", base));
     return back("connected=1");
   } catch (e) {
-    return back(`error=${encodeURIComponent(e instanceof Error ? e.message : "oauth_failed")}`);
+    const q = `error=${encodeURIComponent(e instanceof Error ? e.message : "oauth_failed")}`;
+    return firstConnection ? onboardingBack(q) : back(q);
   }
 }

@@ -98,7 +98,7 @@ export default function OnboardingWizard({ self }: { self: { name: string; email
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex justify-between">
             <button className="btn-ghost" onClick={() => setStep(1)}>Back</button>
-            <button className="btn-primary" onClick={finish} disabled={pending}>{pending ? "Saving…" : "Finish setup"}</button>
+            <button className="btn-primary" onClick={finish} disabled={pending}>{pending ? "Saving…" : "Next: connect calendar"}</button>
           </div>
         </div>
       )}

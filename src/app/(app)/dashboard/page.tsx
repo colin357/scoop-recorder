@@ -6,7 +6,8 @@ import { DueBadge, Empty, PriorityBadge, ProjectChip, StatusBadge } from "@/comp
 import { Blobs, Mascot } from "@/components/mascot";
 import UpcomingList from "@/components/upcoming-list";
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
+  const sp = await searchParams;
   const { org, membership } = await requireOrg();
   const [myTasks, overdueCount, recentMeetings, openCount, upcoming, calendarCount] = await Promise.all([
     db.task.findMany({
@@ -27,6 +28,11 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-8">
+      {sp.calendar === "connected" && (
+        <p className="rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm p-3">
+          Calendar connected. Rocky is syncing your upcoming meetings now and will ask before recording each one. Change that under Calendar settings.
+        </p>
+      )}
       <section className="hero relative overflow-hidden rounded-2xl border border-indigo-100 p-6 flex items-center gap-6">
         <Blobs />
         <Mascot pose={pose} size={112} className="relative shrink-0" />

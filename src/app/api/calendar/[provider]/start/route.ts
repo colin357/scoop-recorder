@@ -8,7 +8,7 @@ import { appUrl } from "@/lib/urls";
 export async function GET(_req: Request, { params }: RouteContext<"/api/calendar/[provider]/start">) {
   const { provider } = await params;
   if (provider !== "google" && provider !== "microsoft") return NextResponse.json({ error: "Unknown provider" }, { status: 400 });
-  await requireOrg();
+  await requireOrg({ skipCalendarGate: true });
   if (!calendarProviderConfigured(provider as CalendarProvider)) {
     return NextResponse.redirect(new URL("/settings/calendar?error=not_configured", appUrl()));
   }

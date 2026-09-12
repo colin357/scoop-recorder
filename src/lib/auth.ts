@@ -45,13 +45,26 @@ export const getCurrentUser = cache(async () => {
   return session.user;
 });
 
-/** Current user, their membership, and org. Redirects to login/onboarding as needed. */
-export const requireOrg = cache(async () => {
+/**
+ * Current user, their membership, and org. Redirects to login/onboarding as needed.
+ * Every member must connect a calendar before using the app (when a calendar
+ * provider is configured); pass { skipCalendarGate: true } on the routes that
+ * implement that step.
+ */
+export const requireOrg = cache(async (opts?: { skipCalendarGate?: boolean }) => {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const membership = user.memberships[0];
   if (!membership) redirect("/onboarding");
+  if (!opts?.skipCalendarGate && (await calendarRequired(membership.id))) redirect("/onboarding/calendar");
   return { user, membership, org: membership.org };
+});
+
+export const calendarRequired = cache(async (memberId: string) => {
+  const { calendarProviderConfigured } = await import("./calendar");
+  if (!calendarProviderConfigured("google") && !calendarProviderConfigured("microsoft")) return false;
+  const count = await db.calendarConnection.count({ where: { memberId } });
+  return count === 0;
 });
 
 export async function signUp(input: { name: string; email: string; password: string }) {

@@ -78,10 +78,10 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
             <div className="card p-4 flex items-center gap-4 border-emerald-200 bg-emerald-50/40">
               <Mascot pose="celebrate" size={56} />
               <div className="flex-1 text-sm">
-                <div className="font-semibold">Ready to go</div>
+                <div className="font-semibold">Almost there</div>
                 <div className="text-slate-600">{d.orgName} · {d.members.length} team member{d.members.length === 1 ? "" : "s"} · {d.projects.filter((p) => p.confirmed).length} projects</div>
               </div>
-              <button className="btn-primary" onClick={() => run(finishFromDraftAction)}>Finish setup</button>
+              <button className="btn-primary" onClick={() => run(finishFromDraftAction)}>Next: connect calendar</button>
             </div>
           )}
           {error && <p className="text-sm text-red-600">{error}</p>}
