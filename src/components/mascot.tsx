@@ -1,31 +1,37 @@
 /**
  * "Rocky", the mascot: a blue merle Australian Shepherd notetaker with headphones,
- * modeled on the founder's dog. Pure inline SVG (no assets), drawn sitting in a
- * three-quarter view with layered fur, shading and merle mottling.
+ * modeled on the founder's dog. Pure inline SVG (no assets), drawn sitting and
+ * facing the viewer with layered fur, shading and marbled merle.
  * Poses change the paws, eyes, mouth and accessories.
  */
 export type MascotPose = "wave" | "listen" | "think" | "celebrate" | "sleep" | "write";
 
 const INK = "#0f172a";
-const WHITE = "#fbfaf6";
-const CREAM = "#f1ede4";
-const COPPER = "#d4894a";
-const COPPER_DARK = "#b86f33";
-const MERLE = "#a3acbb";
-const MERLE_LIGHT = "#c3c9d3";
-const MERLE_DARK = "#2b3340";
-const BLACK = "#161b25";
+const WHITE = "#fcfbf8";
+const CREAM = "#eee9df";
+const COPPER_DARK = "#b5652b";
+const MERLE = "#9ba4b3";
+const MERLE_DARK = "#2a3140";
+const BLACK = "#141922";
 
-/** Irregular merle blotches; deterministic so server and client render the same. */
-const SPOTS: [number, number, number, number, number][] = [
-  // cx, cy, rx, ry, rotate
-  [64, 152, 9, 6, -20], [52, 168, 6, 4, 15], [74, 176, 7, 4, 40], [142, 156, 8, 6, 25], [150, 172, 6, 4, -30],
-  [134, 178, 6, 3, 10], [58, 138, 5, 3, 0], [146, 140, 5, 4, -15], [70, 118, 6, 4, 30], [130, 120, 7, 4, -25],
-  [46, 74, 6, 4, 20], [56, 60, 5, 3, -30], [150, 70, 6, 4, -20], [142, 56, 5, 3, 25], [62, 90, 4, 3, 0], [138, 92, 4, 3, 0],
+// Marbled merle patches (organic blobs) for the body, in 200x200 space.
+const BODY_PATCHES = [
+  "M48 150 q6 -14 20 -10 q10 4 6 16 q-4 12 -16 10 q-14 -2 -10 -16 Z",
+  "M132 140 q12 -10 22 0 q6 10 -4 18 q-12 6 -20 -2 q-6 -8 2 -16 Z",
+  "M60 178 q4 -8 14 -6 q8 4 4 12 q-6 6 -14 2 q-6 -3 -4 -8 Z",
+  "M138 176 q6 -8 14 -4 q6 6 0 12 q-8 4 -14 0 q-4 -4 0 -8 Z",
+  "M70 128 q8 -8 16 -2 q4 6 -2 12 q-8 4 -14 -2 q-4 -4 0 -8 Z",
+  "M124 126 q8 -6 14 0 q4 6 -2 12 q-8 4 -14 -2 q-4 -6 2 -10 Z",
+];
+const HEAD_PATCHES = [
+  "M60 62 q4 -16 18 -16 q8 2 6 12 q-4 12 -14 12 q-12 -2 -10 -8 Z",
+  "M116 46 q12 -2 20 8 q4 10 -6 14 q-12 2 -16 -6 q-4 -10 2 -16 Z",
+  "M64 84 q4 -6 10 -2 q2 6 -4 8 q-8 2 -6 -6 Z",
+  "M128 82 q6 -4 10 2 q0 6 -6 6 q-8 0 -4 -8 Z",
 ];
 const SPECKLES: [number, number][] = [
-  [60, 160], [68, 144], [80, 170], [136, 164], [152, 160], [140, 130], [66, 130], [50, 156], [156, 150], [128, 174],
-  [44, 66], [52, 82], [156, 64], [148, 82], [64, 70], [138, 76],
+  [56, 136], [78, 148], [92, 176], [110, 178], [124, 160], [150, 160], [66, 166], [146, 186], [58, 186], [86, 132], [116, 134],
+  [74, 52], [86, 46], [110, 42], [128, 66], [70, 74], [136, 74], [62, 96], [140, 96],
 ];
 
 export function Mascot({ pose = "wave", size = 96, className = "" }: { pose?: MascotPose; size?: number; className?: string }) {
@@ -33,6 +39,9 @@ export function Mascot({ pose = "wave", size = 96, className = "" }: { pose?: Ma
   const leftPawUp = pose === "wave" || pose === "celebrate";
   const rightPawUp = pose === "celebrate";
   const mouthOpen = pose !== "think" && pose !== "sleep";
+
+  const HEAD = "M100 34 Q132 34 140 60 Q146 84 134 104 Q120 122 100 122 Q80 122 66 104 Q54 84 60 60 Q68 34 100 34 Z";
+  const BODY = "M100 118 Q136 118 148 140 Q160 156 160 178 Q160 194 140 196 L60 196 Q40 194 40 178 Q40 156 52 140 Q64 118 100 118 Z";
 
   return (
     <svg
@@ -44,212 +53,208 @@ export function Mascot({ pose = "wave", size = 96, className = "" }: { pose?: Ma
       aria-label={`Rocky the Aussie mascot, ${pose}`}
     >
       <defs>
-        <radialGradient id="rkMerle" cx="0.4" cy="0.35" r="0.8">
-          <stop offset="0" stopColor={MERLE_LIGHT} />
+        <radialGradient id="rkMerle" cx="0.45" cy="0.3" r="0.85">
+          <stop offset="0" stopColor="#c4cad4" />
           <stop offset="1" stopColor={MERLE} />
         </radialGradient>
         <linearGradient id="rkWhite" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={WHITE} />
           <stop offset="1" stopColor={CREAM} />
         </linearGradient>
-        <linearGradient id="rkCopper" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#e3a067" />
+        <linearGradient id="rkCopper" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#e6a06a" />
           <stop offset="1" stopColor={COPPER_DARK} />
         </linearGradient>
-        <radialGradient id="rkBlue" cx="0.35" cy="0.35" r="0.7">
-          <stop offset="0" stopColor="#bae6fd" />
-          <stop offset="0.6" stopColor="#38bdf8" />
-          <stop offset="1" stopColor="#0369a1" />
+        <radialGradient id="rkBlue" cx="0.35" cy="0.35" r="0.75">
+          <stop offset="0" stopColor="#c7ecfd" />
+          <stop offset="0.55" stopColor="#38bdf8" />
+          <stop offset="1" stopColor="#075985" />
         </radialGradient>
-        <radialGradient id="rkAmber" cx="0.35" cy="0.35" r="0.7">
-          <stop offset="0" stopColor="#fcd34d" />
-          <stop offset="0.6" stopColor="#d97706" />
-          <stop offset="1" stopColor="#78350f" />
+        <radialGradient id="rkAmber" cx="0.35" cy="0.35" r="0.75">
+          <stop offset="0" stopColor="#fde68a" />
+          <stop offset="0.55" stopColor="#d97706" />
+          <stop offset="1" stopColor="#713f12" />
         </radialGradient>
         <linearGradient id="rkTongue" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fb7fb0" />
-          <stop offset="1" stopColor="#e0447f" />
+          <stop offset="0" stopColor="#fb86b4" />
+          <stop offset="1" stopColor="#dc3f7d" />
         </linearGradient>
         <linearGradient id="rkPhones" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#334155" />
+          <stop offset="0" stopColor="#3b4657" />
           <stop offset="1" stopColor={INK} />
         </linearGradient>
-        <clipPath id="rkHeadClip"><path d="M58 70 Q58 32 100 32 Q142 32 142 70 Q146 98 124 108 Q100 116 76 108 Q54 98 58 70 Z" /></clipPath>
-        <clipPath id="rkBodyClip"><path d="M44 150 Q40 108 100 104 Q160 108 156 150 Q160 186 132 190 L68 190 Q40 186 44 150 Z" /></clipPath>
+        <clipPath id="rkHeadClip"><path d={HEAD} /></clipPath>
+        <clipPath id="rkBodyClip"><path d={BODY} /></clipPath>
       </defs>
 
-      {/* ---------- haunches & body ---------- */}
-      <ellipse cx="100" cy="164" rx="60" ry="30" fill="url(#rkMerle)" />
-      <path d="M44 150 Q40 108 100 104 Q160 108 156 150 Q160 186 132 190 L68 190 Q40 186 44 150 Z" fill="url(#rkMerle)" />
+      {/* ================= body ================= */}
+      <path d={BODY} fill="url(#rkMerle)" />
       <g clipPath="url(#rkBodyClip)">
-        {SPOTS.filter(([, cy]) => cy > 110).map(([cx, cy, rx, ry, r], i) => (
-          <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={MERLE_DARK} transform={`rotate(${r} ${cx} ${cy})`} />
-        ))}
-        {SPECKLES.filter(([, cy]) => cy > 110).map(([cx, cy], i) => (
-          <circle key={i} cx={cx} cy={cy} r="1.6" fill={BLACK} opacity="0.7" />
-        ))}
-        {/* chest ruff: white with tufted edge */}
-        <path d="M74 112 Q100 100 126 112 L122 140 Q118 146 122 154 Q116 150 116 160 Q110 154 108 166 Q104 158 100 170 Q96 158 92 166 Q90 154 84 160 Q84 150 78 154 Q82 146 78 140 Z" fill="url(#rkWhite)" />
-        <path d="M86 120 Q100 128 114 120" stroke={CREAM} strokeWidth="2" fill="none" opacity="0.9" />
+        {BODY_PATCHES.map((d, i) => <path key={i} d={d} fill={MERLE_DARK} />)}
+        {SPECKLES.filter(([, y]) => y > 110).map(([x, y], i) => <circle key={i} cx={x} cy={y} r="1.5" fill={BLACK} opacity="0.55" />)}
+        {/* copper on the shoulders */}
+        <path d="M52 146 q6 -18 22 -20 q6 8 -2 20 q-10 10 -20 0 Z" fill="url(#rkCopper)" opacity="0.9" />
+        <path d="M148 146 q-6 -18 -22 -20 q-6 8 2 20 q10 10 20 0 Z" fill="url(#rkCopper)" opacity="0.9" />
+        {/* white bib with a tufted edge */}
+        <path d="M78 118 Q100 112 122 118 L124 150 q-4 4 -2 10 q-6 -2 -6 8 q-6 -4 -8 6 q-4 -6 -8 2 q-2 -8 -8 -4 q-2 -8 -8 -6 q2 -6 -2 -10 Z" fill="url(#rkWhite)" />
+        {/* fur strands */}
+        <g stroke="#7d8798" strokeWidth="1.2" strokeLinecap="round" fill="none" opacity="0.7">
+          <path d="M50 170 q3 -6 2 -12" /><path d="M150 170 q-3 -6 -2 -12" /><path d="M58 188 q2 -5 1 -9" /><path d="M142 188 q-2 -5 -1 -9" />
+        </g>
+        <g stroke="#d9d4c8" strokeWidth="1.2" strokeLinecap="round" fill="none">
+          <path d="M92 130 q2 6 0 12" /><path d="M108 130 q-2 6 0 12" /><path d="M100 144 q0 8 0 14" />
+        </g>
       </g>
 
-      {/* ---------- front legs ---------- */}
-      {/* left (viewer's left) */}
-      <g className="mascot-arm-left" style={{ transformOrigin: "80px 138px" }}>
+      {/* ================= front legs ================= */}
+      <g className="mascot-arm-left" style={{ transformOrigin: "78px 148px" }}>
         {leftPawUp ? (
           <>
-            <path d="M80 138 Q56 122 52 96" stroke="url(#rkCopper)" strokeWidth="15" strokeLinecap="round" fill="none" />
-            <path d="M62 112 Q54 104 52 96" stroke={WHITE} strokeWidth="15" strokeLinecap="round" fill="none" />
-            <ellipse cx="51" cy="92" rx="9" ry="7" fill={WHITE} />
-            <g fill={CREAM}><circle cx="46" cy="90" r="1.8" /><circle cx="51" cy="87" r="1.8" /><circle cx="56" cy="90" r="1.8" /></g>
+            <path d="M78 150 Q60 130 52 104" stroke="url(#rkCopper)" strokeWidth="16" strokeLinecap="round" fill="none" />
+            <path d="M58 116 Q54 110 52 104" stroke={WHITE} strokeWidth="16" strokeLinecap="round" fill="none" />
+            <ellipse cx="51" cy="100" rx="10" ry="8" fill={WHITE} />
+            <g fill={CREAM}><circle cx="45" cy="97" r="2" /><circle cx="51" cy="94" r="2" /><circle cx="57" cy="97" r="2" /></g>
           </>
         ) : (
           <>
-            <path d="M80 138 L78 184" stroke="url(#rkCopper)" strokeWidth="15" strokeLinecap="round" />
-            <path d="M78 160 L78 184" stroke={WHITE} strokeWidth="15" strokeLinecap="round" />
-            <ellipse cx="78" cy="188" rx="11" ry="6" fill={WHITE} />
-            <g fill={CREAM}><circle cx="72" cy="189" r="1.6" /><circle cx="78" cy="191" r="1.6" /><circle cx="84" cy="189" r="1.6" /></g>
+            <path d="M78 150 L76 188" stroke="url(#rkCopper)" strokeWidth="16" strokeLinecap="round" />
+            <path d="M76 170 L76 188" stroke={WHITE} strokeWidth="16" strokeLinecap="round" />
+            <ellipse cx="76" cy="192" rx="12" ry="6.5" fill={WHITE} />
+            <g fill={CREAM}><circle cx="69" cy="193" r="1.8" /><circle cx="76" cy="195" r="1.8" /><circle cx="83" cy="193" r="1.8" /></g>
           </>
         )}
       </g>
-      {/* right (viewer's right) */}
-      <g style={{ transformOrigin: "120px 138px" }}>
+      <g style={{ transformOrigin: "122px 148px" }}>
         {rightPawUp ? (
           <>
-            <path d="M120 138 Q144 122 148 96" stroke="url(#rkCopper)" strokeWidth="15" strokeLinecap="round" fill="none" />
-            <path d="M138 112 Q146 104 148 96" stroke={WHITE} strokeWidth="15" strokeLinecap="round" fill="none" />
-            <ellipse cx="149" cy="92" rx="9" ry="7" fill={WHITE} />
+            <path d="M122 150 Q140 130 148 104" stroke="url(#rkCopper)" strokeWidth="16" strokeLinecap="round" fill="none" />
+            <path d="M142 116 Q146 110 148 104" stroke={WHITE} strokeWidth="16" strokeLinecap="round" fill="none" />
+            <ellipse cx="149" cy="100" rx="10" ry="8" fill={WHITE} />
           </>
         ) : pose === "write" ? (
           <>
-            <path d="M120 138 Q146 140 154 118" stroke="url(#rkCopper)" strokeWidth="15" strokeLinecap="round" fill="none" />
-            <path d="M148 128 Q152 122 154 118" stroke={WHITE} strokeWidth="15" strokeLinecap="round" fill="none" />
-            <ellipse cx="156" cy="114" rx="9" ry="7" fill={WHITE} />
-            <path d="M160 108 L186 74" stroke="#f59e0b" strokeWidth="6" strokeLinecap="round" />
-            <path d="M186 74 L191 67" stroke={INK} strokeWidth="6" strokeLinecap="round" />
-            <path d="M160 108 L156 116" stroke="#fde68a" strokeWidth="6" strokeLinecap="round" />
+            <path d="M122 150 Q146 148 156 126" stroke="url(#rkCopper)" strokeWidth="16" strokeLinecap="round" fill="none" />
+            <path d="M152 134 Q154 130 156 126" stroke={WHITE} strokeWidth="16" strokeLinecap="round" fill="none" />
+            <ellipse cx="158" cy="122" rx="10" ry="8" fill={WHITE} />
+            <path d="M162 116 L188 80" stroke="#f59e0b" strokeWidth="6" strokeLinecap="round" />
+            <path d="M188 80 L193 73" stroke={INK} strokeWidth="6" strokeLinecap="round" />
           </>
         ) : (
           <>
-            <path d="M120 138 L122 184" stroke="url(#rkCopper)" strokeWidth="15" strokeLinecap="round" />
-            <path d="M122 160 L122 184" stroke={WHITE} strokeWidth="15" strokeLinecap="round" />
-            <ellipse cx="122" cy="188" rx="11" ry="6" fill={WHITE} />
-            <g fill={CREAM}><circle cx="116" cy="189" r="1.6" /><circle cx="122" cy="191" r="1.6" /><circle cx="128" cy="189" r="1.6" /></g>
+            <path d="M122 150 L124 188" stroke="url(#rkCopper)" strokeWidth="16" strokeLinecap="round" />
+            <path d="M124 170 L124 188" stroke={WHITE} strokeWidth="16" strokeLinecap="round" />
+            <ellipse cx="124" cy="192" rx="12" ry="6.5" fill={WHITE} />
+            <g fill={CREAM}><circle cx="117" cy="193" r="1.8" /><circle cx="124" cy="195" r="1.8" /><circle cx="131" cy="193" r="1.8" /></g>
           </>
         )}
       </g>
 
-      {/* ---------- ears (behind head) ---------- */}
-      <path d="M70 48 Q44 46 36 78 Q34 96 48 100 Q64 98 72 76 Z" fill={BLACK} />
-      <path d="M66 54 Q50 56 44 78 Q44 90 52 92 Q62 88 66 70 Z" fill="url(#rkCopper)" opacity="0.9" />
-      <path d="M40 84 q-2 6 2 8 M46 94 q-4 3 -2 7" stroke={BLACK} strokeWidth="3" strokeLinecap="round" fill="none" />
-      <path d="M130 48 Q156 46 164 78 Q166 96 152 100 Q136 98 128 76 Z" fill={BLACK} />
-      <path d="M134 54 Q150 56 156 78 Q156 90 148 92 Q138 88 134 70 Z" fill="url(#rkCopper)" opacity="0.9" />
-      <path d="M160 84 q2 6 -2 8 M154 94 q4 3 2 7" stroke={BLACK} strokeWidth="3" strokeLinecap="round" fill="none" />
+      {/* ================= ears (behind head) ================= */}
+      <path d="M72 46 Q46 50 38 84 Q36 104 50 108 Q66 106 72 84 Z" fill={BLACK} />
+      <path d="M70 52 Q52 58 46 84 Q46 98 54 100 Q64 96 68 76 Z" fill="url(#rkCopper)" opacity="0.85" />
+      <path d="M40 96 q3 4 8 6 q-2 4 2 6" stroke="#3b4657" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.8" />
+      <path d="M128 46 Q154 50 162 84 Q164 104 150 108 Q134 106 128 84 Z" fill={BLACK} />
+      <path d="M130 52 Q148 58 154 84 Q154 98 146 100 Q136 96 132 76 Z" fill="url(#rkCopper)" opacity="0.85" />
+      <path d="M160 96 q-3 4 -8 6 q2 4 -2 6" stroke="#3b4657" strokeWidth="1.5" strokeLinecap="round" fill="none" opacity="0.8" />
 
-      {/* ---------- head ---------- */}
-      <path d="M58 70 Q58 32 100 32 Q142 32 142 70 Q146 98 124 108 Q100 116 76 108 Q54 98 58 70 Z" fill="url(#rkMerle)" />
+      {/* ================= head ================= */}
+      <path d={HEAD} fill="url(#rkMerle)" />
       <g clipPath="url(#rkHeadClip)">
-        {/* copper cheeks fading to white muzzle */}
-        <ellipse cx="72" cy="88" rx="22" ry="20" fill="url(#rkCopper)" />
-        <ellipse cx="128" cy="88" rx="22" ry="20" fill="url(#rkCopper)" />
-        {/* merle mottling on the crown and sides */}
-        {SPOTS.filter(([, cy]) => cy <= 110).map(([cx, cy, rx, ry, r], i) => (
-          <ellipse key={i} cx={cx} cy={cy} rx={rx} ry={ry} fill={MERLE_DARK} transform={`rotate(${r} ${cx} ${cy})`} />
-        ))}
-        {SPECKLES.filter(([, cy]) => cy <= 110).map(([cx, cy], i) => (
-          <circle key={i} cx={cx} cy={cy} r="1.5" fill={BLACK} opacity="0.7" />
-        ))}
-        <path d="M84 40 Q100 46 116 40 Q112 34 100 34 Q88 34 84 40 Z" fill={MERLE_DARK} opacity="0.6" />
-        {/* copper eyebrows */}
-        <ellipse cx="78" cy="66" rx="7" ry="4.5" fill="url(#rkCopper)" />
-        <ellipse cx="122" cy="66" rx="7" ry="4.5" fill="url(#rkCopper)" />
-        {/* white blaze: forehead to muzzle, widening over the nose */}
-        <path d="M92 32 L108 32 L106 62 Q112 78 104 92 Q100 94 96 92 Q88 78 94 62 Z" fill="url(#rkWhite)" />
-        {/* muzzle */}
-        <path d="M76 92 Q100 82 124 92 Q128 108 100 116 Q72 108 76 92 Z" fill="url(#rkWhite)" />
-        <path d="M84 104 Q100 112 116 104" stroke={CREAM} strokeWidth="1.5" fill="none" />
-        {/* fur tufts along the cheek edge */}
-        <path d="M60 92 q4 -3 4 3 q3 -4 5 1 M136 92 q-4 -3 -4 3 q-3 -4 -5 1" stroke={COPPER_DARK} strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.6" />
+        {HEAD_PATCHES.map((d, i) => <path key={i} d={d} fill={MERLE_DARK} />)}
+        {SPECKLES.filter(([, y]) => y <= 110).map(([x, y], i) => <circle key={i} cx={x} cy={y} r="1.4" fill={BLACK} opacity="0.55" />)}
+        {/* copper points: around the eyes and on the cheeks */}
+        <path d="M62 76 q8 -8 22 -2 q8 8 4 22 q-6 14 -18 12 q-12 -6 -10 -18 q0 -8 2 -14 Z" fill="url(#rkCopper)" />
+        <path d="M138 76 q-8 -8 -22 -2 q-8 8 -4 22 q6 14 18 12 q12 -6 10 -18 q0 -8 -2 -14 Z" fill="url(#rkCopper)" />
+        <ellipse cx="78" cy="62" rx="6" ry="4" fill="#e6a06a" />
+        <ellipse cx="122" cy="62" rx="6" ry="4" fill="#e6a06a" />
+        {/* white blaze: narrow at the forehead, widening into the muzzle */}
+        <path d="M95 34 L105 34 Q106 52 104 66 Q116 80 116 96 Q112 118 100 120 Q88 118 84 96 Q84 80 96 66 Q94 52 95 34 Z" fill="url(#rkWhite)" />
+        {/* cheek fluff (white) at the jaw */}
+        <path d="M66 100 q10 -6 18 4 q-2 12 -12 14 q-8 -6 -6 -18 Z" fill="url(#rkWhite)" opacity="0.95" />
+        <path d="M134 100 q-10 -6 -18 4 q2 12 12 14 q8 -6 6 -18 Z" fill="url(#rkWhite)" opacity="0.95" />
+        {/* fur texture strokes */}
+        <g stroke="#7d8798" strokeWidth="1.1" strokeLinecap="round" fill="none" opacity="0.6">
+          <path d="M66 58 q2 -6 6 -8" /><path d="M134 58 q-2 -6 -6 -8" /><path d="M90 40 q2 -3 5 -3" /><path d="M110 40 q-2 -3 -5 -3" />
+        </g>
+        <g stroke="#d9d4c8" strokeWidth="1.1" strokeLinecap="round" fill="none">
+          <path d="M96 74 q1 6 0 10" /><path d="M104 74 q-1 6 0 10" /><path d="M72 112 q3 -3 4 -7" /><path d="M128 112 q-3 -3 -4 -7" />
+        </g>
       </g>
 
-      {/* ---------- eyes ---------- */}
+      {/* ================= eyes ================= */}
       {eyesClosed ? (
         <g stroke={INK} strokeWidth="3" strokeLinecap="round" fill="none">
-          <path d="M74 74 q8 6 16 0" />
-          <path d="M110 74 q8 6 16 0" />
-          <path d="M72 70 q3 -3 6 -2 M128 70 q-3 -3 -6 -2" strokeWidth="2" />
+          <path d="M72 78 q8 6 16 0" />
+          <path d="M112 78 q8 6 16 0" />
         </g>
       ) : (
         <g>
-          {/* almond eye whites with lid line */}
-          <path d="M72 74 Q82 64 92 74 Q82 82 72 74 Z" fill="white" />
-          <path d="M108 74 Q118 64 128 74 Q118 82 108 74 Z" fill="white" />
-          <circle cx="82.5" cy="74" r="6" fill="url(#rkBlue)" />
-          <circle cx="117.5" cy="74" r="6" fill="url(#rkAmber)" />
-          <circle cx="82.5" cy="74.5" r="3" fill={INK} />
-          <circle cx="117.5" cy="74.5" r="3" fill={INK} />
-          <circle cx="84.6" cy="71.6" r="1.7" fill="white" />
-          <circle cx="119.6" cy="71.6" r="1.7" fill="white" />
-          <path d="M72 74 Q82 64 92 74" stroke={INK} strokeWidth="2" fill="none" strokeLinecap="round" />
-          <path d="M108 74 Q118 64 128 74" stroke={INK} strokeWidth="2" fill="none" strokeLinecap="round" />
+          <path d="M70 78 Q80 66 90 78 Q80 86 70 78 Z" fill="white" />
+          <path d="M110 78 Q120 66 130 78 Q120 86 110 78 Z" fill="white" />
+          <circle cx="80.5" cy="78" r="6.2" fill="url(#rkBlue)" />
+          <circle cx="119.5" cy="78" r="6.2" fill="url(#rkAmber)" />
+          <circle cx="80.5" cy="78.5" r="3.1" fill={INK} />
+          <circle cx="119.5" cy="78.5" r="3.1" fill={INK} />
+          <circle cx="82.8" cy="75.4" r="1.8" fill="white" />
+          <circle cx="121.8" cy="75.4" r="1.8" fill="white" />
+          <path d="M70 78 Q80 66 90 78" stroke={INK} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+          <path d="M110 78 Q120 66 130 78" stroke={INK} strokeWidth="2.2" fill="none" strokeLinecap="round" />
         </g>
       )}
 
-      {/* ---------- nose & mouth ---------- */}
-      <path d="M92 90 Q100 86 108 90 Q108 98 100 100 Q92 98 92 90 Z" fill={INK} />
-      <ellipse cx="96.5" cy="90" rx="2.2" ry="1.3" fill="white" opacity="0.5" />
-      <path d="M96 95 q1 2 2 0 M102 95 q1 2 2 0" stroke="#475569" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M100 100 L100 104" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+      {/* ================= nose & mouth ================= */}
+      <path d="M91 95 Q100 90 109 95 Q110 104 100 106 Q90 104 91 95 Z" fill={INK} />
+      <ellipse cx="96" cy="95" rx="2.4" ry="1.4" fill="white" opacity="0.45" />
+      <path d="M95 100 q1.5 2.5 3 0 M102 100 q1.5 2.5 3 0" stroke="#475569" strokeWidth="1.3" strokeLinecap="round" fill="none" />
+      <path d="M100 106 L100 110" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
       {mouthOpen ? (
         <>
-          <path d="M82 102 Q100 122 118 102 Q100 110 82 102 Z" fill={INK} />
-          <path d="M92 106 L91 122 Q100 134 109 122 L108 106 Q100 111 92 106 Z" fill="url(#rkTongue)" />
-          <path d="M100 112 L100 128" stroke="#c2185b" strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
-          <path d="M84 102 Q100 112 116 102" stroke={INK} strokeWidth="2" fill="none" strokeLinecap="round" />
-          <path d="M88 105 l2 3 M112 105 l-2 3" stroke="white" strokeWidth="2" strokeLinecap="round" />
+          <path d="M82 108 Q100 128 118 108 Q100 116 82 108 Z" fill={INK} />
+          <path d="M92 112 L91 128 Q100 140 109 128 L108 112 Q100 117 92 112 Z" fill="url(#rkTongue)" />
+          <path d="M100 118 L100 134" stroke="#b91c5c" strokeWidth="1.2" strokeLinecap="round" opacity="0.7" />
+          <path d="M84 108 Q100 118 116 108" stroke={INK} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+          <path d="M88 111 l1.5 3 M112 111 l-1.5 3" stroke="white" strokeWidth="2.2" strokeLinecap="round" />
         </>
       ) : pose === "sleep" ? (
-        <path d="M88 106 Q100 112 112 106" stroke={INK} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d="M88 112 Q100 118 112 112" stroke={INK} strokeWidth="2.4" fill="none" strokeLinecap="round" />
       ) : (
-        <path d="M90 108 Q100 104 110 108" stroke={INK} strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d="M90 114 Q100 110 110 114" stroke={INK} strokeWidth="2.4" fill="none" strokeLinecap="round" />
       )}
-      {/* whisker dots */}
-      <g fill={INK} opacity="0.35">
-        <circle cx="86" cy="98" r="1" /><circle cx="82" cy="102" r="1" /><circle cx="114" cy="98" r="1" /><circle cx="118" cy="102" r="1" />
+      <g fill={INK} opacity="0.3">
+        <circle cx="86" cy="102" r="1" /><circle cx="83" cy="106" r="1" /><circle cx="114" cy="102" r="1" /><circle cx="117" cy="106" r="1" />
       </g>
 
-      {/* ---------- headphones ---------- */}
-      <path d="M54 76 Q54 30 100 30 Q146 30 146 76" stroke="url(#rkPhones)" strokeWidth="6" fill="none" strokeLinecap="round" />
-      <path d="M84 34 Q100 30 116 34" stroke="#64748b" strokeWidth="3" fill="none" strokeLinecap="round" />
-      <rect x="44" y="66" width="16" height="26" rx="7" fill="url(#rkPhones)" />
-      <rect x="47" y="70" width="10" height="18" rx="5" fill="#475569" />
-      <rect x="140" y="66" width="16" height="26" rx="7" fill="url(#rkPhones)" />
-      <rect x="143" y="70" width="10" height="18" rx="5" fill="#475569" />
+      {/* ================= headphones ================= */}
+      <path d="M52 78 Q52 30 100 30 Q148 30 148 78" stroke="url(#rkPhones)" strokeWidth="6.5" fill="none" strokeLinecap="round" />
+      <path d="M82 34 Q100 29 118 34" stroke="#64748b" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <rect x="42" y="66" width="17" height="28" rx="8" fill="url(#rkPhones)" />
+      <rect x="45.5" y="70" width="10" height="20" rx="5" fill="#475569" />
+      <rect x="141" y="66" width="17" height="28" rx="8" fill="url(#rkPhones)" />
+      <rect x="144.5" y="70" width="10" height="20" rx="5" fill="#475569" />
       {pose === "listen" && (
         <g className="mascot-waves" stroke="#f59e0b" strokeWidth="3" fill="none" strokeLinecap="round">
-          <path d="M34 70 q-6 9 0 18" />
-          <path d="M24 64 q-11 15 0 30" />
-          <path d="M166 70 q6 9 0 18" />
-          <path d="M176 64 q11 15 0 30" />
+          <path d="M32 70 q-6 10 0 20" />
+          <path d="M22 64 q-11 16 0 32" />
+          <path d="M168 70 q6 10 0 20" />
+          <path d="M178 64 q11 16 0 32" />
         </g>
       )}
 
-      {/* ---------- accessories ---------- */}
+      {/* ================= accessories ================= */}
       {pose === "think" && (
         <g fill="white" stroke="#c7d2fe" strokeWidth="2">
-          <circle cx="152" cy="42" r="4" />
-          <circle cx="163" cy="30" r="6" />
-          <ellipse cx="178" cy="16" rx="14" ry="10" />
+          <circle cx="152" cy="40" r="4" />
+          <circle cx="163" cy="28" r="6" />
+          <ellipse cx="178" cy="14" rx="14" ry="10" />
           <g fill="#6366f1" stroke="none" className="mascot-dots">
-            <circle cx="171" cy="16" r="2" /><circle cx="178" cy="16" r="2" /><circle cx="185" cy="16" r="2" />
+            <circle cx="171" cy="14" r="2" /><circle cx="178" cy="14" r="2" /><circle cx="185" cy="14" r="2" />
           </g>
         </g>
       )}
       {pose === "sleep" && (
         <g fill="#6366f1" fontFamily="system-ui" fontWeight="700">
-          <text x="150" y="44" fontSize="16">z</text>
-          <text x="162" y="28" fontSize="22">z</text>
+          <text x="150" y="42" fontSize="16">z</text>
+          <text x="162" y="26" fontSize="22">z</text>
         </g>
       )}
       {pose === "celebrate" && (
@@ -258,9 +263,9 @@ export function Mascot({ pose = "wave", size = 96, className = "" }: { pose?: Ma
           <rect x="170" y="26" width="8" height="8" rx="2" fill="#ec4899" transform="rotate(-25 174 30)" />
           <circle cx="34" cy="54" r="4" fill="#10b981" />
           <circle cx="168" cy="56" r="4" fill="#0ea5e9" />
-          <rect x="97" y="10" width="7" height="7" rx="1.5" fill="#6366f1" transform="rotate(45 100 13)" />
-          <circle cx="60" cy="22" r="3" fill="#f43f5e" />
-          <circle cx="140" cy="18" r="3" fill="#a855f7" />
+          <rect x="97" y="8" width="7" height="7" rx="1.5" fill="#6366f1" transform="rotate(45 100 11)" />
+          <circle cx="60" cy="20" r="3" fill="#f43f5e" />
+          <circle cx="140" cy="16" r="3" fill="#a855f7" />
         </g>
       )}
     </svg>
