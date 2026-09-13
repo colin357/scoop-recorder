@@ -73,24 +73,35 @@ export async function ensureCatalog(): Promise<Catalog> {
   if (catalog) return catalog;
   const s = stripe();
 
-  let product = (await s.products.search({ query: "active:'true' AND metadata['scoop']:'seat'" })).data[0];
-  product ??= await s.products.create({
-    name: "Scoop",
-    description: "Per seat. Starter: 10 pooled recording hours per seat per month. Team: 20. Overage $1.50/hour, invoiced monthly.",
-    metadata: { scoop: "seat" },
-  });
-
+  // Prices are the source of truth: their lookup keys are unique across the
+  // account, so the product that owns them is the one to keep using. Only
+  // fall back to searching products when no price exists yet (products.search
+  // is eventually consistent and can return a duplicate created moments ago).
   const keys = PLANS.flatMap((p) => (["month", "year"] as const).map((i) => lookupKey(p.key, i)));
   const existing = await s.prices.list({ lookup_keys: keys, active: true, limit: 20 });
-  const byKey = new Map(existing.data.map((p) => [p.lookup_key, p.id]));
+  const byKey = new Map(existing.data.map((p) => [p.lookup_key, p]));
+  const productOf = (p: Stripe.Price) => (typeof p.product === "string" ? p.product : p.product.id);
+
+  let productId = existing.data[0] ? productOf(existing.data[0]) : undefined;
+  if (!productId) {
+    let product = (await s.products.search({ query: "active:'true' AND metadata['scoop']:'seat'" })).data[0];
+    product ??= await s.products.create({
+      name: "Scoop",
+      description: "Per seat. Starter: 10 pooled recording hours per seat per month. Team: 20. Overage $1.50/hour, invoiced monthly.",
+      metadata: { scoop: "seat" },
+    });
+    productId = product.id;
+  }
+
   const prices = {} as Catalog["prices"];
+  const byProduct = new Map<string, string[]>();
   for (const plan of PLANS) {
     for (const interval of ["month", "year"] as const) {
       const key = lookupKey(plan.key, interval);
-      let id = byKey.get(key);
-      if (!id) {
-        const price = await s.prices.create({
-          product: product.id,
+      let price = byKey.get(key);
+      if (!price) {
+        price = await s.prices.create({
+          product: productId,
           currency: "usd",
           nickname: `${plan.name} seat, ${interval === "month" ? "monthly" : "annual (20% off)"}`,
           lookup_key: key,
@@ -98,31 +109,36 @@ export async function ensureCatalog(): Promise<Catalog> {
           unit_amount: interval === "month" ? plan.monthly * 100 : Math.round(annualPerSeatPerMonth(plan.monthly) * 12 * 100),
           metadata: { plan: plan.key, hoursPerSeat: String(plan.hoursPerSeat) },
         });
-        id = price.id;
       }
-      prices[`${plan.key}:${interval}`] = id;
+      prices[`${plan.key}:${interval}`] = price.id;
+      const pid = productOf(price);
+      byProduct.set(pid, [...(byProduct.get(pid) ?? []), price.id]);
     }
   }
 
-  let portal = (await s.billingPortal.configurations.list({ active: true, limit: 100 })).data.find((c) => c.metadata?.scoop === "2");
-  portal ??= await s.billingPortal.configurations.create({
-    business_profile: { headline: "Scoop billing" },
-    features: {
-      payment_method_update: { enabled: true },
-      invoice_history: { enabled: true },
-      customer_update: { enabled: true, allowed_updates: ["email", "address", "name"] },
-      subscription_cancel: { enabled: true, mode: "at_period_end", cancellation_reason: { enabled: true, options: ["too_expensive", "missing_features", "switched_service", "unused", "other"] } },
-      subscription_update: {
-        enabled: true,
-        default_allowed_updates: ["price"],
-        proration_behavior: "create_prorations",
-        products: [{ product: product.id, prices: Object.values(prices) }],
-      },
-    },
-    metadata: { scoop: "2" },
-  });
+  // Portal config: each product only lists its own prices (Stripe rejects a
+  // price listed under a product it wasn't created for). If a config exists
+  // but its price list is stale, update it in place.
+  const products = [...byProduct].map(([product, ids]) => ({ product, prices: ids }));
+  const wanted = new Set(Object.values(prices));
+  const portalFeatures: Stripe.BillingPortal.ConfigurationCreateParams.Features = {
+    payment_method_update: { enabled: true },
+    invoice_history: { enabled: true },
+    customer_update: { enabled: true, allowed_updates: ["email", "address", "name"] },
+    subscription_cancel: { enabled: true, mode: "at_period_end", cancellation_reason: { enabled: true, options: ["too_expensive", "missing_features", "switched_service", "unused", "other"] } },
+    subscription_update: { enabled: true, default_allowed_updates: ["price"], proration_behavior: "create_prorations", products },
+  };
+  let portal = (await s.billingPortal.configurations.list({ active: true, limit: 100 })).data.find((c) => c.metadata?.scoop === "3");
+  if (portal) {
+    const listed = new Set((portal.features.subscription_update?.products ?? []).flatMap((p) => p.prices));
+    if (listed.size !== wanted.size || [...wanted].some((id) => !listed.has(id))) {
+      portal = await s.billingPortal.configurations.update(portal.id, { features: portalFeatures });
+    }
+  } else {
+    portal = await s.billingPortal.configurations.create({ business_profile: { headline: "Scoop billing" }, features: portalFeatures, metadata: { scoop: "3" } });
+  }
 
-  catalog = { productId: product.id, prices, portalConfigId: portal.id };
+  catalog = { productId, prices, portalConfigId: portal.id };
   return catalog;
 }
 
