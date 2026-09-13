@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { resolveProvider } from "@/lib/llm";
 import { getOnboardingState } from "@/app/actions/onboarding";
 import OnboardingChat from "./chat";
-import { Mascot } from "@/components/mascot";
+import { LogoMark } from "@/components/logo";
 
 export default async function OnboardingPage() {
   const user = await getCurrentUser();
@@ -16,7 +16,7 @@ export default async function OnboardingPage() {
     <main className="flex-1 flex flex-col">
       <header className="border-b edge bg-paper px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Mascot pose="wave" size={40} />
+          <LogoMark size={40} />
           <div>
             <div className="font-display font-semibold">Let&apos;s set up Scoop</div>
             <div className="text-xs text-muted">Chat with Rocky, or <Link href="/onboarding/form" className="text-merle">fill in a form instead</Link>.</div>

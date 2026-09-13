@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mascot } from "@/components/mascot";
+import { Logo } from "@/components/logo";
 import { LEGAL } from "@/lib/legal";
 
 /** Public, print-friendly layout for legal documents. */
@@ -8,7 +8,7 @@ export default function LegalPage({ title, effective, intro, children }: { title
     <main className="theme-landing flex-1 bg-[#f7f6f3] text-ink">
       <header className="sticky top-0 z-30 bg-[#f7f6f3]/85 backdrop-blur border-b edge">
         <div className="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2"><Mascot pose="listen" size={40} className="!animate-none" /><span className="font-display font-bold text-xl tracking-tight">scoop</span></Link>
+          <Logo size={40} />
           <nav className="flex items-center gap-5 text-sm font-medium text-ink-soft">
             <Link href="/privacy" className="hover:text-ink">Privacy</Link>
             <Link href="/terms" className="hover:text-ink">Terms</Link>

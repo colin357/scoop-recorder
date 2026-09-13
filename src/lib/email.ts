@@ -32,13 +32,13 @@ export function layout(title: string, bodyHtml: string, cta?: { label: string; h
   return `<!doctype html><html><body style="margin:0;background:#f8fafc;font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#0f172a">
   <div style="max-width:560px;margin:0 auto;padding:32px 20px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-      <img src="${appUrl()}/mascot/wave.webp" width="40" height="40" alt="" style="vertical-align:middle">
-      <span style="font-weight:600;font-size:18px">Scoop</span>
+      <img src="${appUrl()}/brand/mark-256.png" width="36" height="36" alt="" style="vertical-align:middle">
+      <img src="${appUrl()}/brand/wordmark-96.png" height="16" alt="Scoop" style="vertical-align:middle;height:16px">
     </div>
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px">
       <h1 style="font-size:20px;margin:0 0 12px">${esc(title)}</h1>
       <div style="font-size:15px;line-height:1.55">${bodyHtml}</div>
-      ${cta ? `<p style="margin:22px 0 4px"><a href="${cta.href}" style="display:inline-block;background:#4f46e5;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:600">${esc(cta.label)}</a></p>` : ""}
+      ${cta ? `<p style="margin:22px 0 4px"><a href="${cta.href}" style="display:inline-block;background:#f15025;color:#fff;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:600">${esc(cta.label)}</a></p>` : ""}
     </div>
     <p style="color:#94a3b8;font-size:12px;margin-top:16px">Sent by Scoop · <a href="${appUrl()}/settings/profile" style="color:#94a3b8">notification settings</a></p>
   </div></body></html>`;

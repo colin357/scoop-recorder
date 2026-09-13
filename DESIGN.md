@@ -49,6 +49,10 @@ Focus rings use `--ring` (flame at 22% in the app, sky on the landing). Native `
 - Body: **DM Sans** 400–600.
 - `eyebrow`: 11px uppercase copper, letter-spaced, for section labels ("Today", "Last step", "Settings").
 
+## Logo
+
+`public/scoop-logo.png` is the source lockup (Rocky's head over the "Scoop" wordmark). Derived files in `public/brand/`: `mark.png` (head), `wordmark.png`, `logo.png` (trimmed lockup) plus web-sized copies (`mark-256`, `wordmark-96`, `logo-512`). `src/components/logo.tsx` exposes `Logo` (horizontal: mark beside wordmark, for headers), `LogoMark`, `Wordmark` and `LogoStacked` (auth and onboarding). Favicons, the Apple touch icon and `public/og.png` are generated from the same files. The logo is the brand; the Rocky poses in `public/mascot/` remain the character for empty states, heroes and the onboarding chat.
+
 ## Icons and illustration
 
 - Icons: `src/components/icons.tsx`, 24px grid, 2px stroke, rounded caps, drawn in ink. Wrap in a 44px rounded chip with an ink border and a soft fill (sky, butter, clay-soft) when used as a feature or stat marker.

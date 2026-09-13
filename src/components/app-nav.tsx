@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Mascot } from "@/components/mascot";
 import { Icon, type IconName } from "@/components/icons";
 import { Avatar } from "@/components/ui";
+import { LogoMark, Wordmark } from "@/components/logo";
 
 export type NavItem = { href: string; label: string; icon: IconName };
 export type Alert = { id: string; text: string; href: string; tone: "accent" | "danger" | "neutral" };
@@ -17,7 +17,11 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
 }) {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  useEffect(() => { try { setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1"); } catch {} }, []);
+  useEffect(() => {
+    // Restore the saved state after hydration (deferred so the server and first client render match).
+    const t = setTimeout(() => { try { setCollapsed(localStorage.getItem(COLLAPSE_KEY) === "1"); } catch {} }, 0);
+    return () => clearTimeout(t);
+  }, []);
   const toggleCollapsed = () => setCollapsed((c) => { try { localStorage.setItem(COLLAPSE_KEY, c ? "0" : "1"); } catch {} return !c; });
   const path = usePathname();
   const active = (href: string) => (href === "/dashboard" ? path === href : path.startsWith(href));
@@ -80,8 +84,8 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
       {/* Mobile top bar */}
       <header className="md:hidden sticky top-0 z-40 bg-paper border-b edge flex items-center gap-3 px-4 py-2">
         <button aria-label="Menu" onClick={() => setOpen((o) => !o)} className="btn-ghost !px-2"><Icon name="menu" size={22} /></button>
-        <Mascot pose="listen" size={32} />
-        <div className="min-w-0"><div className="font-display font-bold leading-tight">scoop</div><div className="text-[11px] text-muted truncate">{orgName}</div></div>
+        <LogoMark size={32} />
+        <div className="min-w-0"><Wordmark height={14} /><div className="text-[11px] text-muted truncate">{orgName}</div></div>
         <div className="ml-auto flex items-center gap-1">
           <Bell alerts={alerts} />
           <Link href="/meetings/new" className="btn-accent !py-1.5 text-xs"><Icon name="mic" size={14} />Record</Link>
@@ -104,10 +108,10 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
       {/* Desktop sidebar */}
       <aside className={`hidden md:flex shrink-0 border-r edge bg-paper flex-col sticky top-0 z-30 h-screen transition-[width] duration-200 ${collapsed ? "w-[72px]" : "w-64"}`}>
         <div className={`pt-4 pb-3 flex items-center gap-3 ${collapsed ? "px-3 justify-center" : "px-4"}`}>
-          <Link href="/dashboard" className="shrink-0" title="Home"><Mascot pose="listen" size={40} className="!animate-none" /></Link>
+          <Link href="/dashboard" className="shrink-0" title="Home"><LogoMark size={40} /></Link>
           {!collapsed && (
             <div className="min-w-0 flex-1">
-              <div className="font-display font-bold text-lg tracking-tight leading-tight">scoop</div>
+              <Wordmark height={18} className="mb-0.5" />
               <div className="text-xs text-muted truncate flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-copper" />{orgName}</div>
             </div>
           )}

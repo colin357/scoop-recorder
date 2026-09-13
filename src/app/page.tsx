@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { Mascot } from "@/components/mascot";
 import { Icon, type IconName } from "@/components/icons";
 import HeroScene from "@/components/landing/hero-scene";
+import { Logo, LogoMark } from "@/components/logo";
 import { AskVignette, CtaLinks, MeetingMockup, PromptVignette, ReviewVignette, SlackVignette } from "@/components/landing/mockups";
 import { PLANS, PRICING, annualPerSeatPerMonth, fmtUsd } from "@/lib/billing";
 
@@ -25,7 +26,7 @@ export default async function Home() {
     <main className="theme-landing flex-1 bg-[#f7f6f3] text-ink">
       <header className="sticky top-0 z-30 bg-[#f7f6f3]/85 backdrop-blur border-b edge">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2"><Mascot pose="listen" size={40} className="!animate-none" /><span className="font-display font-bold text-xl tracking-tight">scoop</span></Link>
+          <Logo size={40} />
           <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-ink-soft">
             <a href="#how" className="hover:text-ink">How it works</a><a href="#team" className="hover:text-ink">For teams</a><a href="#pricing" className="hover:text-ink">Pricing</a><a href="#trust" className="hover:text-ink">Trust</a>
           </nav>
@@ -193,7 +194,7 @@ export default async function Home() {
 
       <footer className="border-t edge">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
-          <span>© {new Date().getFullYear()} Scoop · scooprecorder.com</span>
+          <span className="flex items-center gap-2"><LogoMark size={20} />© {new Date().getFullYear()} Scoop · scooprecorder.com</span>
           <span className="flex gap-5"><a href="#pricing" className="hover:text-ink">Pricing</a><a href="#trust" className="hover:text-ink">Trust</a><Link href="/privacy" className="hover:text-ink">Privacy</Link><Link href="/terms" className="hover:text-ink">Terms</Link><Link href="/login" className="hover:text-ink">Sign in</Link><Link href="/signup" className="hover:text-ink">Start free</Link></span>
         </div>
       </footer>
