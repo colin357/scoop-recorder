@@ -71,19 +71,22 @@ export default async function CalendarSettingsPage({ searchParams }: PageProps<"
 
       <section className="card p-5 space-y-3">
         <h2 className="font-semibold">When a meeting with a video link shows up</h2>
-        <form action={setRecordPolicyAction} className="space-y-2">
-          {[
-            { v: "auto", t: "Record automatically", d: "The recorder joins every meeting. You can still skip individual ones." },
-            { v: "ask", t: "Ask me first", d: "You get a pop-up before each meeting and a list on the dashboard." },
-            { v: "off", t: "Off", d: "Only record meetings you add manually." },
-          ].map((o) => (
-            <label key={o.v} className="flex items-start gap-3 rounded-lg border border-line p-3 cursor-pointer has-[:checked]:border-merle has-[:checked]:bg-sky-soft font-normal">
-              <input type="radio" name="policy" value={o.v} defaultChecked={org.autoRecordPolicy === o.v} className="!w-auto mt-1" />
-              <span><span className="font-medium text-ink block">{o.t}</span><span className="text-sm text-muted">{o.d}</span></span>
-            </label>
-          ))}
-          {membership.isAdmin ? <button className="btn-primary">Save</button> : <p className="text-xs text-muted">Only admins can change this policy.</p>}
+        <form action={setRecordPolicyAction} className="flex flex-wrap items-end gap-3">
+          <div className="min-w-64">
+            <label htmlFor="policy">Rocky should</label>
+            <select id="policy" name="policy" defaultValue={org.autoRecordPolicy} disabled={!membership.isAdmin}>
+              <option value="auto">Record automatically</option>
+              <option value="ask">Ask me first</option>
+              <option value="off">Stay out (manual only)</option>
+            </select>
+          </div>
+          {membership.isAdmin ? <button className="btn-primary">Save</button> : <p className="text-xs text-muted pb-2">Only admins can change this policy.</p>}
         </form>
+        <p className="text-xs text-muted">
+          {org.autoRecordPolicy === "auto" && "The recorder joins every meeting with a video link. You can still skip individual ones from the calendar."}
+          {org.autoRecordPolicy === "ask" && "You get a pop-up before each meeting, and undecided ones are flagged on the calendar and in the bell."}
+          {org.autoRecordPolicy === "off" && "Rocky only records meetings you add manually or mark Record on the calendar."}
+        </p>
       </section>
 
       <section>
