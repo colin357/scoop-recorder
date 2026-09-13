@@ -13,11 +13,16 @@ export const DraftSchema = z.object({
     }),
   ),
   projects: z.array(z.object({ name: z.string(), description: z.string(), confirmed: z.boolean() })),
+  teamSize: z
+    .number()
+    .int()
+    .nullable()
+    .describe("How many people are on the team in total, INCLUDING the signed-in user, once they have said. 'I have 2 employees' → 3; 'it's just me' → 1; 'a team of 5' → 5. Null until known."),
   reviewBeforeAssign: z.boolean().nullable().describe("Whether an admin wants to review AI tasks before teammates are notified. Null if not asked yet."),
 });
 export type OnboardingDraftData = z.infer<typeof DraftSchema>;
 
-export const emptyDraft: OnboardingDraftData = { orgName: null, businessDescription: null, members: [], projects: [], reviewBeforeAssign: null };
+export const emptyDraft: OnboardingDraftData = { orgName: null, businessDescription: null, members: [], projects: [], teamSize: null, reviewBeforeAssign: null };
 
 export const TurnSchema = z.object({
   reply: z.string().describe("Your next message to the user. Friendly, short, one question at a time."),
@@ -36,7 +41,7 @@ Your job is to learn about the user's company in a natural conversation and fill
 Gather, roughly in this order:
 1. Company name (draft.orgName).
 2. What the business does, who its clients are, and what it is working on right now (draft.businessDescription). Ask one or two follow-ups so the description is specific enough to guess projects from.
-3. The team. Once you know who is on the team, show widget "team" so they can enter names, emails, roles and what each person typically handles in one go. If they describe people in chat, add them to draft.members yourself and only use the widget to fill gaps (emails, responsibilities).
+3. The team. Ask how many people are on the team; when they answer, set draft.teamSize to the total including the user themselves (someone who says "I have 2 employees" has a team of 3). Then show widget "team" so they can enter names, emails, roles and what each person typically handles in one go; the form opens with one row per person, so do NOT add empty placeholder members to draft.members. If they describe people by name in chat, add those to draft.members yourself and use the widget to fill gaps (emails, responsibilities).
 4. Projects. Propose 2-6 projects inferred from the business description and what they mentioned (clients, product lines, initiatives, internal functions). Put them in draft.projects with confirmed=false and show widget "projects" so they can confirm or edit.
 5. When orgName, businessDescription, at least one member, and at least one confirmed project exist, say you're all set and show widget "finish". The finish card lets them choose whether to review AI tasks before teammates are notified; you don't need to ask about it.
 
