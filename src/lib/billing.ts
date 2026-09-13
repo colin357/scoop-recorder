@@ -63,70 +63,74 @@ export function fmtUsd(n: number) {
 }
 
 // ---------------------------------------------------------------------------
-// Catalog (product, prices, portal configuration), created on demand.
+// Catalog (one product per plan, two prices each, portal configuration),
+// created on demand.
 
 const lookupKey = (plan: PlanKey, interval: Interval) => `scoop_${plan}_${interval === "month" ? "monthly" : "annual"}`;
-type Catalog = { productId: string; prices: Record<`${PlanKey}:${Interval}`, string>; portalConfigId: string };
+type Catalog = { products: Record<PlanKey, string>; prices: Record<`${PlanKey}:${Interval}`, string>; portalConfigId: string };
 let catalog: Catalog | null = null;
 
 export async function ensureCatalog(): Promise<Catalog> {
   if (catalog) return catalog;
   const s = stripe();
 
-  // Prices are the source of truth: their lookup keys are unique across the
-  // account, so the product that owns them is the one to keep using. Only
-  // fall back to searching products when no price exists yet (products.search
-  // is eventually consistent and can return a duplicate created moments ago).
+  // Prices are the source of truth: lookup keys are unique across the account.
+  // Each plan needs its own product because the customer portal only allows
+  // one price per billing interval per product. A price that still sits on
+  // the original shared product is archived and re-created (the lookup key
+  // moves with it; existing subscriptions keep billing on the old price).
   const keys = PLANS.flatMap((p) => (["month", "year"] as const).map((i) => lookupKey(p.key, i)));
-  const existing = await s.prices.list({ lookup_keys: keys, active: true, limit: 20 });
+  const existing = await s.prices.list({ lookup_keys: keys, active: true, limit: 20, expand: ["data.product"] });
   const byKey = new Map(existing.data.map((p) => [p.lookup_key, p]));
-  const productOf = (p: Stripe.Price) => (typeof p.product === "string" ? p.product : p.product.id);
+  const productOf = (p: Stripe.Price) => (typeof p.product === "string" ? null : p.product.deleted ? null : p.product);
 
-  let productId = existing.data[0] ? productOf(existing.data[0]) : undefined;
-  if (!productId) {
-    let product = (await s.products.search({ query: "active:'true' AND metadata['scoop']:'seat'" })).data[0];
-    product ??= await s.products.create({
-      name: "Scoop",
-      description: "Per seat. Starter: 10 pooled recording hours per seat per month. Team: 20. Overage $1.50/hour, invoiced monthly.",
-      metadata: { scoop: "seat" },
-    });
-    productId = product.id;
-  }
-
+  const products = {} as Catalog["products"];
   const prices = {} as Catalog["prices"];
-  const byProduct = new Map<string, string[]>();
   for (const plan of PLANS) {
+    const owned = (["month", "year"] as const).map((i) => byKey.get(lookupKey(plan.key, i))).find((p) => p && productOf(p)?.metadata?.plan === plan.key);
+    let productId = owned ? (productOf(owned) as Stripe.Product).id : null;
+    if (!productId) {
+      const product = await s.products.create({
+        name: `Scoop ${plan.name}`,
+        description: `${plan.name} plan, per seat. ${plan.hoursPerSeat} pooled recording hours per seat per month; overage $${PRICING.overagePerHour.toFixed(2)}/hour invoiced monthly.`,
+        metadata: { scoop: "seat", plan: plan.key },
+      });
+      productId = product.id;
+    }
+    products[plan.key] = productId;
+
     for (const interval of ["month", "year"] as const) {
       const key = lookupKey(plan.key, interval);
-      let price = byKey.get(key);
-      if (!price) {
-        price = await s.prices.create({
-          product: productId,
-          currency: "usd",
-          nickname: `${plan.name} seat, ${interval === "month" ? "monthly" : "annual (20% off)"}`,
-          lookup_key: key,
-          recurring: { interval },
-          unit_amount: interval === "month" ? plan.monthly * 100 : Math.round(annualPerSeatPerMonth(plan.monthly) * 12 * 100),
-          metadata: { plan: plan.key, hoursPerSeat: String(plan.hoursPerSeat) },
-        });
+      const current = byKey.get(key);
+      if (current && productOf(current)?.id === productId) {
+        prices[`${plan.key}:${interval}`] = current.id;
+        continue;
       }
-      prices[`${plan.key}:${interval}`] = price.id;
-      const pid = productOf(price);
-      byProduct.set(pid, [...(byProduct.get(pid) ?? []), price.id]);
+      const created = await s.prices.create({
+        product: productId,
+        currency: "usd",
+        nickname: `${plan.name} seat, ${interval === "month" ? "monthly" : "annual (20% off)"}`,
+        lookup_key: key,
+        transfer_lookup_key: true,
+        recurring: { interval },
+        unit_amount: interval === "month" ? plan.monthly * 100 : Math.round(annualPerSeatPerMonth(plan.monthly) * 12 * 100),
+        metadata: { plan: plan.key, hoursPerSeat: String(plan.hoursPerSeat) },
+      });
+      if (current) await s.prices.update(current.id, { active: false });
+      prices[`${plan.key}:${interval}`] = created.id;
     }
   }
 
-  // Portal config: each product only lists its own prices (Stripe rejects a
-  // price listed under a product it wasn't created for). If a config exists
-  // but its price list is stale, update it in place.
-  const products = [...byProduct].map(([product, ids]) => ({ product, prices: ids }));
+  // Portal config: one entry per plan product with its two prices. If a
+  // config exists but its price list is stale, update it in place.
+  const productList = PLANS.map((p) => ({ product: products[p.key], prices: [prices[`${p.key}:month`], prices[`${p.key}:year`]] }));
   const wanted = new Set(Object.values(prices));
   const portalFeatures: Stripe.BillingPortal.ConfigurationCreateParams.Features = {
     payment_method_update: { enabled: true },
     invoice_history: { enabled: true },
     customer_update: { enabled: true, allowed_updates: ["email", "address", "name"] },
     subscription_cancel: { enabled: true, mode: "at_period_end", cancellation_reason: { enabled: true, options: ["too_expensive", "missing_features", "switched_service", "unused", "other"] } },
-    subscription_update: { enabled: true, default_allowed_updates: ["price"], proration_behavior: "create_prorations", products },
+    subscription_update: { enabled: true, default_allowed_updates: ["price"], proration_behavior: "create_prorations", products: productList },
   };
   let portal = (await s.billingPortal.configurations.list({ active: true, limit: 100 })).data.find((c) => c.metadata?.scoop === "3");
   if (portal) {
@@ -138,7 +142,7 @@ export async function ensureCatalog(): Promise<Catalog> {
     portal = await s.billingPortal.configurations.create({ business_profile: { headline: "Scoop billing" }, features: portalFeatures, metadata: { scoop: "3" } });
   }
 
-  catalog = { productId, prices, portalConfigId: portal.id };
+  catalog = { products, prices, portalConfigId: portal.id };
   return catalog;
 }
 
@@ -359,7 +363,7 @@ export async function billOverageForLastMonth() {
         currency: "usd",
         amount,
         description: `Recording overage: ${qty.toFixed(2)} h beyond ${included} included h at $${PRICING.overagePerHour.toFixed(2)}/h (${format(lastMonth, "MMM yyyy")})`,
-        metadata: { productId: cat.productId },
+        metadata: { productId: cat.products[planFor(org.billingPlan).key], plan: planFor(org.billingPlan).key },
       });
       await s.invoices.finalizeInvoice(invoice.id);
       invoiced = true;
