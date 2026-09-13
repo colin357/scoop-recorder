@@ -242,6 +242,8 @@ export async function syncConnection(connId: string) {
     const gone = await db.calendarEvent.findMany({ where: { connectionId: connId, startAt: { gte: from }, externalId: { notIn: [...seen] } } });
     for (const g of gone) await cancelEventRecording(g.id);
     await db.calendarEvent.deleteMany({ where: { id: { in: gone.map((g) => g.id) } } });
+    // Ended events that never became a recording are calendar data we no longer need.
+    await db.calendarEvent.deleteMany({ where: { connectionId: connId, meetingId: null, endAt: { lt: subMinutes(new Date(), 60) } } });
 
     await db.calendarConnection.update({ where: { id: connId }, data: { syncedAt: new Date(), syncError: null } });
   } catch (err) {
