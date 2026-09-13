@@ -25,7 +25,7 @@ type NormalizedEvent = {
   attendees: { name: string | undefined; email: string | undefined }[];
 };
 
-const SYNC_WINDOW_DAYS = 7;
+const SYNC_WINDOW_DAYS = 14;
 
 export function calendarProviderConfigured(provider: CalendarProvider) {
   return provider === "google"

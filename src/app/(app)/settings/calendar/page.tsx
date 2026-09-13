@@ -2,17 +2,19 @@ import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { calendarProviderConfigured } from "@/lib/calendar";
 import { recallConfigured } from "@/lib/recall";
-import { fmtDateTime, fmtRelative, PLATFORM_LABEL } from "@/lib/utils";
+import { fmtRelative } from "@/lib/utils";
 import { disconnectCalendarAction, setRecordPolicyAction, syncNowAction } from "@/app/actions/calendar";
 import { Mascot } from "@/components/mascot";
-import UpcomingList from "@/components/upcoming-list";
+import WeekCalendar from "@/components/week-calendar";
+import { loadWeek } from "@/lib/week";
 
 export default async function CalendarSettingsPage({ searchParams }: PageProps<"/settings/calendar">) {
   const sp = await searchParams;
   const { org, membership } = await requireOrg();
-  const [connections, events] = await Promise.all([
+  const [connections, events, week] = await Promise.all([
     db.calendarConnection.findMany({ where: { orgId: org.id }, include: { member: true }, orderBy: { createdAt: "asc" } }),
     db.calendarEvent.findMany({ where: { orgId: org.id, endAt: { gt: new Date() } }, orderBy: { startAt: "asc" }, include: { meeting: { select: { id: true, status: true } } } }),
+    loadWeek(org.id, sp.week),
   ]);
   const google = calendarProviderConfigured("google");
   const microsoft = calendarProviderConfigured("microsoft");
@@ -84,13 +86,13 @@ export default async function CalendarSettingsPage({ searchParams }: PageProps<"
         </form>
       </section>
 
-      <section className="card p-5">
-        <h2 className="font-semibold mb-3">Upcoming meetings ({events.length})</h2>
-        {events.length === 0 ? (
-          <p className="text-sm text-muted">Nothing with a video link in the next 7 days.</p>
-        ) : (
-          <UpcomingList events={events.map((e) => ({ id: e.id, title: e.title, startAt: e.startAt.toISOString(), platform: PLATFORM_LABEL[e.platform], decision: e.decision, meeting: e.meeting, when: fmtDateTime(e.startAt) }))} />
-        )}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold">Calendar</h2>
+          <span className="text-xs text-muted">{events.length} upcoming meeting{events.length === 1 ? "" : "s"} with a video link</span>
+        </div>
+        <WeekCalendar weekStart={week.weekStart} prev={week.prev} next={week.next} items={week.items} baseHref="/settings/calendar" />
+        {connections.length > 0 && events.length === 0 && <p className="text-sm text-muted mt-2">Nothing with a video link in the next two weeks. Rocky checks every ten minutes.</p>}
       </section>
     </div>
   );

@@ -4,13 +4,14 @@ import { requireOrg } from "@/lib/auth";
 import { fmtDateTime, PLATFORM_LABEL } from "@/lib/utils";
 import { DueBadge, Empty, IconChip, PriorityBadge, ProjectChip, SectionHeader, StatusBadge } from "@/components/ui";
 import { Mascot } from "@/components/mascot";
-import UpcomingList from "@/components/upcoming-list";
+import WeekCalendar from "@/components/week-calendar";
+import { loadWeek } from "@/lib/week";
 import { Icon, type IconName } from "@/components/icons";
 
 export default async function Dashboard({ searchParams }: PageProps<"/dashboard">) {
   const sp = await searchParams;
   const { org, membership } = await requireOrg();
-  const [myTasks, overdueCount, recentMeetings, openCount, upcoming, calendarCount] = await Promise.all([
+  const [myTasks, overdueCount, recentMeetings, openCount, upcoming, calendarCount, week] = await Promise.all([
     db.task.findMany({
       where: { orgId: org.id, assigneeId: membership.id, status: { notIn: ["done", "draft"] } },
       include: { project: true },
@@ -22,6 +23,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
     db.task.count({ where: { orgId: org.id, status: { notIn: ["done", "draft"] } } }),
     db.calendarEvent.findMany({ where: { orgId: org.id, endAt: { gt: new Date() } }, orderBy: { startAt: "asc" }, take: 6, include: { meeting: { select: { id: true, status: true } } } }),
     db.calendarConnection.count({ where: { orgId: org.id } }),
+    loadWeek(org.id, sp.week),
   ]);
   const undecided = upcoming.filter((e) => e.decision === "undecided").length;
   const first = membership.name.split(" ")[0];
@@ -62,16 +64,10 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
         <Stat label="Assigned to me" value={myTasks.length} href="/tasks?assignee=me" icon="user" />
       </div>
 
-      {(upcoming.length > 0 || calendarCount > 0) && (
+      {(upcoming.length > 0 || calendarCount > 0 || week.items.length > 0) && (
         <section>
-          <SectionHeader title="Upcoming meetings" href="/settings/calendar" linkLabel="Calendar settings" />
-          {upcoming.length === 0 ? (
-            <Empty title="No meetings with a video link in the next 7 days." />
-          ) : (
-            <div className="card px-4">
-              <UpcomingList events={upcoming.map((e) => ({ id: e.id, title: e.title, startAt: e.startAt.toISOString(), platform: PLATFORM_LABEL[e.platform], decision: e.decision, meeting: e.meeting, when: fmtDateTime(e.startAt) }))} />
-            </div>
-          )}
+          <SectionHeader title="This week" href="/settings/calendar" linkLabel="Calendar settings" />
+          <WeekCalendar weekStart={week.weekStart} prev={week.prev} next={week.next} items={week.items} baseHref="/dashboard" compact />
         </section>
       )}
 
