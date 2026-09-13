@@ -8,21 +8,45 @@ import { StatusBadge } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import type { WeekItem } from "@/lib/week";
 
-const HOUR_PX = 44;
+const HOUR_PX = 56;
 const MIN_HOUR = 7;
 const MAX_HOUR = 20;
 
 function tone(item: WeekItem) {
   if (item.meeting) {
     const s = item.meeting.status;
-    if (s === "recording") return "bg-copper text-paper ring-copper";
-    if (s === "done") return "bg-grass-soft text-grass ring-grass/30";
-    if (s === "failed") return "bg-clay-soft text-clay ring-clay/30";
-    return "bg-ink text-paper ring-ink";
+    if (s === "recording") return "bg-flame text-white border-flame-deep";
+    if (s === "done") return "bg-grass-soft text-grass border-grass";
+    if (s === "failed") return "bg-clay-soft text-clay border-clay";
+    return "bg-paper text-ink border-ink";
   }
-  if (item.decision === "record") return "bg-ink text-paper ring-ink";
-  if (item.decision === "skip") return "bg-paper-2 text-muted ring-line line-through";
-  return "bg-butter-soft text-copper-deep ring-copper/40";
+  if (item.decision === "record") return "bg-paper text-ink border-ink";
+  if (item.decision === "skip") return "bg-paper-2 text-muted border-line line-through";
+  return "bg-butter-soft text-copper-deep border-flame";
+}
+
+/**
+ * Side-by-side columns for meetings that overlap in time. Events are grouped
+ * into clusters that share a stretch of time, each event takes the first free
+ * column, and the cluster's column count sets the width.
+ */
+function layout(items: WeekItem[]) {
+  const sorted = [...items].sort((a, b) => a.startAt.localeCompare(b.startAt) || b.endAt.localeCompare(a.endAt));
+  const out = new Map<string, { col: number; cols: number }>();
+  let cluster: { id: string; col: number }[] = [];
+  let colEnds: number[] = [];
+  let clusterEnd = -Infinity;
+  const flush = () => { for (const c of cluster) out.set(c.id, { col: c.col, cols: colEnds.length }); cluster = []; colEnds = []; };
+  for (const it of sorted) {
+    const s = new Date(it.startAt).getTime(), e = Math.max(new Date(it.endAt).getTime(), s + 15 * 60000);
+    if (s >= clusterEnd) flush();
+    let col = colEnds.findIndex((end) => end <= s);
+    if (col === -1) { col = colEnds.length; colEnds.push(e); } else colEnds[col] = e;
+    cluster.push({ id: it.id, col });
+    clusterEnd = Math.max(clusterEnd, e);
+  }
+  flush();
+  return out;
 }
 
 function label(item: WeekItem) {
@@ -78,9 +102,10 @@ export default function WeekCalendar({ weekStart, prev, next, items, baseHref, c
         </div>
         <div className="flex items-center gap-3 text-xs text-muted">
           {undecided > 0 && <span className="badge bg-butter-soft text-copper-deep">{undecided} need{undecided === 1 ? "s" : ""} a decision</span>}
-          <span className="hidden sm:inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-ink" />Recording</span>
-          <span className="hidden sm:inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-copper" />Undecided</span>
-          <span className="hidden sm:inline-flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-grass" />Done</span>
+          <span className="hidden sm:inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border-l-[3px] border-ink bg-paper ring-1 ring-line" />Will record</span>
+          <span className="hidden sm:inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border-l-[3px] border-flame bg-butter-soft ring-1 ring-line" />Undecided</span>
+          <span className="hidden sm:inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm border-l-[3px] border-grass bg-grass-soft ring-1 ring-line" />Done</span>
+          <span className="hidden sm:inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-sm bg-paper-2 ring-1 ring-line" />Skipped</span>
         </div>
       </div>
 
@@ -101,7 +126,7 @@ export default function WeekCalendar({ weekStart, prev, next, items, baseHref, c
           </div>
 
           {/* time grid */}
-          <div className="grid grid-cols-[52px_repeat(7,1fr)] relative" style={{ height: compact ? Math.min(gridH, 9 * HOUR_PX) : gridH, overflowY: compact ? "auto" : undefined }}>
+          <div className="grid grid-cols-[52px_repeat(7,1fr)] relative" style={{ height: compact ? Math.min(gridH, 8 * HOUR_PX) : gridH, overflowY: compact ? "auto" : undefined }}>
             <div className="relative" style={{ height: gridH }}>
               {hours.slice(1).map((h) => (
                 <div key={h} className="absolute right-2 -translate-y-1/2 text-[10px] text-muted" style={{ top: (h - minH) * HOUR_PX }}>{format(new Date(2000, 0, 1, h), "h a")}</div>
@@ -110,25 +135,30 @@ export default function WeekCalendar({ weekStart, prev, next, items, baseHref, c
             {days.map((d) => {
               const today = mounted && isToday(d);
               const dayItems = mounted ? rows.filter((r) => isSameDay(new Date(r.startAt), d)) : [];
+              const pos = layout(dayItems);
               return (
                 <div key={d.toISOString()} className={`relative border-l edge ${today ? "bg-paper-2/60" : ""}`} style={{ height: gridH }}>
                   {hours.map((h) => <div key={h} className="absolute inset-x-0 border-t border-line/50" style={{ top: (h - minH) * HOUR_PX }} />)}
-                  {today && nowTop != null && <div className="absolute inset-x-0 z-10 border-t-2 border-copper" style={{ top: nowTop }}><span className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-copper" /></div>}
+                  {hours.map((h) => <div key={`${h}h`} className="absolute inset-x-0 border-t border-dashed border-line/30" style={{ top: (h - minH + 0.5) * HOUR_PX }} />)}
+                  {today && nowTop != null && <div className="absolute inset-x-0 z-10 border-t-2 border-flame" style={{ top: nowTop }}><span className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-flame" /></div>}
                   {dayItems.map((it) => {
                     const s = new Date(it.startAt), e = new Date(it.endAt);
-                    const top = (s.getHours() + s.getMinutes() / 60 - minH) * HOUR_PX;
-                    const height = Math.max(22, ((e.getTime() - s.getTime()) / 3600000) * HOUR_PX - 2);
+                    const top = (s.getHours() + s.getMinutes() / 60 - minH) * HOUR_PX + 1;
+                    const height = Math.max(24, ((e.getTime() - s.getTime()) / 3600000) * HOUR_PX - 3);
+                    const { col, cols } = pos.get(it.id) ?? { col: 0, cols: 1 };
+                    const width = 100 / cols;
+                    const active = selected === it.id;
                     return (
                       <button
                         key={it.id}
                         type="button"
-                        onClick={() => setSelected(selected === it.id ? null : it.id)}
-                        className={`absolute left-1 right-1 rounded-lg px-1.5 py-1 text-left text-[11px] leading-tight ring-1 shadow-soft transition hover:shadow-lift ${tone(it)} ${selected === it.id ? "z-20 ring-2" : "z-[5]"}`}
-                        style={{ top, height }}
-                        title={`${it.title} · ${format(s, "h:mm a")}`}
+                        onClick={() => setSelected(active ? null : it.id)}
+                        className={`absolute rounded-md border-l-[3px] px-1.5 py-0.5 text-left text-[11px] leading-tight shadow-soft ring-1 ring-line/70 transition hover:shadow-lift hover:z-20 ${tone(it)} ${active ? "z-20 ring-2 ring-ink" : "z-[5]"}`}
+                        style={{ top, height, left: `calc(${col * width}% + 3px)`, width: `calc(${width}% - ${cols > 1 ? 4 : 6}px)` }}
+                        title={`${it.title} · ${format(s, "h:mm a")}–${format(e, "h:mm a")}`}
                       >
                         <div className="font-semibold truncate">{it.title}</div>
-                        {height > 34 && <div className="opacity-80 truncate">{format(s, "h:mm")}–{format(e, "h:mm a")}</div>}
+                        {height > 36 && <div className="opacity-70 truncate">{format(s, "h:mm")}–{format(e, "h:mm a")}</div>}
                       </button>
                     );
                   })}
