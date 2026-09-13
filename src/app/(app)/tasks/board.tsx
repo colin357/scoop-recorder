@@ -30,14 +30,16 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
       await updateTaskAction(id, { assigneeId: assigneeId || null });
     });
 
-  const controls = (t: TaskRow) => (
-    <div className="flex items-center gap-2">
-      <select value={t.status} onChange={(e) => setStatus(t.id, e.target.value)} className="!w-auto !py-1 !rounded-lg text-xs font-medium" aria-label="Status">
+  // Board cards are narrow: two equal columns, no avatar (the dropdown shows
+  // the name). The list row keeps the natural-width controls with the avatar.
+  const controls = (t: TaskRow, compact = false) => (
+    <div className={compact ? "grid grid-cols-2 gap-2" : "flex items-center gap-2 min-w-0"}>
+      <select value={t.status} onChange={(e) => setStatus(t.id, e.target.value)} className={`!py-1 !rounded-lg text-xs font-medium min-w-0 ${compact ? "!pr-6 [background-position:right_0.4rem_center]" : "!w-auto"}`} aria-label="Status">
         {COLUMNS.map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
       </select>
-      <span className="inline-flex items-center gap-1.5">
-        {t.assignee && <Avatar name={t.assignee.name} size="sm" />}
-        <select value={t.assignee?.id ?? ""} onChange={(e) => setAssignee(t.id, e.target.value)} className="!w-auto !py-1 !rounded-lg text-xs font-medium" aria-label="Assignee">
+      <span className="inline-flex items-center gap-1.5 min-w-0">
+        {!compact && t.assignee && <Avatar name={t.assignee.name} size="sm" />}
+        <select value={t.assignee?.id ?? ""} onChange={(e) => setAssignee(t.id, e.target.value)} className={`!py-1 !rounded-lg text-xs font-medium min-w-0 ${compact ? "!pr-6 [background-position:right_0.4rem_center]" : "!w-auto"}`} aria-label="Assignee">
           <option value="">Unassigned</option>
           {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
         </select>
@@ -47,16 +49,16 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
 
   if (view === "board") {
     return (
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {COLUMNS.map((col) => (
-          <div key={col} className="rounded-xl bg-paper-2 p-3 min-h-40">
+          <div key={col} className="rounded-xl bg-paper-2 p-3 min-h-40 min-w-0">
             <div className="flex items-center justify-between mb-2"><StatusBadge status={col} /><span className="text-xs text-muted">{rows.filter((t) => t.status === col).length}</span></div>
             <div className="space-y-2">
               {rows.filter((t) => t.status === col).map((t) => (
                 <div key={t.id} className="card p-3 space-y-2 hover:shadow-lift transition">
                   <Link href={`/tasks/${t.id}`} className="text-sm font-medium hover:underline block">{t.title}</Link>
                   <div className="flex flex-wrap items-center gap-2"><ProjectChip project={t.project} /><DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} /><PriorityBadge priority={t.priority} /></div>
-                  {controls(t)}
+                  {controls(t, true)}
                 </div>
               ))}
             </div>
