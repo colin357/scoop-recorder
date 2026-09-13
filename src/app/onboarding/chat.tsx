@@ -27,22 +27,34 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
       }
     });
 
+
+  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [state.messages.length, pending]);
+
+  // Show the user's bubble right away; the server's reply replaces the whole
+  // state (it includes the same message), and a failure takes it back out.
+  const send = (text: string, patch?: Partial<OnboardingDraftData>) => {
+    if (!text.trim()) return;
+    setInput("");
+    setState((s) => ({ ...s, messages: [...s.messages, { role: "user", content: text }] }));
+    run(async () => {
+      try {
+        return await onboardingChatAction(text, patch);
+      } catch (e) {
+        setState((s) => ({ ...s, messages: s.messages.filter((m, i) => !(i === s.messages.length - 1 && m.role === "user" && m.content === text)) }));
+        if (!patch) setInput(text);
+        throw e;
+      }
+    });
+  };
+
   // Kick off the conversation.
   useEffect(() => {
     if (state.messages.length === 0 && !started.current) {
       started.current = true;
-      run(() => onboardingChatAction(`Hi! I'm ${self.name}. Let's get set up.`));
+      send(`Hi! I'm ${self.name}. Let's get set up.`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => { bottom.current?.scrollIntoView({ behavior: "smooth" }); }, [state.messages.length, pending]);
-
-  const send = (text: string, patch?: Partial<OnboardingDraftData>) => {
-    if (!text.trim()) return;
-    setInput("");
-    run(() => onboardingChatAction(text, patch));
-  };
 
   const last = state.messages[state.messages.length - 1];
   const widget = last?.role === "assistant" ? last.widget : undefined;
