@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { Empty, PageHeader } from "@/components/ui";
 import { Icon } from "@/components/icons";
+import FilterSelects from "@/components/filter-selects";
 import TaskBoard from "./board";
 import { createTaskAction } from "@/app/actions/tasks";
 
@@ -74,7 +75,23 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         }
       />
 
-      <div className="flex flex-wrap gap-4 items-end">
+      {/* Phones: three dropdowns. Tablets and up: pill rows. */}
+      <div className="md:hidden space-y-2">
+        <FilterSelects
+          filters={[
+            { name: "project", label: "Project", value: project, options: [{ value: "", label: "All projects" }, ...projects.map((p) => ({ value: p.id, label: p.name }))] },
+            { name: "assignee", label: "Assignee", value: assigneeParam, options: [{ value: "", label: "Everyone" }, { value: "me", label: "Me" }, ...members.filter((m) => m.id !== membership.id).map((m) => ({ value: m.id, label: m.name }))] },
+            { name: "due", label: "Due", value: due, options: DUE_FILTERS.map((d) => ({ value: d.key, label: d.label })) },
+          ]}
+          hrefFor={{
+            project: Object.fromEntries([["", qs({ project: "" })], ...projects.map((p) => [p.id, qs({ project: p.id })])]),
+            assignee: Object.fromEntries([["", qs({ assignee: "" })], ["me", qs({ assignee: "me" })], ...members.map((m) => [m.id, qs({ assignee: m.id })])]),
+            due: Object.fromEntries(DUE_FILTERS.map((d) => [d.key, qs({ due: d.key })])),
+          }}
+        />
+        <Link href={qs({ done: showDone ? "" : "1" })} className="inline-block text-xs text-muted hover:text-ink">{showDone ? "Hide done" : "Show done"}</Link>
+      </div>
+      <div className="hidden md:flex flex-wrap gap-4 items-end">
         <FilterGroup label="Project">
           <Pill href={qs({ project: "" })} active={!project}>All</Pill>
           {projects.map((p) => <Pill key={p.id} href={qs({ project: p.id })} active={project === p.id} dot={p.color}>{p.name}</Pill>)}
