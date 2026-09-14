@@ -44,7 +44,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex-1 flex flex-col md:flex-row min-h-screen">
       <AppNav items={NAV} orgName={org.name} user={{ name: user.name, email: user.email }} signOut={signOutAction} isAdmin={membership.isAdmin} superAdmin={superAdmin} alerts={alerts} />
-      <main className="flex-1 p-4 pb-20 md:p-8 md:pb-8 max-w-6xl w-full min-w-0"><BillingBanner org={org} isAdmin={membership.isAdmin} />{children}</main>
+      <main className="flex-1 min-w-0 p-4 pb-20 md:p-8 md:pb-8">
+        <div className="mx-auto w-full max-w-6xl"><BillingBanner org={org} isAdmin={membership.isAdmin} />{children}</div>
+      </main>
       <MeetingPrompt />
       <CommandK />
       <Toast />
