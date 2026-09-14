@@ -1,6 +1,7 @@
 import { addDays, format, parseISO, startOfWeek, subDays } from "date-fns";
 import { db } from "./db";
 import { PLATFORM_LABEL } from "./utils";
+import { dayKey, requestTimeZone } from "./tz";
 
 export type WeekItem = {
   id: string;
@@ -20,7 +21,8 @@ export type WeekItem = {
  * on each side so the browser can bucket by local date.
  */
 export async function loadWeek(orgId: string, weekParam?: string | string[]) {
-  const raw = typeof weekParam === "string" && /^\d{4}-\d{2}-\d{2}$/.test(weekParam) ? parseISO(weekParam) : new Date();
+  // "This week" is the viewer's week: today is taken in their zone.
+  const raw = typeof weekParam === "string" && /^\d{4}-\d{2}-\d{2}$/.test(weekParam) ? parseISO(weekParam) : parseISO(dayKey(new Date(), requestTimeZone()));
   const weekStart = startOfWeek(raw, { weekStartsOn: 1 });
   const from = subDays(weekStart, 1);
   const to = addDays(weekStart, 8);

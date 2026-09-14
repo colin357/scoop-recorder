@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { endOfDay, startOfDay, endOfWeek } from "date-fns";
+import { endOfWeek } from "date-fns";
+import { endOfDayIn, requestTimeZone, startOfDayIn } from "@/lib/tz";
 import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { Empty, PageHeader } from "@/components/ui";
@@ -27,10 +28,11 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const showDone = sp.done === "1";
 
   const now = new Date();
+  const tz = requestTimeZone();
   const dueWhere =
-    due === "overdue" ? { lt: startOfDay(now) }
-    : due === "today" ? { gte: startOfDay(now), lte: endOfDay(now) }
-    : due === "week" ? { gte: startOfDay(now), lte: endOfWeek(now, { weekStartsOn: 1 }) }
+    due === "overdue" ? { lt: startOfDayIn(now, tz) }
+    : due === "today" ? { gte: startOfDayIn(now, tz), lte: endOfDayIn(now, tz) }
+    : due === "week" ? { gte: startOfDayIn(now, tz), lte: endOfWeek(now, { weekStartsOn: 1 }) }
     : due === "later" ? { gt: endOfWeek(now, { weekStartsOn: 1 }) }
     : due === "none" ? null
     : undefined;

@@ -1,4 +1,5 @@
-import { format, formatDistanceToNow, isPast, isToday, isTomorrow } from "date-fns";
+import { format, formatDistanceToNow, isPast } from "date-fns";
+import { dayKey, requestTimeZone } from "./tz";
 
 export function slugify(input: string) {
   return input
@@ -8,14 +9,30 @@ export function slugify(input: string) {
     .slice(0, 48);
 }
 
-export function fmtDate(d: Date | string | null | undefined) {
-  if (!d) return "—";
-  return format(new Date(d), "MMM d, yyyy");
+function zonedParts(d: Date, tz: string) {
+  const p = new Intl.DateTimeFormat("en-US", { timeZone: tz, month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(d);
+  const g = (t: Intl.DateTimeFormatPartTypes) => p.find((x) => x.type === t)?.value ?? "";
+  return { month: g("month"), day: g("day"), year: g("year"), hour: g("hour"), minute: g("minute"), period: g("dayPeriod") };
 }
 
+/** "Sep 14, 2026" in the viewer's zone (server) or the local clock (browser). */
+export function fmtDate(d: Date | string | null | undefined) {
+  if (!d) return "—";
+  const date = new Date(d);
+  const tz = requestTimeZone();
+  if (!tz) return format(date, "MMM d, yyyy");
+  const p = zonedParts(date, tz);
+  return `${p.month} ${p.day}, ${p.year}`;
+}
+
+/** "Sep 14, 2026 3:03 PM" in the viewer's zone (server) or the local clock (browser). */
 export function fmtDateTime(d: Date | string | null | undefined) {
   if (!d) return "—";
-  return format(new Date(d), "MMM d, yyyy h:mm a");
+  const date = new Date(d);
+  const tz = requestTimeZone();
+  if (!tz) return format(date, "MMM d, yyyy h:mm a");
+  const p = zonedParts(date, tz);
+  return `${p.month} ${p.day}, ${p.year} ${p.hour}:${p.minute} ${p.period}`;
 }
 
 export function fmtRelative(d: Date | string | null | undefined) {
@@ -27,8 +44,11 @@ export function dueLabel(d: Date | null | undefined, status?: string) {
   if (!d) return { label: "No due date", tone: "muted" as const };
   const date = new Date(d);
   if (status === "done") return { label: fmtDate(date), tone: "muted" as const };
-  if (isToday(date)) return { label: "Due today", tone: "warn" as const };
-  if (isTomorrow(date)) return { label: "Due tomorrow", tone: "warn" as const };
+  const tz = requestTimeZone();
+  const now = new Date();
+  const key = dayKey(date, tz);
+  if (key === dayKey(now, tz)) return { label: "Due today", tone: "warn" as const };
+  if (key === dayKey(new Date(now.getTime() + 86400000), tz)) return { label: "Due tomorrow", tone: "warn" as const };
   if (isPast(date)) return { label: `Overdue · ${fmtDate(date)}`, tone: "danger" as const };
   return { label: fmtDate(date), tone: "muted" as const };
 }

@@ -7,7 +7,10 @@ import CommandK from "@/components/command-k";
 import BillingBanner from "@/components/billing-banner";
 import Toast from "@/components/toast";
 import SupportWidget from "@/components/support-widget";
+import TimezoneSync from "@/components/timezone-sync";
+import { setRequestTimeZone, TZ_COOKIE } from "@/lib/tz";
 import { subDays } from "date-fns";
+import { cookies } from "next/headers";
 
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: "home" },
@@ -40,6 +43,7 @@ async function loadAlerts(orgId: string, memberId: string, isAdmin: boolean, bil
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, org, membership } = await requireOrg();
+  setRequestTimeZone((await cookies()).get(TZ_COOKIE)?.value);
   const superAdmin = (process.env.SUPERADMIN_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).includes(user.email.toLowerCase());
   const alerts = await loadAlerts(org.id, membership.id, membership.isAdmin, org.billingStatus);
   return (
@@ -52,6 +56,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <CommandK />
       <Toast />
       <SupportWidget />
+      <TimezoneSync />
     </div>
   );
 }
