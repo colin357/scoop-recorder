@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useState, useTransition, type DragEvent } from "react";
 import { updateTaskAction } from "@/app/actions/tasks";
 import { Avatar, DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import { STATUS_LABEL } from "@/lib/utils";
@@ -21,6 +21,12 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
     state.map((t) => (t.id === patch.id ? { ...t, ...(patch.status && { status: patch.status }), ...(patch.assignee !== undefined && { assignee: patch.assignee }) } : t)),
   );
   const [, start] = useTransition();
+  // Native drag and drop between columns. `dragging` is the card in flight,
+  // `over` the column under the pointer, `holdingControl` suppresses dragging
+  // while a dropdown inside the card is being used.
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+  const [holdingControl, setHoldingControl] = useState(false);
 
   const setStatus = (id: string, status: string) =>
     start(async () => { setRows({ id, status }); await updateTaskAction(id, { status }); });
@@ -48,22 +54,53 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
   );
 
   if (view === "board") {
+    const onDragStart = (e: DragEvent, id: string) => {
+      e.dataTransfer.setData("text/plain", id);
+      e.dataTransfer.effectAllowed = "move";
+      setDragging(id);
+    };
+    const onDrop = (e: DragEvent, col: string) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData("text/plain") || dragging;
+      setOver(null); setDragging(null);
+      if (!id) return;
+      const task = rows.find((t) => t.id === id);
+      if (task && task.status !== col) setStatus(id, col);
+    };
     return (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {COLUMNS.map((col) => (
-          <div key={col} className="rounded-xl bg-paper-2 p-3 min-h-40 min-w-0">
-            <div className="flex items-center justify-between mb-2"><StatusBadge status={col} /><span className="text-xs text-muted">{rows.filter((t) => t.status === col).length}</span></div>
-            <div className="space-y-2">
-              {rows.filter((t) => t.status === col).map((t) => (
-                <div key={t.id} className="card p-3 space-y-2 hover:shadow-lift transition">
-                  <Link href={`/tasks/${t.id}`} className="text-sm font-medium hover:underline block">{t.title}</Link>
-                  <div className="flex flex-wrap items-center gap-2"><ProjectChip project={t.project} /><DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} /><PriorityBadge priority={t.priority} /></div>
-                  {controls(t, true)}
-                </div>
-              ))}
+        {COLUMNS.map((col) => {
+          const active = over === col && dragging != null;
+          return (
+            <div
+              key={col}
+              className={`rounded-xl bg-paper-2 p-3 min-h-40 min-w-0 transition ring-2 ${active ? "ring-ink/60 bg-paper" : "ring-transparent"}`}
+              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; if (over !== col) setOver(col); }}
+              onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOver((o) => (o === col ? null : o)); }}
+              onDrop={(e) => onDrop(e, col)}
+            >
+              <div className="flex items-center justify-between mb-2"><StatusBadge status={col} /><span className="text-xs text-muted">{rows.filter((t) => t.status === col).length}</span></div>
+              <div className="space-y-2">
+                {rows.filter((t) => t.status === col).map((t) => (
+                  <div
+                    key={t.id}
+                    draggable={!holdingControl}
+                    onDragStart={(e) => onDragStart(e, t.id)}
+                    onDragEnd={() => { setDragging(null); setOver(null); }}
+                    className={`card p-3 space-y-2 hover:shadow-lift transition cursor-grab active:cursor-grabbing ${dragging === t.id ? "opacity-40 ring-2 ring-ink/40" : ""}`}
+                  >
+                    <Link href={`/tasks/${t.id}`} draggable={false} className="text-sm font-medium hover:underline block">{t.title}</Link>
+                    <div className="flex flex-wrap items-center gap-2"><ProjectChip project={t.project} /><DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} /><PriorityBadge priority={t.priority} /></div>
+                    <div onPointerDownCapture={() => setHoldingControl(true)} onPointerUpCapture={() => setHoldingControl(false)} onBlurCapture={() => setHoldingControl(false)}>
+                      {controls(t, true)}
+                    </div>
+                  </div>
+                ))}
+                {active && !rows.some((t) => t.status === col) && <div className="rounded-xl border-2 border-dashed border-line h-16" />}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
