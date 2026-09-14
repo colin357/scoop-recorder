@@ -253,7 +253,14 @@ export async function syncConnection(connId: string) {
   await scheduleDecidedEvents(conn.orgId);
 }
 
-/** Create bots for events marked "record" that do not have one yet. */
+/** Bots join a little before the start so they are in the room (or lobby) on time. */
+export const JOIN_LEAD_MINUTES = 2;
+
+/**
+ * Create bots for events marked "record" that do not have one yet. Safe to run
+ * concurrently: each event is claimed by attaching a meeting row before the
+ * bot is created, so two overlapping syncs cannot both send a bot.
+ */
 export async function scheduleDecidedEvents(orgId: string) {
   if (!recallConfigured()) return;
   const org = await db.organization.findUniqueOrThrow({ where: { id: orgId } });
@@ -262,30 +269,48 @@ export async function scheduleDecidedEvents(orgId: string) {
     where: { orgId, decision: "record", meetingId: null, endAt: { gt: new Date() } },
   });
   for (const ev of pending) {
-    const joinAt = ev.startAt > new Date() ? ev.startAt : undefined;
+    const lead = new Date(ev.startAt.getTime() - JOIN_LEAD_MINUTES * 60_000);
+    const joinAt = lead > new Date() ? lead : undefined;
+    const meeting = await db.meeting.create({
+      data: {
+        orgId,
+        title: ev.title,
+        platform: ev.platform,
+        meetingUrl: ev.meetingUrl,
+        scheduledAt: ev.startAt,
+        status: joinAt ? "scheduled" : "joining",
+        attendees: {
+          create: (JSON.parse(ev.attendees) as { name?: string; email?: string }[])
+            .filter((a) => a.name || a.email)
+            .map((a) => ({ name: a.name ?? a.email ?? "Guest", email: a.email ?? null })),
+        },
+      },
+    });
+    const claimed = await db.calendarEvent.updateMany({ where: { id: ev.id, meetingId: null }, data: { meetingId: meeting.id } });
+    if (claimed.count === 0) {
+      await db.meeting.delete({ where: { id: meeting.id } }); // another sync got there first
+      continue;
+    }
     try {
       const bot = await createBot({ meetingUrl: ev.meetingUrl, botName: org.botName ?? `${org.name} Notetaker`, joinAt, notice: org.recordingNotice ? consentNotice(org.name, org.botName) : null });
-      const meeting = await db.meeting.create({
-        data: {
-          orgId,
-          title: ev.title,
-          platform: ev.platform,
-          meetingUrl: ev.meetingUrl,
-          scheduledAt: ev.startAt,
-          status: joinAt ? "scheduled" : "joining",
-          recallBotId: bot.id,
-          attendees: {
-            create: (JSON.parse(ev.attendees) as { name?: string; email?: string }[])
-              .filter((a) => a.name || a.email)
-              .map((a) => ({ name: a.name ?? a.email ?? "Guest", email: a.email ?? null })),
-          },
-        },
-      });
-      await db.calendarEvent.update({ where: { id: ev.id }, data: { meetingId: meeting.id } });
+      await db.meeting.update({ where: { id: meeting.id }, data: { recallBotId: bot.id } });
     } catch (err) {
       console.error("Failed to schedule bot for event", ev.id, err);
+      await db.calendarEvent.update({ where: { id: ev.id }, data: { meetingId: null } });
+      await db.meeting.delete({ where: { id: meeting.id } });
     }
   }
+}
+
+/** Sync any of the org's connections that have not synced recently. Used by the in-app poll so a meeting added minutes before it starts is still picked up. */
+export async function syncStaleConnections(orgId: string, maxAgeMinutes = 3) {
+  const cutoff = subMinutes(new Date(), maxAgeMinutes);
+  const stale = await db.calendarConnection.findMany({ where: { orgId, OR: [{ syncedAt: null }, { syncedAt: { lt: cutoff } }] }, select: { id: true } });
+  if (stale.length === 0) return 0;
+  // Bump syncedAt first so overlapping polls do not all start a sync.
+  await db.calendarConnection.updateMany({ where: { id: { in: stale.map((c) => c.id) } }, data: { syncedAt: new Date() } });
+  await Promise.allSettled(stale.map((c) => syncConnection(c.id)));
+  return stale.length;
 }
 
 export async function cancelEventRecording(eventId: string) {
