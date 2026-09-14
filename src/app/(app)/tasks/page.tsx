@@ -23,7 +23,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const assigneeParam = typeof sp.assignee === "string" ? sp.assignee : "";
   const assignee = assigneeParam === "me" ? membership.id : assigneeParam;
   const due = typeof sp.due === "string" ? sp.due : "all";
-  const view = sp.view === "board" ? "board" : "list";
+  const view = sp.view === "list" ? "list" : "board";
   const showDone = sp.done === "1";
 
   const now = new Date();
@@ -54,7 +54,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
   const qs = (patch: Record<string, string>) => {
     const p = new URLSearchParams({ project, assignee: assigneeParam, due, view, done: showDone ? "1" : "" });
     for (const [k, v] of Object.entries(patch)) p.set(k, v);
-    for (const [k, v] of [...p.entries()]) if (!v || (k === "due" && v === "all") || (k === "view" && v === "list")) p.delete(k);
+    for (const [k, v] of [...p.entries()]) if (!v || (k === "due" && v === "all") || (k === "view" && v === "board")) p.delete(k);
     return `/tasks?${p.toString()}`;
   };
 
@@ -66,8 +66,8 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         description="Everything Rocky pulled out of your meetings, plus anything you added by hand."
         actions={
           <div className="flex gap-0.5 rounded-xl border edge bg-paper p-0.5 text-sm shadow-soft">
-            <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded-lg font-display font-medium ${view === "list" ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2"}`}>List</Link>
             <Link href={qs({ view: "board" })} className={`px-3 py-1 rounded-lg font-display font-medium ${view === "board" ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2"}`}>Board</Link>
+            <Link href={qs({ view: "list" })} className={`px-3 py-1 rounded-lg font-display font-medium ${view === "list" ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2"}`}>List</Link>
           </div>
         }
       />
