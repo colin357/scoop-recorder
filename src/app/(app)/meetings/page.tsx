@@ -4,40 +4,23 @@ import { requireOrg } from "@/lib/auth";
 import { fmtDateTime, PLATFORM_LABEL } from "@/lib/utils";
 import { Empty, IconChip, PageHeader, ProjectChip, StatusBadge } from "@/components/ui";
 import { Icon } from "@/components/icons";
-import WeekCalendar from "@/components/week-calendar";
-import { loadWeek } from "@/lib/week";
 
-export default async function MeetingsPage({ searchParams }: PageProps<"/meetings">) {
-  const sp = await searchParams;
-  const view = sp.view === "list" ? "list" : "calendar";
+export default async function MeetingsPage() {
   const { org } = await requireOrg();
-  const [meetings, week] = await Promise.all([
-    db.meeting.findMany({
-      where: { orgId: org.id },
-      orderBy: { createdAt: "desc" },
-      include: { project: true, _count: { select: { tasks: true, attendees: true } } },
-    }),
-    loadWeek(org.id, sp.week),
-  ]);
-  const toggle = (v: "calendar" | "list", label: string) => (
-    <Link href={v === "calendar" ? "/meetings" : "/meetings?view=list"} className={`px-3 py-1 rounded-lg font-display font-medium ${view === v ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2"}`}>{label}</Link>
-  );
+  const meetings = await db.meeting.findMany({
+    where: { orgId: org.id },
+    orderBy: { createdAt: "desc" },
+    include: { project: true, _count: { select: { tasks: true, attendees: true } } },
+  });
   return (
     <div className="space-y-6">
       <PageHeader
         title="Meetings"
         count={meetings.length}
-        description="Upcoming calls with a video link and every meeting Rocky recorded or you imported."
-        actions={
-          <>
-            <div className="flex gap-0.5 rounded-xl border edge bg-paper p-0.5 text-sm shadow-soft">{toggle("calendar", "Calendar")}{toggle("list", "List")}</div>
-            <Link href="/meetings/new" className="btn-primary"><Icon name="mic" size={16} />Record a meeting</Link>
-          </>
-        }
+        description="Every call Rocky recorded or transcript you imported, with its summary and the tasks it produced."
+        actions={<Link href="/meetings/new" className="btn-primary"><Icon name="mic" size={16} />Record a meeting</Link>}
       />
-      {view === "calendar" ? (
-        <WeekCalendar weekStart={week.weekStart} prev={week.prev} next={week.next} items={week.items} baseHref="/meetings" />
-      ) : meetings.length === 0 ? (
+      {meetings.length === 0 ? (
         <Empty title="No meetings yet." pose="listen" action={<><Link href="/meetings/new" className="btn-primary"><Icon name="mic" size={16} />Record a meeting</Link><Link href="/settings/calendar" className="btn-secondary">Connect a calendar</Link></>}>
           Send the recorder to your next call, or import a transcript to try it out.
         </Empty>
