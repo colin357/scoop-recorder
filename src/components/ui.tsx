@@ -44,9 +44,9 @@ export function DueBadge({ date, status }: { date: Date | null; status?: string 
 export function ProjectChip({ project }: { project: { id: string; name: string; color: string } | null }) {
   if (!project) return null;
   return (
-    <Link href={`/tasks?project=${project.id}`} className="inline-flex items-center gap-1.5 text-xs text-ink-soft hover:text-ink">
-      <span className="h-2 w-2 rounded-full" style={{ background: project.color }} />
-      {project.name}
+    <Link href={`/tasks?project=${project.id}`} className="inline-flex items-center gap-1.5 text-xs text-ink-soft hover:text-ink max-w-full min-w-0">
+      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: project.color }} />
+      <span className="truncate">{project.name}</span>
     </Link>
   );
 }

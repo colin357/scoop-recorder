@@ -19,7 +19,8 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
       take: 8,
     }),
     db.task.count({ where: { orgId: org.id, status: { notIn: ["done", "draft"] }, dueDate: { lt: new Date() } } }),
-    db.meeting.findMany({ where: { orgId: org.id }, orderBy: { createdAt: "desc" }, take: 5, include: { _count: { select: { tasks: true } } } }),
+    // Meetings that have actually happened (or are happening); scheduled bots live on the calendar.
+    db.meeting.findMany({ where: { orgId: org.id, status: { notIn: ["scheduled", "joining"] } }, orderBy: [{ startedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }], take: 5, include: { _count: { select: { tasks: true } } } }),
     db.task.count({ where: { orgId: org.id, status: { notIn: ["done", "draft"] } } }),
     db.calendarEvent.findMany({ where: { orgId: org.id, endAt: { gt: new Date() } }, orderBy: { startAt: "asc" }, take: 6, include: { meeting: { select: { id: true, status: true } } } }),
     db.calendarConnection.count({ where: { orgId: org.id } }),
@@ -82,10 +83,9 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
                 <IconChip name="check" size={36} />
                 <div className="flex-1 min-w-0">
                   <Link href={`/tasks/${t.id}`} className="font-medium hover:underline block truncate">{t.title}</Link>
-                  <div className="flex gap-3 mt-1"><ProjectChip project={t.project} /><DueBadge date={t.dueDate} /></div>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1"><ProjectChip project={t.project} /><DueBadge date={t.dueDate} /></div>
                 </div>
-                <PriorityBadge priority={t.priority} />
-                <StatusBadge status={t.status} />
+                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0"><PriorityBadge priority={t.priority} /><StatusBadge status={t.status} /></div>
               </li>
             ))}
           </ul>
@@ -103,7 +103,11 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
                 <IconChip name="video" size={36} />
                 <div className="flex-1 min-w-0">
                   <Link href={`/meetings/${m.id}`} className="font-medium hover:underline block truncate">{m.title}</Link>
-                  <div className="text-xs text-muted">{PLATFORM_LABEL[m.platform]} · {fmtDateTime(m.startedAt ?? m.scheduledAt ?? m.createdAt)} · {m._count.tasks} tasks</div>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">
+                    <span>{PLATFORM_LABEL[m.platform]}</span>
+                    <span className="whitespace-nowrap">{fmtDateTime(m.startedAt ?? m.scheduledAt ?? m.createdAt)}</span>
+                    <span className="whitespace-nowrap">{m._count.tasks} task{m._count.tasks === 1 ? "" : "s"}</span>
+                  </div>
                 </div>
                 <StatusBadge status={m.status} />
               </li>
