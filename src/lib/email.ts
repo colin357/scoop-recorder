@@ -9,7 +9,7 @@ export function emailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-export async function sendEmail(input: { to: string; subject: string; html: string; text?: string }) {
+export async function sendEmail(input: { to: string; subject: string; html: string; text?: string; replyTo?: string }) {
   const from = process.env.EMAIL_FROM ?? "Scoop <no-reply@scooprecorder.com>";
   if (!process.env.RESEND_API_KEY) {
     console.log(`[email:not-sent] to=${input.to} subject="${input.subject}"\n${input.text ?? input.html}`);
@@ -18,7 +18,7 @@ export async function sendEmail(input: { to: string; subject: string; html: stri
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from, to: [input.to], subject: input.subject, html: input.html, text: input.text }),
+    body: JSON.stringify({ from, to: [input.to], subject: input.subject, html: input.html, text: input.text, reply_to: input.replyTo }),
   });
   if (!res.ok) throw new Error(`Email send failed: ${res.status} ${await res.text()}`);
   return { sent: true as const };

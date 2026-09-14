@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { fmtRelative } from "@/lib/utils";
 import { setCompedAction } from "@/app/actions/billing";
+import { resolveSupportRequestAction } from "@/app/actions/support";
 
 /** Operator dashboard across all organizations. Restricted to SUPERADMIN_EMAILS. */
 export default async function AdminPage() {
@@ -12,6 +13,7 @@ export default async function AdminPage() {
   if (!allowed.includes(user.email.toLowerCase())) notFound();
 
   const since30 = subDays(new Date(), 30);
+  const support = await db.supportRequest.findMany({ orderBy: [{ status: "desc" }, { createdAt: "desc" }], take: 50 });
   const orgs = await db.organization.findMany({
     orderBy: { createdAt: "desc" },
     include: {
@@ -33,6 +35,29 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Support requests</h1>
+        <p className="text-sm text-muted">Filed from the in-app help button. Each one was also emailed to support with the requester as reply-to.</p>
+      </div>
+      {support.length === 0 ? (
+        <div className="card p-4 text-sm text-muted">Nothing filed yet.</div>
+      ) : (
+        <div className="card divide-y divide-line/60">
+          {support.map((r) => (
+            <details key={r.id} className={`p-4 ${r.status === "resolved" ? "opacity-60" : ""}`}>
+              <summary className="cursor-pointer flex flex-wrap items-center gap-3 text-sm">
+                <span className={`badge ${r.status === "open" ? "bg-butter-soft text-copper-deep" : "bg-grass-soft text-grass"}`}>{r.status}</span>
+                <span className="badge bg-paper-2 text-ink-soft">{r.category}</span>
+                <span className="font-medium flex-1 min-w-40">{r.subject}</span>
+                <span className="text-xs text-muted">{r.name} · {r.orgName ?? "no workspace"} · {fmtRelative(r.createdAt)}</span>
+              </summary>
+              <div className="mt-3 text-sm whitespace-pre-wrap">{r.message}</div>
+              <div className="mt-2 text-xs text-muted break-all">{r.email}{r.pageUrl ? ` · ${r.pageUrl}` : ""}{r.userAgent ? ` · ${r.userAgent}` : ""}</div>
+              <form action={resolveSupportRequestAction.bind(null, r.id, r.status !== "resolved")} className="mt-2"><button className="text-xs underline text-muted">{r.status === "resolved" ? "Reopen" : "Mark resolved"}</button></form>
+            </details>
+          ))}
+        </div>
+      )}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Usage across organizations</h1>
         <p className="text-sm text-muted">Operator view. AI cost uses AI_COST_PER_M_INPUT / AI_COST_PER_M_OUTPUT (USD per million tokens); token counts are exact.</p>

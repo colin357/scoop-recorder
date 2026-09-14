@@ -6,6 +6,7 @@ import AppNav, { type Alert, type NavItem } from "@/components/app-nav";
 import CommandK from "@/components/command-k";
 import BillingBanner from "@/components/billing-banner";
 import Toast from "@/components/toast";
+import SupportWidget from "@/components/support-widget";
 import { subDays } from "date-fns";
 
 const NAV: NavItem[] = [
@@ -50,6 +51,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <MeetingPrompt />
       <CommandK />
       <Toast />
+      <SupportWidget />
     </div>
   );
 }
