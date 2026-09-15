@@ -42,7 +42,7 @@ You need a Postgres database. A Neon branch or `docker run -p 5432:5432 -e POSTG
 
 ## Email and chat notifications
 
-Set `RESEND_API_KEY` and `EMAIL_FROM` for invites, task assignments, summaries and password resets; without a key, emails are printed to the server log. Admins add a Slack incoming webhook and/or a Microsoft Teams workflow webhook under **Settings → Organization**; members can add their Slack member ID on their profile to be @mentioned.
+Set `RESEND_API_KEY` plus `EMAIL_FROM_AUTH` (invites, password resets) and `EMAIL_FROM_NOTIFY` (summaries, task assignments) — `EMAIL_FROM` still covers account mail if `EMAIL_FROM_AUTH` is unset; without a key, emails are printed to the server log. Admins add a Slack incoming webhook and/or a Microsoft Teams workflow webhook under **Settings → Organization**; members can add their Slack member ID on their profile to be @mentioned.
 
 ## AI provider
 

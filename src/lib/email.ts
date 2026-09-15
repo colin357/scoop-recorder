@@ -9,10 +9,28 @@ export function emailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
-export async function sendEmail(input: { to: string; subject: string; html: string; text?: string; replyTo?: string }) {
-  const from = process.env.EMAIL_FROM ?? "Scoop <no-reply@scooprecorder.com>";
+/**
+ * Sender identity by purpose. Account mail (invites, password resets) comes
+ * from the login address; product notifications (summaries, tasks) from the
+ * notifications address, so people can filter one without losing the other.
+ * Override with EMAIL_FROM_AUTH / EMAIL_FROM_NOTIFY. EMAIL_FROM (the original
+ * single sender) still applies to account mail, so an existing deployment keeps
+ * its login address there while notifications move to their own address.
+ */
+export type EmailKind = "auth" | "notify";
+const DEFAULT_FROM: Record<EmailKind, string> = {
+  auth: "Scoop <login@scooprecorder.com>",
+  notify: "Rocky at Scoop <notifications@scooprecorder.com>",
+};
+export function senderFor(kind: EmailKind) {
+  if (kind === "auth") return process.env.EMAIL_FROM_AUTH || process.env.EMAIL_FROM || DEFAULT_FROM.auth;
+  return process.env.EMAIL_FROM_NOTIFY || DEFAULT_FROM.notify;
+}
+
+export async function sendEmail(input: { to: string; subject: string; html: string; text?: string; replyTo?: string; kind?: EmailKind }) {
+  const from = senderFor(input.kind ?? "notify");
   if (!process.env.RESEND_API_KEY) {
-    console.log(`[email:not-sent] to=${input.to} subject="${input.subject}"\n${input.text ?? input.html}`);
+    console.log(`[email:not-sent] from=${from} to=${input.to} subject="${input.subject}"\n${input.text ?? input.html}`);
     return { sent: false as const };
   }
   const res = await fetch("https://api.resend.com/emails", {
@@ -47,6 +65,7 @@ export function layout(title: string, bodyHtml: string, cta?: { label: string; h
 export const templates = {
   invite(p: { inviterName: string; orgName: string; link: string }) {
     return {
+      kind: "auth" as const,
       subject: `${p.inviterName} invited you to ${p.orgName} on Scoop`,
       html: layout(`Join ${p.orgName} on Scoop`, `<p>${esc(p.inviterName)} added you to <b>${esc(p.orgName)}</b>. Scoop records your team's meetings and turns them into assigned tasks, so you'll get a heads-up whenever something lands on your plate.</p>`, { label: "Accept invitation", href: p.link }),
       text: `${p.inviterName} invited you to ${p.orgName} on Scoop. Accept: ${p.link}`,
@@ -54,6 +73,7 @@ export const templates = {
   },
   passwordReset(p: { link: string }) {
     return {
+      kind: "auth" as const,
       subject: "Reset your Scoop password",
       html: layout("Reset your password", `<p>Click below to choose a new password. The link is valid for one hour. If you didn't ask for this, ignore this email.</p>`, { label: "Choose a new password", href: p.link }),
       text: `Reset your Scoop password: ${p.link}`,
@@ -62,6 +82,7 @@ export const templates = {
   tasksAssigned(p: { name: string; meetingTitle: string; tasks: { title: string; due: string; link: string }[]; meetingLink: string }) {
     const items = p.tasks.map((t) => `<li style="margin:6px 0"><a href="${t.link}" style="color:#4f46e5;font-weight:600">${esc(t.title)}</a> <span style="color:#64748b">· due ${esc(t.due)}</span></li>`).join("");
     return {
+      kind: "notify" as const,
       subject: `${p.tasks.length === 1 ? "1 new task" : `${p.tasks.length} new tasks`} from “${p.meetingTitle}”`,
       html: layout(`New tasks for you, ${p.name.split(" ")[0]}`, `<p>From the meeting <b>${esc(p.meetingTitle)}</b>:</p><ul style="padding-left:18px">${items}</ul><p>Each task links to the exact moment in the recording and has a step-by-step guide.</p>`, { label: "Open the meeting", href: p.meetingLink }),
       text: `New tasks from "${p.meetingTitle}":\n${p.tasks.map((t) => `- ${t.title} (due ${t.due}) ${t.link}`).join("\n")}`,
@@ -70,6 +91,7 @@ export const templates = {
   summaryReady(p: { meetingTitle: string; summary: string; taskCount: number; link: string; review: boolean; waitingOn?: string[] }) {
     const waiting = p.waitingOn?.length ? `<p><b>Waiting on others</b></p><ul>${p.waitingOn.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>` : "";
     return {
+      kind: "notify" as const,
       subject: `${p.review ? "Review" : "Summary"}: ${p.meetingTitle}`,
       html: layout(p.review ? "Tasks are waiting for your review" : "Meeting summary ready", `<p><b>${esc(p.meetingTitle)}</b></p><p>${esc(p.summary)}</p><p>${p.taskCount} task${p.taskCount === 1 ? "" : "s"} ${p.review ? "drafted. Approve or edit them before your team is notified." : "created and assigned."}</p>${waiting}`, { label: p.review ? "Review tasks" : "Open the meeting", href: p.link }),
       text: `${p.meetingTitle}\n\n${p.summary}\n\n${p.waitingOn?.length ? `Waiting on others:\n${p.waitingOn.map((w) => `- ${w}`).join("\n")}\n\n` : ""}${p.link}`,
