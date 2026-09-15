@@ -5,6 +5,7 @@ import { fmtDateTime, PLATFORM_LABEL } from "@/lib/utils";
 import { DueBadge, Empty, IconChip, PriorityBadge, ProjectChip, SectionHeader, StatusBadge } from "@/components/ui";
 import { Mascot } from "@/components/mascot";
 import WeekCalendar from "@/components/week-calendar";
+import MeetingThumb from "@/components/meeting-thumb";
 import { loadWeek } from "@/lib/week";
 import { Icon, type IconName } from "@/components/icons";
 
@@ -100,7 +101,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
           <ul className="card divide-y divide-line/60">
             {recentMeetings.map((m) => (
               <li key={m.id} className="p-4 flex items-center gap-4 row-hover">
-                <IconChip name="video" size={36} />
+                <MeetingThumb id={m.id} thumbnail={m.thumbnail} hasRecording={Boolean(m.recordingUrl)} className="w-20" />
                 <div className="flex-1 min-w-0">
                   <Link href={`/meetings/${m.id}`} className="font-medium hover:underline block truncate">{m.title}</Link>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">

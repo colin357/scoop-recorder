@@ -224,6 +224,8 @@ model Meeting {
   status       String   @default("scheduled")
   recallBotId  String?  @unique
   recordingUrl String?
+  // Small JPEG data URL captured from the recording, shown in lists
+  thumbnail    String?
   transcript   String?  // JSON: TranscriptSegment[]
   summary      String?
   keyPoints    String?  // JSON: string[]
