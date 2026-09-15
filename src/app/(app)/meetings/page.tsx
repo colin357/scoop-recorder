@@ -7,9 +7,11 @@ import { Icon } from "@/components/icons";
 
 export default async function MeetingsPage() {
   const { org } = await requireOrg();
+  // Recorded, in-progress or failed meetings only; bots scheduled for upcoming
+  // calls live on the calendar until they actually join.
   const meetings = await db.meeting.findMany({
-    where: { orgId: org.id },
-    orderBy: { createdAt: "desc" },
+    where: { orgId: org.id, status: { notIn: ["scheduled", "joining"] } },
+    orderBy: [{ startedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
     include: { project: true, _count: { select: { tasks: true, attendees: true } } },
   });
   return (
@@ -17,7 +19,7 @@ export default async function MeetingsPage() {
       <PageHeader
         title="Meetings"
         count={meetings.length}
-        description="Every call Rocky recorded or transcript you imported, with its summary and the tasks it produced."
+        description="Every call Rocky recorded or transcript you imported, with its summary and the tasks it produced. Upcoming calls are on the calendar."
         actions={<Link href="/meetings/new" className="btn-primary"><Icon name="mic" size={16} />Record a meeting</Link>}
       />
       {meetings.length === 0 ? (
