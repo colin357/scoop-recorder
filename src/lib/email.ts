@@ -67,11 +67,12 @@ export const templates = {
       text: `New tasks from "${p.meetingTitle}":\n${p.tasks.map((t) => `- ${t.title} (due ${t.due}) ${t.link}`).join("\n")}`,
     };
   },
-  summaryReady(p: { meetingTitle: string; summary: string; taskCount: number; link: string; review: boolean }) {
+  summaryReady(p: { meetingTitle: string; summary: string; taskCount: number; link: string; review: boolean; waitingOn?: string[] }) {
+    const waiting = p.waitingOn?.length ? `<p><b>Waiting on others</b></p><ul>${p.waitingOn.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>` : "";
     return {
       subject: `${p.review ? "Review" : "Summary"}: ${p.meetingTitle}`,
-      html: layout(p.review ? "Tasks are waiting for your review" : "Meeting summary ready", `<p><b>${esc(p.meetingTitle)}</b></p><p>${esc(p.summary)}</p><p>${p.taskCount} task${p.taskCount === 1 ? "" : "s"} ${p.review ? "drafted. Approve or edit them before your team is notified." : "created and assigned."}</p>`, { label: p.review ? "Review tasks" : "Open the meeting", href: p.link }),
-      text: `${p.meetingTitle}\n\n${p.summary}\n\n${p.link}`,
+      html: layout(p.review ? "Tasks are waiting for your review" : "Meeting summary ready", `<p><b>${esc(p.meetingTitle)}</b></p><p>${esc(p.summary)}</p><p>${p.taskCount} task${p.taskCount === 1 ? "" : "s"} ${p.review ? "drafted. Approve or edit them before your team is notified." : "created and assigned."}</p>${waiting}`, { label: p.review ? "Review tasks" : "Open the meeting", href: p.link }),
+      text: `${p.meetingTitle}\n\n${p.summary}\n\n${p.waitingOn?.length ? `Waiting on others:\n${p.waitingOn.map((w) => `- ${w}`).join("\n")}\n\n` : ""}${p.link}`,
     };
   },
 };

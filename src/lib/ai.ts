@@ -12,6 +12,9 @@ export type TeamMemberContext = {
 
 export type ProjectContext = { id: string; name: string; description: string | null };
 
+/** Who was in the meeting, and whether they are on the team. */
+export type AttendeeContext = { name: string; email: string | null; internal: boolean };
+
 export const MeetingAnalysisSchema = z.object({
   summary: z.string().describe("3-6 sentence narrative summary of the meeting."),
   keyPoints: z.array(z.string()).describe("Bullet points of the most important things discussed."),
@@ -30,10 +33,14 @@ export const MeetingAnalysisSchema = z.object({
       description: z
         .string()
         .describe("What needs to be done and why, with enough context to act on without rewatching."),
+      owner: z
+        .enum(["team", "external", "unclear"])
+        .describe("Who owns this item: 'team' if someone on the roster (or the team collectively) committed to it or was asked to do it; 'external' if a person outside the team committed to it (a client, vendor, partner, guest); 'unclear' if you cannot tell."),
+      ownerName: z.string().nullable().describe("Name of the person who committed to or was asked to do this, as they appear in the transcript. Null if nobody specific."),
       assigneeId: z
         .string()
         .nullable()
-        .describe("ID of the team member best suited, based on role and responsibilities. Null if nobody fits."),
+        .describe("For team-owned items: the roster ID of the person who committed to it, or the best-fit teammate if the commitment was to the team as a whole. Null for external or unclear items."),
       assignmentReason: z.string().describe("One sentence on why this person and this deadline."),
       priority: z.enum(["low", "medium", "high", "urgent"]),
       dueInDays: z
@@ -84,17 +91,27 @@ function projectBlock(projects: ProjectContext[]) {
   return projects.map((p) => `- id=${p.id} | ${p.name}${p.description ? ` — ${p.description}` : ""}`).join("\n");
 }
 
+function attendeeBlock(attendees: AttendeeContext[]) {
+  if (!attendees.length) return "(attendee list unavailable; infer from the transcript and the roster)";
+  return attendees.map((a) => `- ${a.name}${a.email ? ` <${a.email}>` : ""} — ${a.internal ? "ON THE TEAM" : "EXTERNAL (not on the team)"}`).join("\n");
+}
+
 const ANALYSIS_SYSTEM = `You are the meeting intelligence engine for a team's meeting recorder.
-You receive a meeting transcript plus the team roster (with roles and typical responsibilities) and the team's projects.
+You receive a meeting transcript, the attendee list (marked as on the team or external), the team roster (with roles and typical responsibilities) and the team's projects.
 
 Produce:
 1. A faithful summary, key points, and decisions. Do not invent things that were not said.
-2. Action items as tasks. Every commitment, request, or follow-up in the transcript becomes a task. Skip vague musings that nobody committed to.
-3. For each task, choose the assignee whose role and responsibilities best match the work. If someone in the meeting explicitly volunteered or was asked by name, prefer them if they are on the roster. Explain the choice in assignmentReason.
-4. Deadlines: if a date or timeframe is stated, use it. Otherwise estimate a realistic deadline from scope and urgency (small follow-ups: 1-3 days; medium work: about a week; larger deliverables: 2-4 weeks).
-5. A step-by-step guide per task, with each step's own deadline spread sensibly before the task deadline.
-6. Timestamps and quotes must point at the actual place in the transcript where the item was raised.
-7. Pick the single most relevant existing project for the meeting. If none fits and the meeting is clearly about a distinct client, product line, or initiative, propose newProject instead (short name, one-sentence description). Use the business description to judge what counts as a separate project.`;
+2. Action items. Every commitment, request, or follow-up in the transcript becomes an item. Skip vague musings that nobody committed to.
+3. Ownership matters. Meetings often include clients, vendors, partners or other guests, and things THEY promise to do are not the team's work. For each item set owner:
+   - "team": a person on the roster committed to it, was asked to do it, or the team as a whole agreed to do it.
+   - "external": a person who is not on the team committed to it (for example a client saying "I'll send you the files"). Set ownerName to that person. Do not assign it to anyone.
+   - "unclear": you genuinely cannot tell who owns it. Do not assign it; a human will decide.
+   Use the attendee list and speaker names to tell team from external. Someone whose name is not on the roster and not marked as on the team is external. Never turn an external person's commitment into a team task just because a teammate's role matches the work.
+4. For team items, assign the roster member who committed to it or was asked by name. If the commitment was to the team collectively, choose the teammate whose role and responsibilities best match. Explain the choice in assignmentReason.
+5. Deadlines: if a date or timeframe is stated, use it. Otherwise estimate a realistic deadline from scope and urgency (small follow-ups: 1-3 days; medium work: about a week; larger deliverables: 2-4 weeks).
+6. A step-by-step guide per team item, with each step's own deadline spread sensibly before the item deadline. External and unclear items may have an empty steps list.
+7. Timestamps and quotes must point at the actual place in the transcript where the item was raised.
+8. Pick the single most relevant existing project for the meeting. If none fits and the meeting is clearly about a distinct client, product line, or initiative, propose newProject instead (short name, one-sentence description). Use the business description to judge what counts as a separate project.`;
 
 export async function analyzeMeeting(input: {
   title: string;
@@ -102,6 +119,7 @@ export async function analyzeMeeting(input: {
   transcript: TranscriptSegment[];
   team: TeamMemberContext[];
   projects: ProjectContext[];
+  attendees?: AttendeeContext[];
   businessDescription?: string | null;
 }): Promise<MeetingAnalysis> {
   const userText = `Meeting title: ${input.title}
@@ -109,6 +127,9 @@ Meeting date: ${input.meetingDate.toISOString().slice(0, 10)}
 
 About the business:
 ${input.businessDescription ?? "(no description provided)"}
+
+Attendees:
+${attendeeBlock(input.attendees ?? [])}
 
 Team roster:
 ${teamBlock(input.team)}
@@ -133,6 +154,7 @@ ${transcriptToText(input.transcript)}`;
   const clamp = (n: number) => Math.max(0, Math.min(90, Math.round(n)));
   for (const t of analysis.tasks) {
     if (t.assigneeId && !validMembers.has(t.assigneeId)) t.assigneeId = null;
+    if (t.owner !== "team") t.assigneeId = null; // only the team's own work gets assigned
     t.dueInDays = clamp(t.dueInDays);
     for (const s of t.steps) s.dueInDays = Math.min(clamp(s.dueInDays), t.dueInDays);
   }

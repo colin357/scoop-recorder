@@ -7,7 +7,7 @@ import type { TranscriptSegment } from "@/lib/recall";
 import { AvatarGroup, DueBadge, IconChip, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import CopyLink from "@/components/copy-link";
-import { deleteMeetingAction, reprocessMeetingAction } from "@/app/actions/meetings";
+import { deleteMeetingAction, reprocessMeetingAction, trackCommitmentAction } from "@/app/actions/meetings";
 import RecordingPlayer from "@/components/recording-player";
 import { Mascot } from "@/components/mascot";
 import LiveStatus from "@/components/live-status";
@@ -22,7 +22,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   const { org, membership } = await requireOrg();
   const meeting = await db.meeting.findFirst({
     where: { id, orgId: org.id },
-    include: { project: true, attendees: true, tasks: { include: { assignee: true, project: true }, orderBy: { dueDate: "asc" } } },
+    include: { project: true, attendees: true, tasks: { include: { assignee: true, project: true }, orderBy: { dueDate: "asc" } }, commitments: { orderBy: { dueDate: "asc" } } },
   });
   if (!meeting) notFound();
 
@@ -131,6 +131,34 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
                 </li>
               ))}
             </ul>
+          )}
+
+          {meeting.commitments.length > 0 && (
+            <div className="mt-8">
+              <h2 className="font-semibold mb-1">Waiting on others ({meeting.commitments.length})</h2>
+              <p className="text-xs text-muted mb-3">Things people outside the team said they would do. Not on your board unless you choose to track them.</p>
+              <ul className="space-y-3">
+                {meeting.commitments.map((c) => (
+                  <li key={c.id} className="card p-4 border-dashed">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium">{c.title}</div>
+                        <div className="text-xs text-muted mt-1"><span className="font-medium text-ink-soft">{c.ownerName}</span>{c.dueDate ? ` · by ${fmtDate(c.dueDate)}` : ""}</div>
+                        <p className="text-sm text-ink-soft mt-2">{c.description}</p>
+                        {c.sourceTimestampSec != null && (
+                          <Link href={`/meetings/${meeting.id}?t=${c.sourceTimestampSec}`} className="text-xs text-merle mt-2 inline-block">▶ Discussed at {fmtTimestamp(c.sourceTimestampSec)}</Link>
+                        )}
+                      </div>
+                      {c.taskId ? (
+                        <Link href={`/tasks/${c.taskId}`} className="btn-secondary !py-1 text-xs">Tracked ↗</Link>
+                      ) : (
+                        <form action={trackCommitmentAction.bind(null, c.id)}><button className="btn-secondary !py-1 text-xs">Track as task</button></form>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </section>
       </div>

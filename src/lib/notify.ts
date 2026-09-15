@@ -10,19 +10,20 @@ import { appUrl } from "./urls";
 export async function notifyMeetingProcessed(meetingId: string) {
   const meeting = await db.meeting.findUnique({
     where: { id: meetingId },
-    include: { org: true, tasks: { include: { assignee: true }, orderBy: { dueDate: "asc" } } },
+    include: { org: true, tasks: { include: { assignee: true }, orderBy: { dueDate: "asc" } }, commitments: { orderBy: { dueDate: "asc" } } },
   });
   if (!meeting || !meeting.summary) return;
   const base = appUrl();
   const meetingLink = `${base}/meetings/${meeting.id}`;
   const review = meeting.org.reviewBeforeAssign && !meeting.reviewedAt;
   const liveTasks = meeting.tasks.filter((t) => t.status !== "draft");
+  const waitingOn = meeting.commitments.map((c) => `${c.ownerName}: ${c.title}`);
 
   // Admins always get the summary (and the review request in review mode).
   const admins = await db.membership.findMany({ where: { orgId: meeting.orgId, isAdmin: true, notifyByEmail: true } });
   await Promise.allSettled(
     admins.map((a) =>
-      sendEmail({ to: a.email, ...templates.summaryReady({ meetingTitle: meeting.title, summary: meeting.summary!, taskCount: meeting.tasks.length, link: meetingLink, review }) }),
+      sendEmail({ to: a.email, ...templates.summaryReady({ meetingTitle: meeting.title, summary: meeting.summary!, taskCount: meeting.tasks.length, link: meetingLink, review, waitingOn }) }),
     ),
   );
   if (review) return; // assignees and channels are notified after approval

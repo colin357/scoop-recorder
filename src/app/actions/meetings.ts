@@ -122,3 +122,30 @@ export async function discardDraftAction(taskId: string) {
     revalidatePath(`/meetings/${t.meetingId}`);
   }
 }
+
+/** Turn something an outside person owes us into a task the team tracks (unassigned, due when they said). */
+export async function trackCommitmentAction(commitmentId: string) {
+  const { org, membership } = await requireOrg();
+  const c = await db.meetingCommitment.findFirst({ where: { id: commitmentId, meeting: { orgId: org.id } }, include: { meeting: { select: { id: true, projectId: true, title: true } } } });
+  if (!c) return;
+  if (c.taskId) redirect(`/tasks/${c.taskId}`);
+  const task = await db.task.create({
+    data: {
+      orgId: org.id,
+      meetingId: c.meeting.id,
+      projectId: c.meeting.projectId,
+      title: `Follow up: ${c.title}`,
+      description: `${c.ownerName} said they would do this in “${c.meeting.title}”. Chase it if it does not arrive.\n\n${c.description}`,
+      status: "todo",
+      priority: "medium",
+      dueDate: c.dueDate,
+      sourceTimestampSec: c.sourceTimestampSec,
+      sourceQuote: c.sourceQuote,
+      assignmentReason: `Tracking a commitment made by ${c.ownerName}.`,
+    },
+  });
+  await db.meetingCommitment.update({ where: { id: c.id }, data: { taskId: task.id } });
+  await logActivity({ orgId: org.id, actorId: membership.id, action: "task.created", entityType: "task", entityId: task.id, summary: `${membership.name} started tracking “${c.title}” (owed by ${c.ownerName})` });
+  revalidatePath(`/meetings/${c.meeting.id}`);
+  redirect(`/tasks/${task.id}`);
+}

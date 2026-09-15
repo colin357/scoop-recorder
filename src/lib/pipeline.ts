@@ -23,12 +23,21 @@ export async function processMeeting(meetingId: string) {
   await db.meeting.update({ where: { id: meetingId }, data: { status: "processing", error: null } });
 
   try {
-    const [team, projects, org] = await Promise.all([
+    const [team, projects, org, attendeeRows] = await Promise.all([
       db.membership.findMany({ where: { orgId: meeting.orgId } }),
       db.project.findMany({ where: { orgId: meeting.orgId } }),
       db.organization.findUniqueOrThrow({ where: { id: meeting.orgId } }),
+      db.meetingAttendee.findMany({ where: { meetingId } }),
     ]);
     const meetingDate = meeting.startedAt ?? meeting.scheduledAt ?? meeting.createdAt;
+
+    // Mark each attendee as on the team or external so commitments by guests
+    // (clients, vendors) are not turned into the team's tasks.
+    const teamEmails = new Set(team.map((m) => m.email.toLowerCase()));
+    const teamNames = new Set(team.map((m) => m.name.trim().toLowerCase()));
+    const isInternal = (name: string, email: string | null) => (email ? teamEmails.has(email.toLowerCase()) : false) || teamNames.has(name.trim().toLowerCase());
+    const attendeeSource = attendeeRows.length ? attendeeRows.map((a) => ({ name: a.name, email: a.email })) : [...new Set(transcript.map((s) => s.speaker))].map((name) => ({ name, email: null }));
+    const attendees = attendeeSource.filter((a) => a.name && a.name !== "Unknown").map((a) => ({ name: a.name, email: a.email, internal: isInternal(a.name, a.email) }));
 
     const analysis = await analyzeMeeting({
       title: meeting.title,
@@ -36,6 +45,7 @@ export async function processMeeting(meetingId: string) {
       transcript,
       team: team.map((m) => ({ id: m.id, name: m.name, role: m.role, responsibilities: m.responsibilities })),
       projects: projects.map((p) => ({ id: p.id, name: p.name, description: p.description })),
+      attendees,
       businessDescription: org.businessDescription,
     });
 
@@ -51,9 +61,12 @@ export async function processMeeting(meetingId: string) {
 
     const usage = lastUsage;
     const draft = org.reviewBeforeAssign;
+    const teamItems = analysis.tasks.filter((t) => t.owner !== "external");
+    const externalItems = analysis.tasks.filter((t) => t.owner === "external");
     await db.$transaction(async (tx) => {
-      // Re-running analysis replaces previously generated (still-untouched) tasks.
+      // Re-running analysis replaces previously generated (still-untouched) tasks and untracked commitments.
       await tx.task.deleteMany({ where: { meetingId, status: { in: ["todo", "draft"] } } });
+      await tx.meetingCommitment.deleteMany({ where: { meetingId, taskId: null } });
       await tx.meeting.update({
         where: { id: meetingId },
         data: {
@@ -67,16 +80,18 @@ export async function processMeeting(meetingId: string) {
           aiOutputTokens: usage?.outputTokens ?? null,
         },
       });
-      for (const t of analysis.tasks) {
+      for (const t of teamItems) {
+        // Items whose owner is unclear are never auto-assigned: they wait as drafts for a person to decide.
+        const unclear = t.owner === "unclear";
         await tx.task.create({
           data: {
             orgId: meeting.orgId,
             meetingId,
             projectId,
-            assigneeId: t.assigneeId,
+            assigneeId: unclear ? null : t.assigneeId,
             title: t.title,
-            description: t.description,
-            status: draft ? "draft" : "todo",
+            description: unclear && t.ownerName ? `${t.description}\n\nRocky wasn't sure whether this is ours or ${t.ownerName}'s. Confirm before assigning.` : t.description,
+            status: draft || unclear ? "draft" : "todo",
             priority: t.priority,
             dueDate: addDays(meetingDate, t.dueInDays),
             assignmentReason: t.assignmentReason,
@@ -93,8 +108,21 @@ export async function processMeeting(meetingId: string) {
           },
         });
       }
+      for (const c of externalItems) {
+        await tx.meetingCommitment.create({
+          data: {
+            meetingId,
+            ownerName: c.ownerName ?? "Someone outside the team",
+            title: c.title,
+            description: c.description,
+            dueDate: addDays(meetingDate, c.dueInDays),
+            sourceTimestampSec: c.sourceTimestampSec,
+            sourceQuote: c.sourceQuote,
+          },
+        });
+      }
     });
-    await logActivity({ orgId: meeting.orgId, action: "meeting.processed", entityType: "meeting", entityId: meetingId, summary: `Summary and ${analysis.tasks.length} task(s) generated for “${meeting.title}”${draft ? " (awaiting review)" : ""}` });
+    await logActivity({ orgId: meeting.orgId, action: "meeting.processed", entityType: "meeting", entityId: meetingId, summary: `Summary and ${teamItems.length} task(s) generated for “${meeting.title}”${draft ? " (awaiting review)" : ""}${externalItems.length ? `, ${externalItems.length} item(s) waiting on others` : ""}` });
     await notifyMeetingProcessed(meetingId).catch((e) => console.error("notify failed", e));
   } catch (err) {
     await db.meeting.update({
