@@ -105,4 +105,5 @@ export async function deleteTaskAction(taskId: string) {
   await db.task.delete({ where: { id: taskId } });
   await logActivity({ orgId: org.id, actorId: membership.id, action: "task.deleted", entityType: "task", entityId: taskId, summary: `${membership.name} deleted “${task.title}”` });
   revalidatePath("/tasks");
+  redirect(`/deleted?type=task&title=${encodeURIComponent(task.title)}`);
 }
