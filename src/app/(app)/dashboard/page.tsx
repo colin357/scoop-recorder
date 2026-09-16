@@ -29,7 +29,8 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
   ]);
   const undecided = upcoming.filter((e) => e.decision === "undecided").length;
   const first = membership.name.split(" ")[0];
-  const pose = overdueCount > 0 ? "think" : openCount === 0 ? "celebrate" : "wave";
+  // The greeting always waves; the message below it carries the overdue/all-clear nuance.
+  const pose = "wave" as const;
 
   return (
     <div className="space-y-8">
