@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Markdown from "@/components/markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-export default function TaskChat({ taskId, initial, hasMeeting }: { taskId: string; initial: Msg[]; hasMeeting: boolean }) {
+export default function TaskChat({ taskId, initial, hasMeeting, meetingId = null }: { taskId: string; initial: Msg[]; hasMeeting: boolean; meetingId?: string | null }) {
   const [messages, setMessages] = useState<Msg[]>(initial);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,7 +38,9 @@ export default function TaskChat({ taskId, initial, hasMeeting }: { taskId: stri
       <p className="text-xs text-muted">Answers come from the meeting transcript, with timestamps you can jump to.</p>
       <div className="space-y-3 max-h-96 overflow-y-auto">
         {messages.map((m, i) => (
-          <div key={i} className={`text-sm rounded-lg p-3 whitespace-pre-line ${m.role === "user" ? "bg-sky-soft text-merle-deep ml-6" : "bg-paper-2 text-ink-soft mr-6"}`}>{m.content}</div>
+          m.role === "user"
+            ? <div key={i} className="text-sm rounded-lg p-3 whitespace-pre-line bg-sky-soft text-merle-deep ml-6">{m.content}</div>
+            : <Markdown key={i} text={m.content} meetingId={meetingId} className="text-sm rounded-lg p-3 bg-paper-2 text-ink-soft mr-6" />
         ))}
         {busy && <div className="text-sm text-muted mr-6">Thinking…</div>}
       </div>

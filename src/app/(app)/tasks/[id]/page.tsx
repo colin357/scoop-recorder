@@ -77,6 +77,8 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
             )}
           </section>
 
+          <TaskChat taskId={task.id} initial={task.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))} hasMeeting={Boolean(task.meeting)} meetingId={task.meeting?.id ?? null} />
+
           <section className="card p-5 space-y-4">
             <h2 className="font-semibold">Comments</h2>
             {task.comments.length === 0 ? <p className="text-sm text-muted">No comments yet. Blocked on something? Say so here.</p> : (
@@ -127,7 +129,6 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
             projects={projects.map((p) => ({ id: p.id, name: p.name }))}
             members={members.map((m) => ({ id: m.id, name: m.name }))}
           />
-          <TaskChat taskId={task.id} initial={task.messages.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }))} hasMeeting={Boolean(task.meeting)} />
         </div>
       </div>
     </div>
