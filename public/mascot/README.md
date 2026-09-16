@@ -10,6 +10,7 @@ File names (one per pose, any of .png / .webp / .svg):
     celebrate.png  all done, setup finished
     sleep.png      nothing to show yet
     write.png      writing the summary, project suggestions
+    alert.png      something needs attention: not-found pages, failed recordings, overdue greeting
 
 Only `wave.png` is required; any missing pose falls back to `wave.png`, and if that is missing too the built-in SVG is used.
 

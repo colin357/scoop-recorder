@@ -29,7 +29,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
   ]);
   const undecided = upcoming.filter((e) => e.decision === "undecided").length;
   const first = membership.name.split(" ")[0];
-  const pose = overdueCount > 0 ? "think" : openCount === 0 ? "celebrate" : "wave";
+  const pose = overdueCount > 0 ? "alert" : openCount === 0 ? "celebrate" : "wave";
 
   return (
     <div className="space-y-8">

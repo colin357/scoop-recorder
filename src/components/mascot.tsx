@@ -6,7 +6,7 @@
  */
 import { MASCOT_IMAGES } from "@/generated/mascot-images";
 
-export type MascotPose = "wave" | "listen" | "think" | "celebrate" | "sleep" | "write";
+export type MascotPose = "wave" | "listen" | "think" | "celebrate" | "sleep" | "write" | "alert";
 
 const INK = "#0f172a";
 const WHITE = "#fcfbf8";
@@ -38,7 +38,8 @@ const SPECKLES: [number, number][] = [
 
 export function Mascot({ pose = "wave", size = 96, className = "" }: { pose?: MascotPose; size?: number; className?: string }) {
   // Custom artwork in public/mascot/ takes precedence over the drawn SVG.
-  const image = MASCOT_IMAGES[pose] ?? MASCOT_IMAGES.wave;
+  // "alert" (something needs attention) falls back to "think" until artwork exists for it.
+  const image = MASCOT_IMAGES[pose] ?? (pose === "alert" ? MASCOT_IMAGES.think : undefined) ?? MASCOT_IMAGES.wave;
   if (image) {
     return (
       // eslint-disable-next-line @next/next/no-img-element

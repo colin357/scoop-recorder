@@ -2,7 +2,7 @@
 // Run automatically before build (and via `npm run mascot:sync`).
 import { readdirSync, mkdirSync, writeFileSync, existsSync } from "node:fs";
 
-const POSES = ["wave", "listen", "think", "celebrate", "sleep", "write"];
+const POSES = ["wave", "listen", "think", "celebrate", "sleep", "write", "alert"];
 const EXTS = ["png", "webp", "svg"];
 const dir = "public/mascot";
 const found = {};
