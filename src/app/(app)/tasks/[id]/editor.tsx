@@ -3,9 +3,10 @@
 import { useTransition } from "react";
 import { updateTaskAction } from "@/app/actions/tasks";
 import { STATUS_LABEL } from "@/lib/utils";
+import { RECURRENCES } from "@/lib/recurrence";
 
 type Props = {
-  task: { id: string; status: string; priority: string; assigneeId: string | null; projectId: string | null; dueDate: string };
+  task: { id: string; status: string; priority: string; assigneeId: string | null; projectId: string | null; dueDate: string; recurrence: string | null };
   projects: { id: string; name: string }[];
   members: { id: string; name: string }[];
 };
@@ -33,6 +34,12 @@ export default function TaskEditor({ task, projects, members }: Props) {
         <select defaultValue={task.priority} onChange={(e) => update({ priority: e.target.value })}>
           {["low", "medium", "high", "urgent"].map((p) => <option key={p} value={p}>{p}</option>)}
         </select></div>
+      <div><label>Repeats</label>
+        <select defaultValue={task.recurrence ?? ""} onChange={(e) => update({ recurrence: e.target.value || null })}>
+          <option value="">Doesn&apos;t repeat</option>
+          {RECURRENCES.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}
+        </select>
+        <p className="text-xs text-muted mt-1">Marking it done creates the next one.</p></div>
     </section>
   );
 }

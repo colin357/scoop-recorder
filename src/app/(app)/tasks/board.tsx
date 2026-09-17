@@ -5,9 +5,11 @@ import { useOptimistic, useState, useTransition, type DragEvent } from "react";
 import { updateTaskAction } from "@/app/actions/tasks";
 import { Avatar, DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import { STATUS_LABEL } from "@/lib/utils";
+import { Icon } from "@/components/icons";
+import { recurrenceLabel } from "@/lib/recurrence";
 
 export type TaskRow = {
-  id: string; title: string; status: string; priority: string; dueDate: string | null;
+  id: string; title: string; status: string; priority: string; dueDate: string | null; recurrence?: string | null;
   project: { id: string; name: string; color: string } | null;
   assignee: { id: string; name: string } | null;
   meeting: { id: string; title: string } | null;
@@ -90,6 +92,7 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
                     className={`card p-3 space-y-2 hover:shadow-lift transition cursor-grab active:cursor-grabbing ${dragging === t.id ? "opacity-40 ring-2 ring-ink/40" : ""}`}
                   >
                     <Link href={`/tasks/${t.id}`} draggable={false} className="text-sm font-medium hover:underline block">{t.title}</Link>
+                    {t.recurrence && <span className="inline-flex items-center gap-1 text-[11px] text-muted" title={`Repeats ${recurrenceLabel(t.recurrence)}`}><Icon name="refresh" size={11} />Repeats {recurrenceLabel(t.recurrence)}</span>}
                     <div className="flex flex-wrap items-center gap-2"><ProjectChip project={t.project} /><DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} /><PriorityBadge priority={t.priority} /></div>
                     <div onPointerDownCapture={() => setHoldingControl(true)} onPointerUpCapture={() => setHoldingControl(false)} onBlurCapture={() => setHoldingControl(false)}>
                       {controls(t, true)}
@@ -119,6 +122,7 @@ export default function TaskBoard({ view, tasks, members }: { view: "list" | "bo
           </button>
           <div className="flex-1 min-w-60">
             <Link href={`/tasks/${t.id}`} className={`font-medium hover:underline ${t.status === "done" ? "line-through text-muted" : ""}`}>{t.title}</Link>
+            {t.recurrence && <span className="ml-2 inline-flex items-center gap-1 text-[11px] text-muted align-middle" title={`Repeats ${recurrenceLabel(t.recurrence)}`}><Icon name="refresh" size={11} />{recurrenceLabel(t.recurrence)}</span>}
             <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-muted">
               <ProjectChip project={t.project} />
               <DueBadge date={t.dueDate ? new Date(t.dueDate) : null} status={t.status} />

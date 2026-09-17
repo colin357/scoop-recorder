@@ -295,6 +295,8 @@ model Task {
   sourceTimestampSec Int?
   // Verbatim snippet from the transcript that produced the task
   sourceQuote   String?
+  // daily | weekly | biweekly | monthly — marking it done creates the next occurrence
+  recurrence    String?
   completedAt   DateTime?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

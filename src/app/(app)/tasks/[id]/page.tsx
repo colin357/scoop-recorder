@@ -5,6 +5,8 @@ import { requireOrg } from "@/lib/auth";
 import { fmtDate, fmtTimestamp, PLATFORM_LABEL } from "@/lib/utils";
 import { DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import TaskEditor from "./editor";
+import { Icon } from "@/components/icons";
+import { recurrenceLabel } from "@/lib/recurrence";
 import TaskChat from "./chat";
 import { addCommentAction, deleteTaskAction, toggleStepAction } from "@/app/actions/tasks";
 import { fmtRelative } from "@/lib/utils";
@@ -36,6 +38,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
         </div>
         <div className="flex flex-wrap items-center gap-3 mt-2 text-sm">
           <StatusBadge status={task.status} />
+          {task.recurrence && <span className="badge bg-paper-2 text-ink-soft inline-flex items-center gap-1"><Icon name="refresh" size={12} />Repeats {recurrenceLabel(task.recurrence)}</span>}
           <PriorityBadge priority={task.priority} />
           <DueBadge date={task.dueDate} status={task.status} />
           <ProjectChip project={task.project} />
@@ -125,7 +128,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
 
         <div className="lg:col-span-2 space-y-6">
           <TaskEditor
-            task={{ id: task.id, status: task.status, priority: task.priority, assigneeId: task.assigneeId, projectId: task.projectId, dueDate: task.dueDate?.toISOString().slice(0, 10) ?? "" }}
+            task={{ id: task.id, status: task.status, priority: task.priority, assigneeId: task.assigneeId, projectId: task.projectId, dueDate: task.dueDate?.toISOString().slice(0, 10) ?? "", recurrence: task.recurrence }}
             projects={projects.map((p) => ({ id: p.id, name: p.name }))}
             members={members.map((m) => ({ id: m.id, name: m.name }))}
           />

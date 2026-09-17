@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { logActivity } from "@/lib/audit";
 import { notifyTaskAssigned } from "@/lib/notify";
+import { isRecurrence, nextOccurrence, recurrenceLabel, type Recurrence } from "@/lib/recurrence";
 import { STATUS_LABEL, fmtDate } from "@/lib/utils";
 
 async function ownedTask(taskId: string) {
@@ -23,6 +24,7 @@ export async function updateTaskAction(taskId: string, patch: {
   priority?: string;
   title?: string;
   description?: string;
+  recurrence?: string | null;
 }) {
   const { org, membership, task: before } = await ownedTask(taskId);
   await db.task.update({
@@ -38,8 +40,13 @@ export async function updateTaskAction(taskId: string, patch: {
       ...(patch.priority !== undefined && { priority: patch.priority }),
       ...(patch.title !== undefined && { title: patch.title }),
       ...(patch.description !== undefined && { description: patch.description }),
+      ...(patch.recurrence !== undefined && { recurrence: isRecurrence(patch.recurrence) ? patch.recurrence : null }),
     },
   });
+  // A recurring task that was just completed spawns its next occurrence.
+  if (patch.status === "done" && before.status !== "done" && isRecurrence(before.recurrence)) {
+    await spawnNextOccurrence(taskId, before.recurrence);
+  }
   // Activity + notifications for meaningful changes
   const changes: string[] = [];
   if (patch.status !== undefined && patch.status !== before.status) changes.push(`status → ${STATUS_LABEL[patch.status] ?? patch.status}`);
@@ -52,6 +59,7 @@ export async function updateTaskAction(taskId: string, patch: {
   if (patch.priority !== undefined && patch.priority !== before.priority) changes.push(`priority → ${patch.priority}`);
   if (patch.title !== undefined && patch.title !== before.title) changes.push("title edited");
   if (patch.description !== undefined && patch.description !== before.description) changes.push("description edited");
+  if (patch.recurrence !== undefined && (patch.recurrence || null) !== before.recurrence) changes.push(`repeats → ${recurrenceLabel(patch.recurrence) ?? "never"}`);
   if (changes.length) {
     await logActivity({ orgId: org.id, actorId: membership.id, action: "task.updated", entityType: "task", entityId: taskId, summary: `${membership.name} changed ${changes.join(", ")} on “${before.title}”`, meta: patch });
   }
@@ -81,6 +89,7 @@ export async function createTaskAction(form: FormData) {
   const title = String(form.get("title") ?? "").trim();
   if (!title) return;
   const dueDate = String(form.get("dueDate") ?? "");
+  const recurrence = String(form.get("recurrence") ?? "");
   const created = await db.task.create({
     data: {
       orgId: org.id,
@@ -90,6 +99,7 @@ export async function createTaskAction(form: FormData) {
       assigneeId: String(form.get("assigneeId") ?? "") || null,
       priority: String(form.get("priority") ?? "medium"),
       dueDate: dueDate ? new Date(dueDate) : null,
+      recurrence: isRecurrence(recurrence) ? recurrence : null,
     },
   });
   const { membership } = await requireOrg();
@@ -106,4 +116,32 @@ export async function deleteTaskAction(taskId: string) {
   await logActivity({ orgId: org.id, actorId: membership.id, action: "task.deleted", entityType: "task", entityId: taskId, summary: `${membership.name} deleted “${task.title}”` });
   revalidatePath("/tasks");
   redirect(`/deleted?type=task&title=${encodeURIComponent(task.title)}`);
+}
+
+/**
+ * Copy a completed recurring task forward: same title, notes, project,
+ * assignee, priority and steps (unticked), due one interval after the old
+ * due date (or after today if it had none). The finished one stays done.
+ */
+async function spawnNextOccurrence(taskId: string, recurrence: Recurrence) {
+  const t = await db.task.findUniqueOrThrow({ where: { id: taskId }, include: { steps: { orderBy: { order: "asc" } } } });
+  const base = t.dueDate ?? new Date();
+  const due = nextOccurrence(base, recurrence);
+  const shift = due.getTime() - base.getTime();
+  const next = await db.task.create({
+    data: {
+      orgId: t.orgId,
+      projectId: t.projectId,
+      assigneeId: t.assigneeId,
+      title: t.title,
+      description: t.description,
+      priority: t.priority,
+      dueDate: due,
+      recurrence,
+      status: "todo",
+      steps: { create: t.steps.map((s) => ({ order: s.order, title: s.title, details: s.details, dueDate: s.dueDate ? new Date(s.dueDate.getTime() + shift) : null })) },
+    },
+  });
+  await logActivity({ orgId: t.orgId, action: "task.created", entityType: "task", entityId: next.id, summary: `“${t.title}” repeats ${recurrenceLabel(recurrence)}; next one due ${fmtDate(due)}` });
+  return next;
 }

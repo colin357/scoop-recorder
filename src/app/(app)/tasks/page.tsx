@@ -8,6 +8,7 @@ import { Icon } from "@/components/icons";
 import FilterSelects from "@/components/filter-selects";
 import TaskBoard from "./board";
 import { createTaskAction } from "@/app/actions/tasks";
+import { RECURRENCES } from "@/lib/recurrence";
 
 const DUE_FILTERS = [
   { key: "all", label: "Any date" },
@@ -113,7 +114,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         <TaskBoard
           view={view}
           tasks={tasks.map((t) => ({
-            id: t.id, title: t.title, status: t.status, priority: t.priority,
+            id: t.id, title: t.title, status: t.status, priority: t.priority, recurrence: t.recurrence,
             dueDate: t.dueDate?.toISOString() ?? null,
             project: t.project ? { id: t.project.id, name: t.project.name, color: t.project.color } : null,
             assignee: t.assignee ? { id: t.assignee.id, name: t.assignee.name } : null,
@@ -134,6 +135,8 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
           <div><label>Assignee</label><select name="assigneeId" defaultValue=""><option value="">Unassigned</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
           <div><label>Due date</label><input type="date" name="dueDate" /></div>
           <div><label>Priority</label><select name="priority" defaultValue="medium">{["low", "medium", "high", "urgent"].map((p) => <option key={p}>{p}</option>)}</select></div>
+          <div><label>Repeats</label><select name="recurrence" defaultValue=""><option value="">Doesn&apos;t repeat</option>{RECURRENCES.map((r) => <option key={r.key} value={r.key}>{r.label}</option>)}</select></div>
+          <p className="sm:col-span-2 text-xs text-muted -mt-1">A repeating task comes back with a fresh due date each time you mark it done.</p>
           <div className="sm:col-span-2"><button className="btn-primary">Create task</button></div>
         </form>
       </details>
