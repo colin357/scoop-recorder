@@ -5,5 +5,6 @@ export const MASCOT_IMAGES: Record<string, string> = {
   "think": "/mascot/think.webp",
   "celebrate": "/mascot/celebrate.webp",
   "sleep": "/mascot/sleep.webp",
-  "write": "/mascot/write.webp"
+  "write": "/mascot/write.webp",
+  "alert": "/mascot/alert.webp"
 };
