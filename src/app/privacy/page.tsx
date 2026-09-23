@@ -37,6 +37,10 @@ export default function PrivacyPage() {
         <ul>
           <li>If you connect Google Calendar or Microsoft 365, we read upcoming events to find ones with a video-meeting link: title, start and end time, attendees, and the meeting link. Access is <strong>read-only</strong>; we never create, edit or delete events.</li>
           <li>OAuth tokens are encrypted at rest. Disconnecting a calendar deletes the tokens immediately.</li>
+          <li id="google-limited-use">
+            <strong>Google API Services Limited Use disclosure.</strong> {P}&rsquo;s use and transfer to any other app of information received from Google APIs will adhere to the{" "}
+            <a href="https://developers.google.com/terms/api-services-user-data-policy#additional_requirements_for_specific_api_scopes" target="_blank" rel="noopener noreferrer">Google API Services User Data Policy</a>, including the Limited Use requirements. The use of raw or derived user data received from Workspace APIs will adhere to the Google User Data Policy, including the Limited Use requirements. We do not use Google user data, including raw, aggregated or derived calendar data, to develop, train or improve any machine-learning or artificial-intelligence model, whether generalized or foundational, and we do not transfer or sell it to anyone for that purpose. Calendar data is never sent to our AI provider.
+          </li>
         </ul>
         <h3>Meeting content</h3>
         <ul>

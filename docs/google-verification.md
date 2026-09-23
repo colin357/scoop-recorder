@@ -62,7 +62,17 @@ Standard sign-in. The email address identifies the user's Scoop account and the 
 
 ## Demo video (required for sensitive scopes)
 
-Google wants a screen recording, in English, showing the full OAuth flow from the app's real domain and how the granted data is used. Under two minutes is fine. Record these steps in order:
+Google wants a screen recording, in English, showing the full OAuth flow from the app's real domain and how the granted data is used. Under two minutes is fine.
+
+Google's follow-up review (September 2026) added three hard requirements for the video:
+
+- **Consent screen fully expanded.** On the Google permission screen, click "Show all services" / expand every scope so each requested scope's text is readable on screen. Pause there for a few seconds.
+- **Scope matching.** The scopes shown on the consent screen must be exactly the set configured under OAuth consent screen → Data access in the Cloud Console: `calendar.readonly`, `userinfo.email`, `openid`, `email`, `profile`. Remove anything else from the console before recording. The app requests nothing else (`src/lib/calendar.ts` and `src/lib/social-auth.ts`).
+- **Source account impact.** This applies only to write or delete scopes. Scoop requests read-only access, so there is nothing to show changing in the Google account. State this in the reply and, in the video, show the Google Calendar unchanged after Scoop reads it.
+
+Because the app is live and "In Production", do not record against production traffic with unverified scopes. Use a separate Google Cloud project (or a staging OAuth client on the production project) pointed at the production domain to record the demo, and keep the production project's publishing status at "In Production".
+
+Record these steps in order:
 
 1. Open https://www.scooprecorder.com, sign in, and go to Settings → Calendar. Show the page that explains what connecting does.
 2. Click "Connect Google Calendar". Let the Google consent screen render fully so the reviewer can read the app name, the requested scopes, and the "read-only" wording. Click Allow.
@@ -77,6 +87,19 @@ Tips that avoid a rejection:
 - The scopes in the video must exactly match the scopes listed in the console. Don't request any scope the app doesn't use.
 - Show the data being used for the stated purpose (the upcoming meetings list), not just the consent screen.
 - Keep the app's OAuth client "User type" set to External and make sure the homepage, privacy and terms URLs all resolve on the same verified domain.
+
+## Test credentials for the reviewer
+
+Google asks for working test credentials and step-by-step navigation. Before replying:
+
+- Create a dedicated reviewer account (email + password login, not Google sign-in) in a throwaway workspace on the paid or trial plan, with no MFA, no phone verification and no card required.
+- Connect nothing in advance; the reviewer must perform the calendar connection themselves. Provide a test Google account they can use, or tell them they may use their own.
+- Include in the reply: login URL, credentials, and the numbered steps above (sign in → Settings → Calendar → Connect Google Calendar → Allow → Upcoming meetings → Disconnect).
+- Rotate the password after verification completes.
+
+## Limited Use disclosure
+
+Google flagged that the app uses AI. The AI pipeline only processes meeting transcripts; calendar data from Google APIs never reaches the AI provider. The affirmative Limited Use statement is published in the Privacy Policy under "Calendar data" (`https://www.scooprecorder.com/privacy#google-limited-use`). Link that anchor in the reply to Google.
 
 ## Domain verification checklist
 
