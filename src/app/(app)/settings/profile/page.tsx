@@ -1,3 +1,5 @@
+import { signOutAction } from "@/app/actions/auth";
+import { Icon } from "@/components/icons";
 import { requireOrg } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { deleteAccountAction, updateProfileAction } from "@/app/actions/org";
@@ -27,6 +29,14 @@ export default async function ProfilePage({ searchParams }: PageProps<"/settings
         <div><button className="btn-primary">Save</button></div>
       </form>
       <PasswordForm hasPassword={Boolean(user.passwordHash)} />
+
+      <section className="card p-5 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-semibold">Signed in on this device</h2>
+          <p className="text-sm text-muted">Sign out here, or from the bottom of the sidebar.</p>
+        </div>
+        <form action={signOutAction}><button className="btn-secondary"><Icon name="logout" size={16} />Sign out</button></form>
+      </section>
 
       <section className="card p-5 grid gap-3 border-clay/40">
         <h2 className="font-semibold text-clay">Delete my account</h2>

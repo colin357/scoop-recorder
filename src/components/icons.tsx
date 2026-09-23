@@ -4,7 +4,7 @@ import type { SVGProps } from "react";
 export type IconName =
   | "home" | "video" | "check" | "folder" | "calendar" | "users" | "search" | "mic" | "clock" | "user"
   | "settings" | "chart" | "menu" | "close" | "play" | "spark" | "shield" | "chat" | "mail" | "bolt" | "paw" | "chevron"
-  | "link" | "download" | "bell" | "sidebar" | "refresh" | "trash";
+  | "link" | "download" | "bell" | "sidebar" | "refresh" | "trash" | "logout";
 
 const PATHS: Record<IconName, string> = {
   home: "M3 11 12 3l9 8M5 10v10h5v-6h4v6h5V10",
@@ -33,6 +33,7 @@ const PATHS: Record<IconName, string> = {
   bell: "M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15ZM10 21h4",
   sidebar: "M4 5h16v14H4zM9 5v14",
   refresh: "M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5",
+  logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
   trash: "M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
   paw: "M12 21c-3 0-6-1.6-6-4.2 0-2.2 2.8-3.8 6-3.8s6 1.6 6 3.8C18 19.4 15 21 12 21Zm-6.5-8.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm13 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM9 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z",
 };

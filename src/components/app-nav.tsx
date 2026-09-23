@@ -99,7 +99,7 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
             <div className="mt-6 border-t border-line pt-3 text-sm px-1">
               <div className="truncate font-medium">{user.name}</div>
               <div className="truncate text-xs text-muted">{user.email}</div>
-              <form action={signOut}><button className="text-xs text-muted hover:text-ink mt-2">Sign out</button></form>
+              <form action={signOut} className="mt-3"><button className="w-full flex items-center gap-2 rounded-lg border edge px-3 py-2 text-sm text-ink-soft hover:bg-paper-2 hover:text-ink"><Icon name="logout" size={16} />Sign out</button></form>
             </div>
           </nav>
         </div>
@@ -123,7 +123,7 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
           {collapsed ? (
             <div className="flex flex-col items-center gap-2">
               <Avatar name={user.name} size="md" />
-              <form action={signOut}><button className="btn-ghost !px-2 !py-1.5 text-xs" title="Sign out" aria-label="Sign out"><Icon name="close" size={16} /></button></form>
+              <form action={signOut}><button className="btn-ghost !px-2 !py-1.5 text-xs" title="Sign out" aria-label="Sign out"><Icon name="logout" size={16} /></button></form>
             </div>
           ) : (
             <div className="flex items-center gap-3 rounded-xl px-2 py-1.5">
@@ -132,12 +132,16 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
                 <div className="truncate text-sm font-medium leading-tight">{user.name}</div>
                 <div className="truncate text-[11px] text-muted">{user.email}</div>
               </div>
-              <form action={signOut}><button className="btn-ghost !px-2 !py-1.5 text-xs" title="Sign out" aria-label="Sign out"><Icon name="close" size={16} /></button></form>
             </div>
           )}
-          <button type="button" onClick={toggleCollapsed} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} className={`mt-2 w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-muted hover:bg-paper-2 hover:text-ink ${collapsed ? "justify-center" : ""}`}>
-            <Icon name="sidebar" size={14} />{!collapsed && "Collapse"}
-          </button>
+          <div className={`mt-2 flex gap-1 ${collapsed ? "flex-col items-center" : ""}`}>
+            {!collapsed && (
+              <form action={signOut} className="flex-1"><button className="w-full flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-muted hover:bg-paper-2 hover:text-ink" title="Sign out"><Icon name="logout" size={14} />Sign out</button></form>
+            )}
+            <button type="button" onClick={toggleCollapsed} title={collapsed ? "Expand sidebar" : "Collapse sidebar"} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-[11px] text-muted hover:bg-paper-2 hover:text-ink ${collapsed ? "justify-center w-full" : "flex-1"}`}>
+              <Icon name="sidebar" size={14} />{!collapsed && "Collapse"}
+            </button>
+          </div>
         </div>
       </aside>
 
