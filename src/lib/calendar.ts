@@ -8,7 +8,8 @@
 import { addDays, subMinutes } from "date-fns";
 import { db } from "./db";
 import { decrypt, encrypt } from "./crypto";
-import { consentNotice, createBot, recallConfigured, removeBot } from "./recall";
+import { cancelScheduledBot, consentNotice, createBot, recallConfigured, removeBot } from "./recall";
+import { logActivity } from "./audit";
 import { recordingAllowed } from "./billing";
 import { detectPlatform } from "./utils";
 import { appUrl } from "./urls";
@@ -225,7 +226,12 @@ export async function syncConnection(connId: string) {
         attendees: JSON.stringify(e.attendees),
       };
       if (existing) {
+        const moved = existing.startAt.getTime() !== e.startAt.getTime() || existing.meetingUrl !== e.meetingUrl;
         await db.calendarEvent.update({ where: { id: existing.id }, data: base });
+        if (existing.meetingId && moved) await rebookMovedEvent(existing.id);
+        else if (existing.meetingId && existing.title !== e.title) {
+          await db.meeting.updateMany({ where: { id: existing.meetingId, status: "scheduled" }, data: { title: e.title } });
+        }
       } else {
         await db.calendarEvent.create({
           data: {
@@ -311,6 +317,28 @@ export async function syncStaleConnections(orgId: string, maxAgeMinutes = 3) {
   await db.calendarConnection.updateMany({ where: { id: { in: stale.map((c) => c.id) } }, data: { syncedAt: new Date() } });
   await Promise.allSettled(stale.map((c) => syncConnection(c.id)));
   return stale.length;
+}
+
+/**
+ * An event with a booked bot was moved to a new time or given a new link.
+ * Cancel the old booking while the bot is still only scheduled and drop its
+ * placeholder meeting; the scheduling pass at the end of the sync then books
+ * a fresh bot for the new time. A bot that already joined is left alone.
+ */
+async function rebookMovedEvent(eventId: string) {
+  const ev = await db.calendarEvent.findUnique({ where: { id: eventId }, include: { meeting: true } });
+  const m = ev?.meeting;
+  if (!ev || !m || m.status !== "scheduled") return;
+  if (m.recallBotId) {
+    try {
+      if (!(await cancelScheduledBot(m.recallBotId))) return; // already joined the old slot
+    } catch (err) {
+      console.error("Could not cancel bot for rescheduled event", eventId, err);
+      return; // keep the booking rather than risk two bots
+    }
+  }
+  await db.meeting.deleteMany({ where: { id: m.id, status: "scheduled" } });
+  await logActivity({ orgId: ev.orgId, action: "meeting.rescheduled", entityType: "meeting", entityId: m.id, summary: `“${ev.title}” was rescheduled; the recorder was rebooked for the new time` });
 }
 
 export async function cancelEventRecording(eventId: string) {

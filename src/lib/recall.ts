@@ -15,6 +15,12 @@ export function recallConfigured() {
   return Boolean(process.env.RECALL_API_KEY);
 }
 
+export class RecallError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
+
 async function recallFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const key = process.env.RECALL_API_KEY;
   if (!key) throw new Error("RECALL_API_KEY is not set");
@@ -27,11 +33,9 @@ async function recallFetch<T>(path: string, init: RequestInit = {}): Promise<T> 
       ...(init.headers ?? {}),
     },
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Recall ${init.method ?? "GET"} ${path} failed: ${res.status} ${text}`);
-  }
-  return (await res.json()) as T;
+  const text = await res.text();
+  if (!res.ok) throw new RecallError(`Recall ${init.method ?? "GET"} ${path} failed: ${res.status} ${text}`, res.status);
+  return (text ? JSON.parse(text) : null) as T; // DELETE answers 204 with no body
 }
 
 export type RecallBot = {
@@ -84,8 +88,25 @@ export async function getBot(botId: string) {
   return recallFetch<RecallBot>(`/bot/${botId}/`);
 }
 
+/**
+ * Cancel a bot that is booked but has not joined yet. Returns false if it has
+ * already joined (Recall answers 405), true if it was deleted or was already gone.
+ */
+export async function cancelScheduledBot(botId: string) {
+  try {
+    await recallFetch<unknown>(`/bot/${botId}/`, { method: "DELETE" });
+    return true;
+  } catch (err) {
+    if (err instanceof RecallError && err.status === 404) return true;
+    if (err instanceof RecallError && err.status === 405) return false;
+    throw err;
+  }
+}
+
+/** Stop a bot whatever state it is in: cancel it if only scheduled, otherwise pull it out of the call. */
 export async function removeBot(botId: string) {
-  return recallFetch<unknown>(`/bot/${botId}/leave_call/`, { method: "POST" });
+  if (await cancelScheduledBot(botId)) return;
+  await recallFetch<unknown>(`/bot/${botId}/leave_call/`, { method: "POST" });
 }
 
 export type TranscriptSegment = {
