@@ -5,6 +5,7 @@ import { requireOrg } from "@/lib/auth";
 import { fmtDate, fmtTimestamp, PLATFORM_LABEL } from "@/lib/utils";
 import { DueBadge, PriorityBadge, ProjectChip, StatusBadge } from "@/components/ui";
 import TaskEditor from "./editor";
+import { activeProjectsByRecency } from "@/lib/projects";
 import { Icon } from "@/components/icons";
 import { recurrenceLabel } from "@/lib/recurrence";
 import TaskChat from "./chat";
@@ -19,7 +20,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
       where: { id, orgId: org.id },
       include: { project: true, assignee: true, meeting: true, steps: { orderBy: { order: "asc" } }, messages: { orderBy: { createdAt: "asc" } }, comments: { include: { member: true }, orderBy: { createdAt: "asc" } } },
     }),
-    db.project.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } }),
+    activeProjectsByRecency(org.id),
     db.membership.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } }),
     db.activityLog.findMany({ where: { orgId: org.id, entityType: "task", entityId: id }, orderBy: { createdAt: "desc" }, take: 30, include: { actor: true } }),
   ]);
@@ -130,6 +131,7 @@ export default async function TaskPage({ params }: PageProps<"/tasks/[id]">) {
           <TaskEditor
             task={{ id: task.id, status: task.status, priority: task.priority, assigneeId: task.assigneeId, projectId: task.projectId, dueDate: task.dueDate?.toISOString().slice(0, 10) ?? "", recurrence: task.recurrence }}
             projects={projects.map((p) => ({ id: p.id, name: p.name }))}
+            currentProject={task.project ? { id: task.project.id, name: task.project.name } : null}
             members={members.map((m) => ({ id: m.id, name: m.name }))}
           />
         </div>

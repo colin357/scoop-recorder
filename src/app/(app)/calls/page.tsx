@@ -8,6 +8,7 @@ import { Empty, PageHeader, ProjectChip, StatusBadge } from "@/components/ui";
 import MeetingThumb from "@/components/meeting-thumb";
 import { Icon } from "@/components/icons";
 import PhoneCallForm from "./phone-call-form";
+import { activeProjectsByRecency } from "@/lib/projects";
 
 /** Phone calls: place a "Call with Rocky" call, see how to merge Rocky in, and browse past calls. */
 export default async function CallsPage() {
@@ -19,7 +20,7 @@ export default async function CallsPage() {
       orderBy: [{ startedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
       include: { project: true, attendees: { orderBy: { id: "asc" } }, _count: { select: { tasks: true } } },
     }),
-    db.project.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } }),
+    activeProjectsByRecency(org.id),
   ]);
 
   return (

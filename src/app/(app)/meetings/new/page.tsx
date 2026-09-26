@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
 import { recallConfigured } from "@/lib/recall";
 import { resolveProvider } from "@/lib/llm";
 import NewMeetingForms from "./forms";
+import { activeProjectsByRecency } from "@/lib/projects";
 
 // Server actions on this page run the AI pipeline; allow long executions on Vercel.
 export const maxDuration = 300;
 
 export default async function NewMeetingPage() {
   const { org } = await requireOrg();
-  const projects = await db.project.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } });
+  const projects = await activeProjectsByRecency(org.id);
   return (
     <div className="space-y-6 max-w-2xl">
       <div>

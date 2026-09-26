@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { importTranscriptAction, scheduleBotAction } from "@/app/actions/meetings";
+import { ProjectOptions } from "@/components/project-options";
 
 const SAMPLE = `[00:00] Priya: Thanks everyone. Quick sync on the Acme onboarding. Where are we on the proposal?
 [00:22] Marcus: Draft is done. I need the pricing table from finance before I send it. Can we get that by Wednesday?
@@ -78,7 +79,7 @@ function ProjectSelect({ projects }: { projects: Project[] }) {
       <label>Project (optional)</label>
       <select name="projectId" defaultValue="">
         <option value="">Let the AI pick</option>
-        {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <ProjectOptions projects={projects} />
       </select>
     </div>
   );

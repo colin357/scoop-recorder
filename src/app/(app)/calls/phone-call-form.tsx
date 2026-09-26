@@ -5,6 +5,7 @@ import { useActionState } from "react";
 import { startPhoneCallAction } from "@/app/actions/phone";
 import { Icon } from "@/components/icons";
 import { formatPhone } from "@/lib/phone-format";
+import { ProjectOptions } from "@/components/project-options";
 
 type Project = { id: string; name: string };
 
@@ -35,7 +36,7 @@ export default function PhoneCallForm({ myPhone, rockyNumber, projects }: { myPh
             <input name="title" placeholder="Title" aria-label="Title" />
             <select name="projectId" defaultValue="" aria-label="Project">
               <option value="">Project: let the AI pick</option>
-              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              <ProjectOptions projects={projects} />
             </select>
           </div>
         </details>

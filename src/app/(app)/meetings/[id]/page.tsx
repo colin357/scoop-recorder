@@ -10,6 +10,9 @@ import CopyLink from "@/components/copy-link";
 import { deleteMeetingAction, reprocessMeetingAction, trackCommitmentAction } from "@/app/actions/meetings";
 import RecordingPlayer from "@/components/recording-player";
 import { formatPhone } from "@/lib/phone-format";
+import { activeProjectsByRecency } from "@/lib/projects";
+import { ProjectOptions } from "@/components/project-options";
+import { assignMeetingProjectAction, createSuggestedProjectAction, dismissProjectSuggestionAction } from "@/app/actions/projects";
 import { Mascot } from "@/components/mascot";
 import LiveStatus from "@/components/live-status";
 import ReviewDrafts from "./review";
@@ -26,6 +29,8 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
     include: { project: true, attendees: true, tasks: { include: { assignee: true, project: true }, orderBy: { dueDate: "asc" } }, commitments: { orderBy: { dueDate: "asc" } } },
   });
   if (!meeting) notFound();
+  const suggestProject = !meeting.projectId && meeting.suggestedProjectName ? meeting.suggestedProjectName : null;
+  const pickable = suggestProject ? await activeProjectsByRecency(org.id) : [];
 
   const transcript = safeJson<TranscriptSegment[]>(meeting.transcript, []);
   const keyPoints = safeJson<string[]>(meeting.keyPoints, []);
@@ -70,6 +75,23 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
         </div>
       </div>
 
+      {suggestProject && (
+        <section className="card p-4 flex flex-wrap items-center gap-3 border-dashed">
+          <span className="h-9 w-9 shrink-0 rounded-lg bg-paper-2 text-ink-soft flex items-center justify-center"><Icon name="folder" size={16} /></span>
+          <div className="flex-1 min-w-52">
+            <div className="text-sm font-medium">This meeting isn&apos;t in a project yet</div>
+            <div className="text-xs text-muted">Rocky suggests a new one: <b className="text-ink-soft">{suggestProject}</b>{meeting.suggestedProjectDescription ? `. ${meeting.suggestedProjectDescription}` : ""}</div>
+          </div>
+          <form action={createSuggestedProjectAction.bind(null, meeting.id)}><button className="btn-secondary !py-1.5 text-sm">Create “{suggestProject}”</button></form>
+          {pickable.length > 0 && (
+            <form action={assignMeetingProjectAction.bind(null, meeting.id)} className="flex gap-1.5">
+              <select name="projectId" defaultValue="" required className="!py-1.5 text-sm !w-auto max-w-48" aria-label="Add to an existing project"><option value="" disabled>Add to existing…</option><ProjectOptions projects={pickable} /></select>
+              <button className="btn-ghost !py-1.5 text-sm">Add</button>
+            </form>
+          )}
+          <form action={dismissProjectSuggestionAction.bind(null, meeting.id)}><button className="text-xs text-muted hover:text-ink" aria-label="Dismiss suggestion">No project</button></form>
+        </section>
+      )}
       {drafts.length > 0 && membership.isAdmin && (
         <ReviewDrafts meetingId={meeting.id} drafts={drafts.map((d) => ({ id: d.id, title: d.title, assignee: d.assignee?.name ?? null, due: fmtDate(d.dueDate) }))} />
       )}

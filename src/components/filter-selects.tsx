@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-export type FilterSelect = { name: string; label: string; value: string; options: { value: string; label: string }[] };
+export type FilterSelect = { name: string; label: string; value: string; options: { value: string; label: string; group?: string }[] };
 
 /**
  * Compact alternative to filter pills on small screens: one <select> per
@@ -17,10 +17,23 @@ export default function FilterSelects({ filters, hrefFor, className = "" }: { fi
         <div key={f.name}>
           <label htmlFor={`filter-${f.name}`} className="!text-xs !text-muted !mb-0.5">{f.label}</label>
           <select id={`filter-${f.name}`} value={f.value} onChange={(e) => router.push(hrefFor[f.name][e.target.value])} className="!py-1.5 text-sm">
-            {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {groups(f.options).map(([g, opts], i) =>
+              g ? <optgroup key={g} label={g}>{opts.map((o) => <option key={`${g}-${o.value}`} value={o.value}>{o.label}</option>)}</optgroup>
+                : opts.map((o) => <option key={`${i}-${o.value}`} value={o.value}>{o.label}</option>),
+            )}
           </select>
         </div>
       ))}
     </div>
   );
+}
+
+/** Consecutive options sharing a group label become one <optgroup>. */
+function groups(options: FilterSelect["options"]) {
+  const out: [string | undefined, FilterSelect["options"]][] = [];
+  for (const o of options) {
+    const last = out[out.length - 1];
+    if (last && last[0] === o.group) last[1].push(o); else out.push([o.group, [o]]);
+  }
+  return out;
 }

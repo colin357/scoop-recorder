@@ -6,6 +6,9 @@ import { requireOrg } from "@/lib/auth";
 import { Empty, PageHeader } from "@/components/ui";
 import { Icon } from "@/components/icons";
 import FilterSelects from "@/components/filter-selects";
+import ProjectFilter from "@/components/project-filter";
+import { GROUP_THRESHOLD, ProjectOptions, RECENT_COUNT } from "@/components/project-options";
+import { activeProjectsByRecency, type PickerProject } from "@/lib/projects";
 import TaskBoard from "./board";
 import { createTaskAction } from "@/app/actions/tasks";
 import { RECURRENCES } from "@/lib/recurrence";
@@ -51,7 +54,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       include: { project: true, assignee: true, meeting: { select: { id: true, title: true } }, _count: { select: { steps: true } }, steps: { select: { completedAt: true } } },
       orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
     }),
-    db.project.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } }),
+    activeProjectsByRecency(org.id),
     db.membership.findMany({ where: { orgId: org.id }, orderBy: { name: "asc" } }),
   ]);
 
@@ -80,7 +83,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       <div className="md:hidden space-y-2">
         <FilterSelects
           filters={[
-            { name: "project", label: "Project", value: project, options: [{ value: "", label: "All projects" }, ...projects.map((p) => ({ value: p.id, label: p.name }))] },
+            { name: "project", label: "Project", value: project, options: [{ value: "", label: "All projects" }, ...projectFilterOptions(projects)] },
             { name: "assignee", label: "Assignee", value: assigneeParam, options: [{ value: "", label: "Everyone" }, { value: "me", label: "Me" }, ...members.filter((m) => m.id !== membership.id).map((m) => ({ value: m.id, label: m.name }))] },
             { name: "due", label: "Due", value: due, options: DUE_FILTERS.map((d) => ({ value: d.key, label: d.label })) },
           ]}
@@ -94,8 +97,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
       </div>
       <div className="hidden md:flex flex-wrap gap-4 items-end">
         <FilterGroup label="Project">
-          <Pill href={qs({ project: "" })} active={!project}>All</Pill>
-          {projects.map((p) => <Pill key={p.id} href={qs({ project: p.id })} active={project === p.id} dot={p.color}>{p.name}</Pill>)}
+          <ProjectFilter projects={projects} current={project} allHref={qs({ project: "" })} hrefFor={Object.fromEntries(projects.map((p) => [p.id, qs({ project: p.id })]))} />
         </FilterGroup>
         <FilterGroup label="Assignee">
           <Pill href={qs({ assignee: "" })} active={!assigneeParam}>Everyone</Pill>
@@ -131,7 +133,7 @@ export default async function TasksPage({ searchParams }: PageProps<"/tasks">) {
         <form action={createTaskAction} className="grid sm:grid-cols-2 gap-3 mt-4">
           <div className="sm:col-span-2"><label>Title</label><input name="title" required /></div>
           <div className="sm:col-span-2"><label>Description</label><textarea name="description" rows={2} /></div>
-          <div><label>Project</label><select name="projectId" defaultValue=""><option value="">None</option>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
+          <div><label>Project</label><select name="projectId" defaultValue=""><option value="">None</option><ProjectOptions projects={projects} /></select></div>
           <div><label>Assignee</label><select name="assigneeId" defaultValue=""><option value="">Unassigned</option>{members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
           <div><label>Due date</label><input type="date" name="dueDate" /></div>
           <div><label>Priority</label><select name="priority" defaultValue="medium">{["low", "medium", "high", "urgent"].map((p) => <option key={p}>{p}</option>)}</select></div>
@@ -160,4 +162,14 @@ function Pill({ href, active, dot, children }: { href: string; active: boolean; 
       {children}
     </Link>
   );
+}
+
+/** Mobile project filter options: a "Recent" group on top when the list is long. */
+function projectFilterOptions(projects: PickerProject[]) {
+  const all = [...projects].sort((a, b) => a.name.localeCompare(b.name));
+  if (projects.length <= GROUP_THRESHOLD) return all.map((p) => ({ value: p.id, label: p.name }));
+  return [
+    ...projects.slice(0, RECENT_COUNT).map((p) => ({ value: p.id, label: p.name, group: "Recent" })),
+    ...all.map((p) => ({ value: p.id, label: p.name, group: "All projects" })),
+  ];
 }

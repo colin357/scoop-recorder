@@ -4,14 +4,16 @@ import { useTransition } from "react";
 import { updateTaskAction } from "@/app/actions/tasks";
 import { STATUS_LABEL } from "@/lib/utils";
 import { RECURRENCES } from "@/lib/recurrence";
+import { ProjectOptions } from "@/components/project-options";
 
 type Props = {
   task: { id: string; status: string; priority: string; assigneeId: string | null; projectId: string | null; dueDate: string; recurrence: string | null };
   projects: { id: string; name: string }[];
+  currentProject?: { id: string; name: string } | null;
   members: { id: string; name: string }[];
 };
 
-export default function TaskEditor({ task, projects, members }: Props) {
+export default function TaskEditor({ task, projects, currentProject = null, members }: Props) {
   const [pending, start] = useTransition();
   const update = (patch: Parameters<typeof updateTaskAction>[1]) => start(() => updateTaskAction(task.id, patch));
   return (
@@ -27,7 +29,7 @@ export default function TaskEditor({ task, projects, members }: Props) {
         </select></div>
       <div><label>Project</label>
         <select defaultValue={task.projectId ?? ""} onChange={(e) => update({ projectId: e.target.value || null })}>
-          <option value="">None</option>{projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          <option value="">None</option><ProjectOptions projects={projects} extra={currentProject} />
         </select></div>
       <div><label>Due date</label><input type="date" defaultValue={task.dueDate} onChange={(e) => update({ dueDate: e.target.value || null })} /></div>
       <div><label>Priority</label>

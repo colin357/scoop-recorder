@@ -6,8 +6,6 @@ import { notifyMeetingProcessed } from "./notify";
 import { logActivity } from "./audit";
 import { fetchTranscript, getBot, recordingUrlFromBot, type TranscriptSegment } from "./recall";
 
-const PALETTE = ["#6366f1", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
-
 /**
  * Run the AI pipeline on a meeting that already has a transcript:
  * summary + key points + decisions, then tasks with assignees, deadlines and steps.
@@ -25,7 +23,7 @@ export async function processMeeting(meetingId: string) {
   try {
     const [team, projects, org, attendeeRows] = await Promise.all([
       db.membership.findMany({ where: { orgId: meeting.orgId } }),
-      db.project.findMany({ where: { orgId: meeting.orgId } }),
+      db.project.findMany({ where: { orgId: meeting.orgId, archivedAt: null }, include: { meetings: { where: { id: { not: meetingId } }, orderBy: { createdAt: "desc" }, take: 3, select: { title: true } } } }),
       db.organization.findUniqueOrThrow({ where: { id: meeting.orgId } }),
       db.meetingAttendee.findMany({ where: { meetingId } }),
     ]);
@@ -44,19 +42,19 @@ export async function processMeeting(meetingId: string) {
       meetingDate,
       transcript,
       team: team.map((m) => ({ id: m.id, name: m.name, role: m.role, responsibilities: m.responsibilities })),
-      projects: projects.map((p) => ({ id: p.id, name: p.name, description: p.description })),
+      projects: projects.map((p) => ({ id: p.id, name: p.name, description: p.description, recentMeetings: p.meetings.map((m) => m.title) })),
       attendees,
       businessDescription: org.businessDescription,
     });
 
+    // Rocky never creates projects on its own. An exact name match files the
+    // meeting there; otherwise the idea is kept as a suggestion on the meeting.
     let projectId = meeting.projectId ?? analysis.projectId;
+    let suggestion: { name: string; description: string } | null = null;
     if (!projectId && analysis.newProject) {
-      // Reuse a same-named project if one appeared meanwhile, otherwise create it.
-      const existing = await db.project.findFirst({ where: { orgId: meeting.orgId, name: { equals: analysis.newProject.name, mode: "insensitive" } } });
-      const created = existing ?? (await db.project.create({
-        data: { orgId: meeting.orgId, name: analysis.newProject.name, description: analysis.newProject.description, color: PALETTE[projects.length % PALETTE.length] },
-      }));
-      projectId = created.id;
+      const same = projects.find((p) => p.name.trim().toLowerCase() === analysis.newProject!.name.trim().toLowerCase());
+      if (same) projectId = same.id;
+      else suggestion = analysis.newProject;
     }
 
     const usage = lastUsage;
@@ -72,6 +70,8 @@ export async function processMeeting(meetingId: string) {
         data: {
           status: "done",
           projectId,
+          suggestedProjectName: projectId ? null : suggestion?.name ?? null,
+          suggestedProjectDescription: projectId ? null : suggestion?.description ?? null,
           summary: analysis.summary,
           keyPoints: JSON.stringify(analysis.keyPoints),
           decisions: JSON.stringify(analysis.decisions),

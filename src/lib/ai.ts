@@ -10,7 +10,7 @@ export type TeamMemberContext = {
   responsibilities: string;
 };
 
-export type ProjectContext = { id: string; name: string; description: string | null };
+export type ProjectContext = { id: string; name: string; description: string | null; recentMeetings?: string[] };
 
 /** Who was in the meeting, and whether they are on the team. */
 export type AttendeeContext = { name: string; email: string | null; internal: boolean };
@@ -26,7 +26,7 @@ export const MeetingAnalysisSchema = z.object({
   newProject: z
     .object({ name: z.string(), description: z.string() })
     .nullable()
-    .describe("If no existing project fits and the meeting clearly belongs to a distinct client, product, or initiative, propose a new project. Otherwise null."),
+    .describe("Only when no existing project reasonably fits AND the meeting is clearly about a distinct, lasting client, product or initiative: a suggested new project (short name, one sentence). A person decides whether to create it. Otherwise null."),
   tasks: z.array(
     z.object({
       title: z.string().describe("Short imperative title, max 80 chars."),
@@ -88,7 +88,9 @@ function teamBlock(team: TeamMemberContext[]) {
 
 function projectBlock(projects: ProjectContext[]) {
   if (!projects.length) return "(no projects configured)";
-  return projects.map((p) => `- id=${p.id} | ${p.name}${p.description ? ` — ${p.description}` : ""}`).join("\n");
+  return projects
+    .map((p) => `- id=${p.id} | ${p.name}${p.description ? ` — ${p.description}` : ""}${p.recentMeetings?.length ? `\n  Recent meetings: ${p.recentMeetings.map((t) => `“${t}”`).join(", ")}` : ""}`)
+    .join("\n");
 }
 
 function attendeeBlock(attendees: AttendeeContext[]) {
@@ -111,7 +113,7 @@ Produce:
 5. Deadlines: if a date or timeframe is stated, use it. Otherwise estimate a realistic deadline from scope and urgency (small follow-ups: 1-3 days; medium work: about a week; larger deliverables: 2-4 weeks).
 6. A step-by-step guide per team item, with each step's own deadline spread sensibly before the item deadline. External and unclear items may have an empty steps list.
 7. Timestamps and quotes must point at the actual place in the transcript where the item was raised.
-8. Pick the single most relevant existing project for the meeting. If none fits and the meeting is clearly about a distinct client, product line, or initiative, propose newProject instead (short name, one-sentence description). Use the business description to judge what counts as a separate project.`;
+8. Projects: strongly prefer an existing project. Pick the one this meeting belongs to, using its name, description and recent meeting titles; variants of the same client or initiative ("Acme", "Acme Corp", "Acme onboarding") are the same project. Only if nothing reasonably fits and the meeting is clearly about a distinct, lasting client, product line or initiative, set projectId to null and suggest newProject (short name, one-sentence description). One-off topics, internal chatter and general check-ins get no project and no suggestion.`;
 
 export async function analyzeMeeting(input: {
   title: string;
@@ -197,4 +199,43 @@ ${transcriptToText(input.meeting.transcript)}`
 }`;
 
   return getLLM().chat({ system: TASK_CHAT_SYSTEM, context, history: input.history, question: input.question });
+}
+
+/** Rocky's proposal for tidying a sprawling project list: merge duplicates, archive dead ones. */
+export const ProjectCleanupSchema = z.object({
+  merges: z.array(z.object({
+    targetId: z.string().describe("Project to keep."),
+    sourceIds: z.array(z.string()).describe("Projects to fold into the target (their meetings and tasks move over)."),
+    reason: z.string().describe("One short sentence."),
+  })),
+  archives: z.array(z.object({
+    projectId: z.string(),
+    reason: z.string().describe("One short sentence."),
+  })),
+});
+export type ProjectCleanup = z.infer<typeof ProjectCleanupSchema>;
+
+export async function suggestProjectCleanup(input: {
+  businessDescription: string | null;
+  projects: { id: string; name: string; description: string | null; tasks: number; openTasks: number; meetings: number; lastActivity: string | null }[];
+}): Promise<ProjectCleanup> {
+  const system = `You help a small team tidy their project list. Projects are clients, product lines or initiatives that meetings and tasks are filed under.
+Propose:
+- merges: groups that are really the same client or initiative (name variants, a sub-topic of another project, duplicates). Keep the clearest, most used project as the target.
+- archives: projects that look finished or abandoned (no recent activity and no open tasks), or one-off topics that never needed a project.
+Be conservative: leave active, distinct projects alone. A project may appear in at most one proposal.`;
+  const user = `About the business:
+${input.businessDescription ?? "(not provided)"}
+
+Projects:
+${input.projects.map((p) => `- id=${p.id} | ${p.name}${p.description ? ` — ${p.description}` : ""} | tasks: ${p.tasks} (${p.openTasks} open) | meetings: ${p.meetings} | last activity: ${p.lastActivity ?? "never"}`).join("\n")}`;
+  const raw = await getLLM().structured({ schema: ProjectCleanupSchema, schemaName: "project_cleanup", system, user });
+  // Keep only valid, non-overlapping proposals.
+  const valid = new Set(input.projects.map((p) => p.id));
+  const used = new Set<string>();
+  const merges = raw.merges
+    .map((m) => ({ ...m, sourceIds: [...new Set(m.sourceIds)].filter((id) => valid.has(id) && id !== m.targetId) }))
+    .filter((m) => valid.has(m.targetId) && m.sourceIds.length > 0 && ![m.targetId, ...m.sourceIds].some((id) => used.has(id)) && [m.targetId, ...m.sourceIds].every((id) => used.add(id)));
+  const archives = raw.archives.filter((a) => valid.has(a.projectId) && !used.has(a.projectId) && used.add(a.projectId));
+  return { merges, archives };
 }

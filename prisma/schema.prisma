@@ -194,6 +194,8 @@ model Project {
   name        String
   description String?
   color       String   @default("#6366f1")
+  // Archived projects keep their meetings and tasks but are hidden from pickers and filters
+  archivedAt  DateTime?
   createdAt   DateTime @default(now())
 
   members  ProjectMember[]
@@ -233,6 +235,9 @@ model Meeting {
   callKind           String?
   twilioRecordingSid String?
   phoneContact       String?
+  // Rocky's suggestion when a meeting fits no existing project (never auto-created)
+  suggestedProjectName        String?
+  suggestedProjectDescription String?
   recordingUrl String?
   // Small JPEG data URL captured from the recording, shown in lists
   thumbnail    String?
