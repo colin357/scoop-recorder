@@ -80,11 +80,9 @@ async function tearDownOrg(org: { id: string; stripeSubscriptionId: string | nul
   if (stripeConfigured() && org.stripeSubscriptionId && !["canceled", "none"].includes(org.billingStatus)) {
     await stripe().subscriptions.cancel(org.stripeSubscriptionId, { prorate: false }).catch((e) => console.error("cancel subscription on delete", e));
   }
-  const { deleteBotMedia, recallConfigured } = await import("@/lib/recall");
-  if (recallConfigured()) {
-    const bots = await db.meeting.findMany({ where: { orgId: org.id, recallBotId: { not: null }, recordingDeletedAt: null }, select: { recallBotId: true } });
-    for (const b of bots) await deleteBotMedia(b.recallBotId!).catch((e) => console.error("deleteBotMedia on delete", e));
-  }
+  const { deleteMeetingMedia } = await import("@/lib/media");
+  const withMedia = await db.meeting.findMany({ where: { orgId: org.id, recordingDeletedAt: null, OR: [{ recallBotId: { not: null } }, { twilioRecordingSid: { not: null } }] }, select: { recallBotId: true, twilioRecordingSid: true } });
+  for (const m of withMedia) await deleteMeetingMedia(m);
   await db.organization.delete({ where: { id: org.id } });
 }
 

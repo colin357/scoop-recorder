@@ -101,7 +101,7 @@ export default async function Dashboard({ searchParams }: PageProps<"/dashboard"
           <ul className="card divide-y divide-line/60">
             {recentMeetings.map((m) => (
               <li key={m.id} className="p-4 flex items-center gap-4 row-hover">
-                <MeetingThumb id={m.id} thumbnail={m.thumbnail} hasRecording={Boolean(m.recordingUrl)} className="w-20" />
+                <MeetingThumb id={m.id} thumbnail={m.thumbnail} hasRecording={Boolean(m.recordingUrl)} phone={m.platform === "phone"} className="w-20" />
                 <div className="flex-1 min-w-0">
                   <Link href={`/meetings/${m.id}`} className="font-medium hover:underline block truncate">{m.title}</Link>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted">

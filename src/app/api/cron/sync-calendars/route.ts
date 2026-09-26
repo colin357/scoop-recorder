@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { syncAllConnections } from "@/lib/calendar";
+import { sweepStalePhoneCalls } from "@/lib/phone";
 
 export const maxDuration = 300;
 
@@ -10,5 +11,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const result = await syncAllConnections();
-  return NextResponse.json({ ok: true, ...result, at: new Date().toISOString() });
+  const phoneCallsClosed = await sweepStalePhoneCalls().catch((e) => { console.error("sweepStalePhoneCalls", e); return 0; });
+  return NextResponse.json({ ok: true, ...result, phoneCallsClosed, at: new Date().toISOString() });
 }

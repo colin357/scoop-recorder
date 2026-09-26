@@ -9,6 +9,7 @@ import { Icon } from "@/components/icons";
 import CopyLink from "@/components/copy-link";
 import { deleteMeetingAction, reprocessMeetingAction, trackCommitmentAction } from "@/app/actions/meetings";
 import RecordingPlayer from "@/components/recording-player";
+import { formatPhone } from "@/lib/phone-format";
 import { Mascot } from "@/components/mascot";
 import LiveStatus from "@/components/live-status";
 import ReviewDrafts from "./review";
@@ -37,15 +38,15 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
       <div className="space-y-4">
         <Link href="/meetings" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink"><Icon name="chevron" size={14} className="rotate-90" />Meetings</Link>
         <div className="card p-5 flex flex-col md:flex-row md:items-start gap-5">
-          <IconChip name="video" size={52} tone={meeting.status === "recording" ? "accent" : "neutral"} />
+          <IconChip name={meeting.platform === "phone" ? "phone" : "video"} size={52} tone={meeting.status === "recording" ? "accent" : "neutral"} />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-semibold tracking-tight">{meeting.title}</h1>
               <StatusBadge status={meeting.status} />
-              <LiveStatus meetingId={meeting.id} status={meeting.status} />
+              <LiveStatus meetingId={meeting.id} status={meeting.status} phone={meeting.platform === "phone"} />
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted mt-2">
-              <span className="inline-flex items-center gap-1.5"><Icon name="video" size={14} />{PLATFORM_LABEL[meeting.platform]}</span>
+              <span className="inline-flex items-center gap-1.5"><Icon name={meeting.platform === "phone" ? "phone" : "video"} size={14} />{PLATFORM_LABEL[meeting.platform]}{meeting.phoneContact ? ` · ${formatPhone(meeting.phoneContact)}` : ""}</span>
               <span className="inline-flex items-center gap-1.5"><Icon name="calendar" size={14} />{fmtDateTime(meeting.startedAt ?? meeting.scheduledAt ?? meeting.createdAt)}</span>
               {meeting.durationSec != null && <span className="inline-flex items-center gap-1.5"><Icon name="clock" size={14} />{Math.round(meeting.durationSec / 60)} min</span>}
               <ProjectChip project={meeting.project} />
@@ -90,7 +91,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-6">
-          <RecordingPlayer url={meeting.recordingUrl} startAt={startAt} transcript={transcript} />
+          <RecordingPlayer url={meeting.platform === "phone" && meeting.recordingUrl ? `/api/meetings/${meeting.id}/recording` : meeting.recordingUrl} audio={meeting.platform === "phone"} startAt={startAt} transcript={transcript} />
 
           {meeting.summary && (
             <section className="card p-5 space-y-4">

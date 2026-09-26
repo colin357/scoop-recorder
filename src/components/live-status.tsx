@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 const LIVE = ["scheduled", "joining", "recording", "processing"];
 
 /** While a meeting is in flight, poll its status and refresh the page when it changes. */
-export default function LiveStatus({ meetingId, status }: { meetingId: string; status: string }) {
+export default function LiveStatus({ meetingId, status, phone = false }: { meetingId: string; status: string; phone?: boolean }) {
   const router = useRouter();
   useEffect(() => {
     if (!LIVE.includes(status)) return;
@@ -21,7 +21,7 @@ export default function LiveStatus({ meetingId, status }: { meetingId: string; s
     return () => clearInterval(t);
   }, [meetingId, status, router]);
   if (!LIVE.includes(status)) return null;
-  const label = { scheduled: "Recorder scheduled", joining: "Joining the call", recording: "Recording", processing: "Writing up" }[status];
+  const label = { scheduled: "Recorder scheduled", joining: phone ? "Calling…" : "Joining the call", recording: phone ? "On the call · recording" : "Recording", processing: "Writing up" }[status];
   return (
     <span className="inline-flex items-center gap-2 text-xs font-medium text-clay bg-clay-soft border border-clay rounded-full px-2.5 py-1">
       <span className={`h-2 w-2 rounded-full bg-clay ${status === "recording" ? "animate-pulse" : ""}`} />{label}

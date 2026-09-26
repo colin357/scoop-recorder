@@ -9,6 +9,7 @@ import { consentNotice, createBot, parsePlainTranscript, recallConfigured } from
 import { detectPlatform } from "@/lib/utils";
 import { approveDrafts, ingestFromRecall, processMeeting } from "@/lib/pipeline";
 import { recordingAllowed } from "@/lib/billing";
+import { deleteMeetingMedia } from "@/lib/media";
 
 export type MeetingFormState = { error?: string };
 
@@ -94,6 +95,7 @@ export async function deleteMeetingAction(meetingId: string) {
   const { org, membership } = await requireAdmin();
   const m = await db.meeting.findFirst({ where: { id: meetingId, orgId: org.id } });
   if (!m) redirect("/meetings");
+  await deleteMeetingMedia(m);
   await db.meeting.delete({ where: { id: meetingId } });
   await logActivity({ orgId: org.id, actorId: membership.id, action: "meeting.deleted", entityType: "meeting", entityId: meetingId, summary: `${membership.name} deleted meeting “${m.title}”` });
   revalidatePath("/meetings");

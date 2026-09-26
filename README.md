@@ -44,6 +44,8 @@ You need a Postgres database. A Neon branch or `docker run -p 5432:5432 -e POSTG
 
 Set `RESEND_API_KEY` plus `EMAIL_FROM_AUTH` (invites, password resets) and `EMAIL_FROM_NOTIFY` (summaries, task assignments) — `EMAIL_FROM` still covers account mail if `EMAIL_FROM_AUTH` is unset; without a key, emails are printed to the server log. Admins add a Slack incoming webhook and/or a Microsoft Teams workflow webhook under **Settings → Organization**; members can add their Slack member ID on their profile to be @mentioned.
 
+**Phone calls.** Set `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` and `DEEPGRAM_API_KEY` to let Rocky record phone calls ("Call with Rocky", or merge Rocky into a call). Setup steps, webhooks and costs are in [docs/phone-calls.md](docs/phone-calls.md).
+
 ## AI provider
 
 Set `XAI_API_KEY` to use Grok (default model `grok-4`, override with `XAI_MODEL`) or `ANTHROPIC_API_KEY` to use Claude. If both are set, xAI is used unless `AI_PROVIDER=anthropic`.

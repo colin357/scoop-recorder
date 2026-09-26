@@ -4,6 +4,8 @@ import { requireOrg } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { deleteAccountAction, updateProfileAction } from "@/app/actions/org";
 import PasswordForm from "./password-form";
+import PhoneSection from "./phone-section";
+import { scoopNumber, twilioConfigured } from "@/lib/twilio";
 
 export default async function ProfilePage({ searchParams }: PageProps<"/settings/profile">) {
   const sp = await searchParams;
@@ -28,6 +30,7 @@ export default async function ProfilePage({ searchParams }: PageProps<"/settings
         <label className="inline-flex items-center gap-2 font-normal"><input type="checkbox" name="notifyByEmail" defaultChecked={membership.notifyByEmail} className="!w-auto" />Email me when I&apos;m assigned a task or a summary is ready</label>
         <div><button className="btn-primary">Save</button></div>
       </form>
+      {twilioConfigured() && <PhoneSection phone={user.phone} verified={Boolean(user.phoneVerifiedAt)} rockyNumber={scoopNumber()} />}
       <PasswordForm hasPassword={Boolean(user.passwordHash)} />
 
       <section className="card p-5 flex flex-wrap items-center justify-between gap-3">

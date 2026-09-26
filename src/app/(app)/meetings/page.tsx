@@ -32,7 +32,7 @@ export default async function MeetingsPage() {
           {meetings.map((m) => (
             <li key={m.id}>
               <Link href={`/meetings/${m.id}`} className="p-4 flex items-center gap-4 row-hover">
-                <MeetingThumb id={m.id} thumbnail={m.thumbnail} hasRecording={Boolean(m.recordingUrl)} className="w-24 sm:w-32" />
+                <MeetingThumb id={m.id} thumbnail={m.thumbnail} hasRecording={Boolean(m.recordingUrl)} phone={m.platform === "phone"} className="w-24 sm:w-32" />
                 <div className="flex-1 min-w-0">
                   <div className="font-medium truncate">{m.title}</div>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted mt-1">

@@ -28,6 +28,8 @@ export const PRICING = {
   trialDays: 14,
   trialHours: 5,
   defaultRetentionDays: 90,
+  // "Call with Rocky" pays for two phone lines (you and the contact), so those minutes count double.
+  bridgedCallWeight: 2,
 };
 
 export const ACTIVE_STATUSES = new Set(["trialing", "active", "past_due", "comped"]);
@@ -157,8 +159,13 @@ export async function seatCount(orgId: string) {
 
 /** Recorded hours in a window (bot-recorded meetings only; uploaded transcripts have no duration). */
 export async function recordedHours(orgId: string, from: Date, to: Date) {
-  const agg = await db.meeting.aggregate({ _sum: { durationSec: true }, where: { orgId, endedAt: { gte: from, lt: to }, durationSec: { not: null } } });
-  return (agg._sum.durationSec ?? 0) / 3600;
+  const where = { orgId, endedAt: { gte: from, lt: to }, durationSec: { not: null } };
+  const [all, bridged] = await Promise.all([
+    db.meeting.aggregate({ _sum: { durationSec: true }, where }),
+    db.meeting.aggregate({ _sum: { durationSec: true }, where: { ...where, callKind: "bridge" } }),
+  ]);
+  const seconds = (all._sum.durationSec ?? 0) + (bridged._sum.durationSec ?? 0) * (PRICING.bridgedCallWeight - 1);
+  return seconds / 3600;
 }
 
 export type BillingSnapshot = {

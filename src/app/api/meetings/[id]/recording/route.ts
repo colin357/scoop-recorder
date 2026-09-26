@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getBot, recallConfigured, recordingUrlFromBot } from "@/lib/recall";
+import { fetchTwilioMedia, isTwilioMediaUrl } from "@/lib/twilio";
 
 /**
  * Same-origin proxy for a meeting's recording, forwarding Range requests, so
@@ -17,7 +18,8 @@ export async function GET(req: Request, { params }: RouteContext<"/api/meetings/
   if (!m?.recordingUrl) return NextResponse.json({ error: "No recording" }, { status: 404 });
 
   const range = req.headers.get("range");
-  const upstream = async (url: string) => fetch(url, { headers: range ? { Range: range } : {}, cache: "no-store" });
+  // Phone recordings live behind Twilio auth, so they are always played through this proxy.
+  const upstream = async (url: string) => (isTwilioMediaUrl(url) ? fetchTwilioMedia(url, range) : fetch(url, { headers: range ? { Range: range } : {}, cache: "no-store" }));
   let res = await upstream(m.recordingUrl);
   if ((res.status === 403 || res.status === 404) && m.recallBotId && recallConfigured()) {
     const fresh = recordingUrlFromBot(await getBot(m.recallBotId));

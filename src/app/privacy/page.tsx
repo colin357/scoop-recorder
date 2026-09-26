@@ -46,6 +46,7 @@ export default function PrivacyPage() {
         <ul>
           <li>When {P}&rsquo;s recording bot (&ldquo;Rocky&rdquo;) joins a Google Meet, Zoom or Microsoft Teams call, it captures the call&rsquo;s audio and video and the platform&rsquo;s captions, which become the transcript.</li>
           <li>From the transcript we generate a summary, decisions, tasks with owners and due dates, step-by-step guides, and answers to questions you ask about the meeting (&ldquo;Ask Rocky&rdquo;).</li>
+          <li>When you record a phone call, Rocky joins through our phone provider, records the call audio, and a speech-to-text provider turns it into the transcript. We store your verified mobile number and the numbers you call.</li>
           <li>Transcripts you paste or upload manually are treated the same way, without a recording.</li>
         </ul>
         <h3>Billing data</h3>
@@ -73,7 +74,7 @@ export default function PrivacyPage() {
       <section>
         <h2>4. Recording consent</h2>
         <p>
-          Laws on recording conversations vary and some require the consent of every participant. {P} helps by having the bot appear as a named participant and, by default, posting a notice in the meeting chat when it joins that the call is being recorded and how to object. The Customer is responsible for turning recording on only where it is lawful and for obtaining any consent required from participants. Participants can ask the host to remove the bot at any time.
+          Laws on recording conversations vary and some require the consent of every participant. {P} helps by having the bot appear as a named participant and, by default, posting a notice in the meeting chat when it joins that the call is being recorded and how to object. The Customer is responsible for turning recording on only where it is lawful and for obtaining any consent required from participants. Participants can ask the host to remove the bot at any time. On phone calls, Rocky tells everyone on the line that the call is being recorded before recording starts.
         </p>
       </section>
 

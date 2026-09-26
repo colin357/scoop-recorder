@@ -69,7 +69,7 @@ export default async function BillingSettingsPage({ searchParams }: PageProps<"/
           {snap.overageHours > 0 && snap.status !== "trialing" && <span className="text-copper-deep">Overage {snap.overageHours.toFixed(1)} h · ${(snap.overageHours * PRICING.overagePerHour).toFixed(2)} so far</span>}
         </div>
         {!snap.recording.ok && <p className="text-sm text-clay">{snap.recording.reason}</p>}
-        <p className="text-xs text-muted">On the {plan.name} plan each seat adds {plan.hoursPerSeat} hours to the shared pool. Hours beyond the pool are invoiced at ${PRICING.overagePerHour.toFixed(2)}/hour on the 1st of the next month. Uploaded transcripts don&apos;t count.</p>
+        <p className="text-xs text-muted">On the {plan.name} plan each seat adds {plan.hoursPerSeat} hours to the shared pool. Hours beyond the pool are invoiced at ${PRICING.overagePerHour.toFixed(2)}/hour on the 1st of the next month. Uploaded transcripts don&apos;t count. Calls Rocky places for you count double, since they use two phone lines; calls you merge Rocky into count normally.</p>
       </section>
     </div>
   );

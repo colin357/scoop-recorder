@@ -71,6 +71,7 @@ export const PLATFORM_LABEL: Record<string, string> = {
   google_meet: "Google Meet",
   zoom: "Zoom",
   teams: "Microsoft Teams",
+  phone: "Phone call",
   other: "Other",
 };
 

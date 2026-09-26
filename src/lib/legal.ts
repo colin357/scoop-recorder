@@ -19,6 +19,8 @@ export const LEGAL = {
     { name: "Recall.ai", purpose: "Meeting bot that joins calls, records audio/video and captures captions; short-term media storage", location: "United States" },
     { name: "xAI", purpose: "AI model provider for summaries, task extraction and Ask Rocky (transcript text only)", location: "United States" },
     { name: "Anthropic", purpose: "Alternative AI model provider, used only if configured", location: "United States" },
+    { name: "Twilio", purpose: "Phone calls placed or joined by Rocky, and short-term storage of call recordings", location: "United States" },
+    { name: "Deepgram", purpose: "Speech-to-text for phone call recordings (audio is processed, not retained)", location: "United States" },
     { name: "Stripe", purpose: "Payments, subscriptions and invoicing; card details never touch Scoop", location: "United States" },
     { name: "Resend", purpose: "Transactional email (invites, notifications, password resets)", location: "United States" },
     { name: "Google / Microsoft", purpose: "Calendar and sign-in providers you choose to connect (read-only calendar access)", location: "United States" },

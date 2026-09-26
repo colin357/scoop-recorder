@@ -59,6 +59,11 @@ model User {
   passwordResetExpires DateTime?
   createdAt            DateTime @default(now())
 
+  // Mobile (E.164) verified with Twilio: rings for "Call with Rocky", shown as caller ID,
+  // and recognised when the user merges Rocky into a call
+  phone                String?   @unique
+  phoneVerifiedAt      DateTime?
+  phonePending         String?
   sessions    Session[]
   memberships Membership[]
   onboarding  OnboardingDraft?
@@ -223,6 +228,11 @@ model Meeting {
   // scheduled | joining | recording | processing | done | failed
   status       String   @default("scheduled")
   recallBotId  String?  @unique
+  // Phone calls (platform "phone"): bridge = Rocky called both people, merge = user added Rocky
+  callSid            String?  @unique
+  callKind           String?
+  twilioRecordingSid String?
+  phoneContact       String?
   recordingUrl String?
   // Small JPEG data URL captured from the recording, shown in lists
   thumbnail    String?

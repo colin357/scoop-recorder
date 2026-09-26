@@ -6,10 +6,10 @@ import { fmtTimestamp } from "@/lib/utils";
 import { Avatar } from "@/components/ui";
 import { Icon } from "@/components/icons";
 
-export default function RecordingPlayer({ url, startAt, transcript }: { url: string | null; startAt: number; transcript: TranscriptSegment[] }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
+export default function RecordingPlayer({ url, startAt, transcript, audio = false }: { url: string | null; startAt: number; transcript: TranscriptSegment[]; audio?: boolean }) {
+  const videoRef = useRef<HTMLVideoElement & HTMLAudioElement>(null);
   const [current, setCurrent] = useState(startAt);
-  const isMedia = url ? /\.(mp4|webm|m4v|mov)(\?|$)/i.test(url) : false;
+  const isMedia = url ? audio || /\.(mp4|webm|m4v|mov)(\?|$)/i.test(url) : false;
 
   useEffect(() => {
     const v = videoRef.current;
@@ -28,7 +28,12 @@ export default function RecordingPlayer({ url, startAt, transcript }: { url: str
 
   return (
     <div className="card overflow-hidden">
-      {url && isMedia ? (
+      {url && audio ? (
+        <div className="p-4 bg-paper-2 border-b edge flex items-center gap-3">
+          <span className="h-10 w-10 shrink-0 rounded-full bg-flame-soft text-flame-deep flex items-center justify-center"><Icon name="phone" size={18} /></span>
+          <audio ref={videoRef} src={url} controls preload="metadata" className="w-full" onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)} />
+        </div>
+      ) : url && isMedia ? (
         <video ref={videoRef} src={url} controls className="w-full bg-black aspect-video" onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)} />
       ) : url ? (
         <div className="p-4 bg-ink text-paper text-sm flex items-center justify-between">

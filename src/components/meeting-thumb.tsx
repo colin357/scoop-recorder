@@ -16,13 +16,13 @@ const release = () => { inFlight--; waiters.shift()?.(); };
  * the same-origin proxy, stores it, and swaps it in. Meetings without a
  * recording show a placeholder.
  */
-export default function MeetingThumb({ id, thumbnail, hasRecording, className = "" }: { id: string; thumbnail: string | null; hasRecording: boolean; className?: string }) {
+export default function MeetingThumb({ id, thumbnail, hasRecording, className = "", phone = false }: { id: string; thumbnail: string | null; hasRecording: boolean; className?: string; phone?: boolean }) {
   const [src, setSrc] = useState<string | null>(thumbnail);
   const [failed, setFailed] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (src || !hasRecording || failed || !ref.current) return;
+    if (src || phone || !hasRecording || failed || !ref.current) return;
     let cancelled = false;
     const el = ref.current;
     const capture = async () => {
@@ -65,7 +65,7 @@ export default function MeetingThumb({ id, thumbnail, hasRecording, className = 
     const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); capture(); } }, { rootMargin: "200px" });
     io.observe(el);
     return () => { cancelled = true; io.disconnect(); };
-  }, [id, src, hasRecording, failed]);
+  }, [id, src, hasRecording, failed, phone]);
 
   return (
     <div ref={ref} className={`relative shrink-0 overflow-hidden rounded-lg bg-paper-2 ring-1 ring-line/60 aspect-video ${className}`}>
@@ -73,7 +73,7 @@ export default function MeetingThumb({ id, thumbnail, hasRecording, className = 
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" />
       ) : (
-        <div className={`absolute inset-0 flex items-center justify-center text-muted ${hasRecording && !failed ? "skeleton" : ""}`}><Icon name="video" size={18} /></div>
+        <div className={`absolute inset-0 flex items-center justify-center ${phone ? "bg-flame-soft text-flame-deep" : `text-muted ${hasRecording && !failed ? "skeleton" : ""}`}`}><Icon name={phone ? "phone" : "video"} size={18} /></div>
       )}
       {src && <span className="absolute inset-0 flex items-center justify-center"><span className="h-7 w-7 rounded-full bg-ink/70 text-paper flex items-center justify-center"><Icon name="play" size={12} /></span></span>}
     </div>
