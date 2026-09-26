@@ -15,6 +15,7 @@ import { cookies } from "next/headers";
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Home", icon: "home" },
   { href: "/meetings", label: "Meetings", icon: "video" },
+  { href: "/calls", label: "Calls", icon: "phone" },
   { href: "/tasks", label: "Tasks", icon: "check" },
   { href: "/projects", label: "Projects", icon: "folder" },
   { href: "/settings/calendar", label: "Calendar", icon: "calendar" },

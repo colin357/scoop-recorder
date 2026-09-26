@@ -99,7 +99,7 @@ export async function deleteMeetingAction(meetingId: string) {
   await db.meeting.delete({ where: { id: meetingId } });
   await logActivity({ orgId: org.id, actorId: membership.id, action: "meeting.deleted", entityType: "meeting", entityId: meetingId, summary: `${membership.name} deleted meeting “${m.title}”` });
   revalidatePath("/meetings");
-  redirect(`/deleted?type=meeting&title=${encodeURIComponent(m.title)}`);
+  redirect(`/deleted?type=${m.platform === "phone" ? "call" : "meeting"}&title=${encodeURIComponent(m.title)}`);
 }
 
 export async function approveTasksAction(meetingId: string, taskIds?: string[]) {

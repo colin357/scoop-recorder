@@ -146,8 +146,8 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-paper border-t edge grid grid-cols-5 text-[11px] font-display">
-        {items.slice(0, 5).map((n) => (
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-paper border-t edge grid grid-cols-6 text-[11px] font-display">
+        {items.slice(0, 6).map((n) => (
           <Link key={n.href} href={n.href} className={`flex flex-col items-center gap-0.5 py-2 ${active(n.href) ? "text-ink font-semibold" : "text-muted"}`}><Icon name={n.icon} size={20} />{n.label}</Link>
         ))}
       </nav>

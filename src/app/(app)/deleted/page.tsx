@@ -5,6 +5,7 @@ import { Icon } from "@/components/icons";
 const KINDS = {
   task: { noun: "task", back: { href: "/tasks", label: "Back to tasks" } },
   meeting: { noun: "meeting", back: { href: "/meetings", label: "Back to meetings" } },
+  call: { noun: "call", back: { href: "/calls", label: "Back to calls" } },
 } as const;
 
 /** Confirmation shown after something is deleted, so the user lands somewhere deliberate instead of a 404. */

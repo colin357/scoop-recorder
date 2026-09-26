@@ -11,7 +11,7 @@ export default async function MeetingsPage() {
   // Recorded, in-progress or failed meetings only; bots scheduled for upcoming
   // calls live on the calendar until they actually join.
   const meetings = await db.meeting.findMany({
-    where: { orgId: org.id, status: { notIn: ["scheduled", "joining"] } },
+    where: { orgId: org.id, status: { notIn: ["scheduled", "joining"] }, platform: { not: "phone" } }, // phone calls live under Calls
     orderBy: [{ startedAt: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
     include: { project: true, _count: { select: { tasks: true, attendees: true } } },
   });

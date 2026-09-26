@@ -36,7 +36,7 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        <Link href="/meetings" className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink"><Icon name="chevron" size={14} className="rotate-90" />Meetings</Link>
+        <Link href={meeting.platform === "phone" ? "/calls" : "/meetings"} className="inline-flex items-center gap-1 text-sm text-muted hover:text-ink"><Icon name="chevron" size={14} className="rotate-90" />{meeting.platform === "phone" ? "Calls" : "Meetings"}</Link>
         <div className="card p-5 flex flex-col md:flex-row md:items-start gap-5">
           <IconChip name={meeting.platform === "phone" ? "phone" : "video"} size={52} tone={meeting.status === "recording" ? "accent" : "neutral"} />
           <div className="flex-1 min-w-0">

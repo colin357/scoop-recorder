@@ -17,7 +17,7 @@ async function claimNumber(userId: string, phone: string) {
   if (taken) return "That number is already verified by another Scoop account.";
   await db.user.update({ where: { id: userId }, data: { phone, phoneVerifiedAt: new Date(), phonePending: null } });
   revalidatePath("/settings/profile");
-  revalidatePath("/meetings/new");
+  revalidatePath("/calls");
   return null;
 }
 
