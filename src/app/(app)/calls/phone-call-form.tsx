@@ -8,46 +8,51 @@ import { formatPhone } from "@/lib/phone-format";
 
 type Project = { id: string; name: string };
 
-/** "Call with Rocky": Rocky rings you, then the contact, and records both sides. */
+/** "Call with Rocky" dialer: just the number up front; title and project tucked away. */
 export default function PhoneCallForm({ myPhone, rockyNumber, projects }: { myPhone: string | null; rockyNumber: string | null; projects: Project[] }) {
   const [state, action, pending] = useActionState(startPhoneCallAction, {});
-  return (
-    <section className="card p-6 space-y-4">
-      <div className="flex items-center gap-3">
+
+  if (!myPhone) {
+    return (
+      <section className="card p-5 flex flex-wrap items-center gap-4">
         <span className="h-10 w-10 shrink-0 rounded-full bg-flame-soft text-flame-deep flex items-center justify-center"><Icon name="phone" size={18} /></span>
-        <div>
-          <h2 className="font-semibold">Call with Rocky</h2>
-          <p className="text-sm text-muted">Record a phone call. Rocky rings you first, then the other person, and announces that the call is recorded.</p>
+        <p className="flex-1 min-w-48 text-sm text-ink-soft">Add your mobile so Rocky knows which phone to ring.</p>
+        <Link href="/settings/profile" className="btn-primary">Verify your phone</Link>
+      </section>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <form action={action} className="card p-5 space-y-3">
+        <input name="contactPhone" type="tel" inputMode="tel" autoComplete="off" placeholder="Phone number" aria-label="Phone number to call" required className="!text-lg !py-3" />
+        <input name="contactName" placeholder="Name (optional)" aria-label="Who you're calling" />
+        <details className="group">
+          <summary className="cursor-pointer list-none text-xs text-muted hover:text-ink inline-flex items-center gap-1">
+            <Icon name="chevron" size={12} className="-rotate-90 group-open:rotate-0 transition" />More options
+          </summary>
+          <div className="grid sm:grid-cols-2 gap-3 mt-3">
+            <input name="title" placeholder="Title" aria-label="Title" />
+            <select name="projectId" defaultValue="" aria-label="Project">
+              <option value="">Project: let the AI pick</option>
+              {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
+        </details>
+        {state.error && <p className="text-sm text-clay">{state.error}</p>}
+        <button className="btn-accent w-full sm:w-auto !py-3 sm:!py-2" disabled={pending}><Icon name="phone" size={16} />{pending ? "Ringing you…" : "Call with Rocky"}</button>
+        <p className="text-xs text-muted">Rocky rings you at {formatPhone(myPhone)} first, then connects the call.</p>
+      </form>
+
+      {rockyNumber && (
+        <div className="card p-4 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium">Already on a call?</div>
+            <div className="text-xs text-muted">Add Rocky, then tap Merge.</div>
+          </div>
+          <a href={`tel:${rockyNumber}`} className="btn-secondary shrink-0"><Icon name="phone" size={14} />{formatPhone(rockyNumber)}</a>
         </div>
-      </div>
-      {!myPhone ? (
-        <p className="text-sm rounded-md bg-butter-soft border border-copper text-copper-deep p-3">
-          Verify your mobile number first so Rocky knows which phone to ring. <Link href="/settings/profile" className="underline font-medium">Go to your profile</Link>
-        </p>
-      ) : (
-        <form action={action} className="space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div><label>Who are you calling?</label><input name="contactName" placeholder="Jordan at Acme" /></div>
-            <div><label>Their number</label><input name="contactPhone" type="tel" inputMode="tel" placeholder="(239) 555-0123" required /></div>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div><label>Title (optional)</label><input name="title" placeholder="Call with Jordan" /></div>
-            <div>
-              <label>Project (optional)</label>
-              <select name="projectId" defaultValue="">
-                <option value="">Let the AI pick</option>
-                {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </div>
-          </div>
-          <p className="text-xs text-muted">Rocky calls <b>{formatPhone(myPhone)}</b>. Answer and press any key, and Rocky dials them showing your number. Calls Rocky places count double toward your recording hours, since they use two phone lines.</p>
-          {state.error && <p className="text-sm text-clay">{state.error}</p>}
-          <button className="btn-primary" disabled={pending}><Icon name="phone" size={16} />{pending ? "Calling you…" : "Call me now"}</button>
-        </form>
       )}
-      {rockyNumber && myPhone && (
-        <p className="text-xs text-muted border-t edge pt-3">Already on a call? Tap Add call, dial Rocky at <b>{formatPhone(rockyNumber)}</b>, then Merge.</p>
-      )}
-    </section>
+    </div>
   );
 }

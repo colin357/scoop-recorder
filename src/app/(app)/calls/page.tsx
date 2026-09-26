@@ -24,10 +24,10 @@ export default async function CallsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Calls" count={calls.length} description="Record phone calls with Rocky. You get the same summary and assigned tasks as a meeting." />
+      <PageHeader title="Calls" count={calls.length} />
 
       {ready ? (
-        <div className="max-w-2xl">
+        <div className="max-w-xl">
           <PhoneCallForm myPhone={user.phoneVerifiedAt ? user.phone : null} rockyNumber={scoopNumber()} projects={projects.map((p) => ({ id: p.id, name: p.name }))} />
         </div>
       ) : (
