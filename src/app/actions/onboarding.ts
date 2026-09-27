@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { PRICING } from "@/lib/billing";
+import { PRICING, newTrialFields } from "@/lib/billing";
 import { getCurrentUser } from "@/lib/auth";
 import { slugify } from "@/lib/utils";
 
@@ -36,6 +36,7 @@ export async function completeOnboarding(input: OnboardingInput) {
       reviewBeforeAssign: Boolean(input.reviewBeforeAssign),
       onboardedAt: new Date(),
       retentionDays: PRICING.defaultRetentionDays,
+      ...newTrialFields(),
       members: {
         create: [
           ...(selfIncluded

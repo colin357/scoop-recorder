@@ -6,7 +6,7 @@ import { Icon, type IconName } from "@/components/icons";
 import HeroScene from "@/components/landing/hero-scene";
 import { Logo, LogoMark } from "@/components/logo";
 import { AskVignette, CtaLinks, MeetingMockup, PromptVignette, ReviewVignette, SlackVignette } from "@/components/landing/mockups";
-import { PLANS, PRICING, annualPerSeatPerMonth, fmtUsd } from "@/lib/billing";
+import { PRICING, fmtUsd } from "@/lib/billing";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -138,47 +138,53 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="text-center max-w-2xl mx-auto">
             <div className="eyebrow">Pricing</div>
-            <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2">Simple, per seat.</h2>
-            <p className="text-ink-soft mt-3 text-lg">Two plans. {PRICING.trialDays}-day free trial on both. Cancel any time.</p>
+            <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2">One price. Everything included.</h2>
+            <p className="text-ink-soft mt-3 text-lg">{fmtUsd(PRICING.seatMonthly)} per person. Unlimited meetings. Try it free for {PRICING.trialDays} days, no card needed.</p>
           </div>
-          <div className="grid md:grid-cols-2 gap-6 mt-12 max-w-4xl mx-auto items-stretch">
-            {PLANS.map((plan) => {
-              const featured = plan.key === "team";
-              return (
-                <div key={plan.key} className={featured ? "rounded-3xl bg-[#0e1220] text-paper p-8 md:p-10 ring-1 ring-white/10 shadow-lift flex flex-col" : "card-flat rounded-3xl p-8 md:p-10 flex flex-col"}>
-                  <div className="flex items-center justify-between">
-                    <span className={`eyebrow ${featured ? "!text-copper" : ""}`}>{plan.name}</span>
-                    {featured && <span className="rounded-full bg-copper/20 text-copper px-2.5 py-0.5 text-[11px] font-semibold">Most popular</span>}
-                  </div>
-                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-3">
-                    <span className="font-display font-bold text-6xl tracking-tight">{fmtUsd(plan.monthly)}</span>
-                    <span className={featured ? "text-paper/60" : "text-muted"}>per seat / month</span>
-                  </div>
-                  <div className={`mt-1 text-sm ${featured ? "text-paper/60" : "text-muted"}`}>or {fmtUsd(annualPerSeatPerMonth(plan.monthly))} per seat / month billed annually <span className={`ml-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${featured ? "bg-grass/20 text-grass-soft" : "bg-grass-soft text-grass"}`}>save 20%</span></div>
-                  <p className={`mt-4 text-sm ${featured ? "text-paper/70" : "text-ink-soft"}`}>{plan.blurb}</p>
-                  <ul className="mt-6 space-y-3 text-sm">
-                    {[
-                      `${plan.hoursPerSeat} recording hours per seat per month, pooled across your whole team`,
-                      "Unlimited meetings, summaries, tasks and Ask Rocky",
-                      "Google Meet, Zoom and Microsoft Teams",
-                      "Calendar auto-join, Slack and email delivery",
-                      "Review mode, audit log, retention controls and export",
-                      `Extra hours $${PRICING.overagePerHour.toFixed(2)} each, invoiced monthly`,
-                    ].map((t) => (
-                      <li key={t} className="flex gap-3">
-                        <span className={`mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0 ${featured ? "bg-copper/25 text-copper" : "bg-grass-soft text-grass"}`}><Icon name="check" size={12} /></span>{t}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-8 flex flex-wrap items-center gap-3">
-                    <Link href="/signup" className={`inline-flex items-center justify-center rounded-full font-semibold px-6 py-3 transition ${featured ? "bg-copper text-ink hover:bg-copper-deep" : "bg-ink text-paper hover:bg-merle-deep"}`} style={{ fontFamily: "var(--font-display)" }}>Start free trial</Link>
-                    <span className={`text-xs ${featured ? "text-paper/50" : "text-muted"}`}>Card required · nothing charged for {PRICING.trialDays} days</span>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="grid md:grid-cols-[1.5fr_1fr] gap-6 mt-12 max-w-4xl mx-auto items-stretch">
+            <div className="rounded-3xl bg-[#0e1220] text-paper p-8 md:p-10 ring-1 ring-white/10 shadow-lift flex flex-col">
+              <span className="eyebrow !text-copper">Scoop</span>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-3">
+                <span className="font-display font-bold text-6xl tracking-tight">{fmtUsd(PRICING.seatMonthly)}</span>
+                <span className="text-paper/60">per person / month</span>
+              </div>
+              <div className="mt-1 text-sm text-paper/60">or {fmtUsd(PRICING.seatAnnualMonthly)} per person / month billed annually <span className="ml-1 rounded-full px-2 py-0.5 text-[11px] font-semibold bg-grass/20 text-grass-soft">save 20%</span></div>
+              <ul className="mt-6 space-y-3 text-sm">
+                {[
+                  "Unlimited meetings, summaries, tasks and Ask Rocky",
+                  "Google Meet, Zoom and Microsoft Teams",
+                  "Calendar auto-join, Slack and email delivery",
+                  "Review mode, audit log, retention controls and export",
+                  "Add people any time; you only pay for who joins",
+                ].map((t) => (
+                  <li key={t} className="flex gap-3">
+                    <span className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0 bg-copper/25 text-copper"><Icon name="check" size={12} /></span>{t}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link href="/signup" className="inline-flex items-center justify-center rounded-full font-semibold px-6 py-3 transition bg-copper text-ink hover:bg-copper-deep" style={{ fontFamily: "var(--font-display)" }}>Start free trial</Link>
+                <span className="text-xs text-paper/50">No card needed · {PRICING.trialDays} days free</span>
+              </div>
+            </div>
+            <div className="card-flat rounded-3xl p-8 flex flex-col">
+              <span className="eyebrow">Add-on</span>
+              <h3 className="font-display font-bold text-2xl mt-2">Phone calls</h3>
+              <div className="flex flex-wrap items-baseline gap-x-2 mt-3">
+                <span className="font-display font-bold text-4xl tracking-tight">{fmtUsd(PRICING.phoneMonthly)}</span>
+                <span className="text-muted">/ month per workspace</span>
+              </div>
+              <p className="mt-4 text-sm text-ink-soft">Rocky records your phone calls too, with the same summaries and tasks as your meetings.</p>
+              <ul className="mt-5 space-y-3 text-sm">
+                {[`${PRICING.phoneIncludedHours} hours of calls a month`, `${fmtUsd(PRICING.phoneOveragePerHour)} per extra hour`, "Included in your free trial", "Turn it on or off any time"].map((t) => (
+                  <li key={t} className="flex gap-3">
+                    <span className="mt-0.5 h-5 w-5 rounded-full flex items-center justify-center shrink-0 bg-grass-soft text-grass"><Icon name="check" size={12} /></span>{t}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-          <p className="text-center text-xs text-muted mt-6">A seat is a teammate who has joined your workspace. Anyone can read summaries and tasks you share with them.</p>
+          <p className="text-center text-xs text-muted mt-6">You pay for teammates who join your workspace. Anyone can read the summaries and tasks you share with them.</p>
         </div>
       </section>
 

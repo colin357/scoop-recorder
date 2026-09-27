@@ -49,14 +49,19 @@ export const getCurrentUser = cache(async () => {
  * Current user, their membership, and org. Redirects to login/onboarding as needed.
  * Every member must connect a calendar before using the app (when a calendar
  * provider is configured); pass { skipCalendarGate: true } on the routes that
- * implement that step. Likewise the org must have started its subscription
- * (when Stripe is configured); pass { skipBillingGate: true } on /billing/start.
+ * implement that step. New organizations start a free trial (no card)
+ * automatically; one with no trial left and no plan must pick one (when
+ * Stripe is configured); pass { skipBillingGate: true } on /billing/start.
  */
 export const requireOrg = cache(async (opts?: { skipCalendarGate?: boolean; skipBillingGate?: boolean }) => {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const membership = user.memberships[0];
   if (!membership) redirect("/onboarding");
+  if (membership.org.billingStatus === "none") {
+    const { ensureTrialStarted } = await import("./billing");
+    await ensureTrialStarted(membership.org);
+  }
   if (!opts?.skipBillingGate && billingRequired(membership.org.billingStatus) && !isSuperAdmin(user.email)) redirect("/billing/start");
   if (!opts?.skipCalendarGate && (await calendarRequired(membership.id))) redirect("/onboarding/calendar");
   return { user, membership, org: membership.org };
@@ -67,7 +72,7 @@ export function isSuperAdmin(email: string) {
   return (process.env.SUPERADMIN_EMAILS ?? "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean).includes(email.toLowerCase());
 }
 
-/** With Stripe configured, an organization must start its trial before using the app. */
+/** With Stripe configured, an organization that has used its trial and never subscribed must pick a plan. */
 export function billingRequired(billingStatus: string) {
   return Boolean(process.env.STRIPE_SECRET_KEY) && billingStatus === "none";
 }

@@ -2,7 +2,7 @@
 
 Rocky can record phone calls two ways:
 
-- **Call with Rocky** (Record a meeting page). Rocky rings the user's verified mobile. They answer and press any key, and Rocky dials the other person, showing the user's own number as caller ID. The contact hears a recording notice before they are connected. Each side is recorded on its own channel, so the transcript knows exactly who said what. These calls use two phone lines and count double toward a workspace's recording hours.
+- **Call with Rocky** (Record a meeting page). Rocky rings the user's verified mobile. They answer and press any key, and Rocky dials the other person, showing the user's own number as caller ID. The contact hears a recording notice before they are connected. Each side is recorded on its own channel, so the transcript knows exactly who said what.
 - **Merge Rocky in** (any call already in progress). The user taps Add call, dials Rocky's number, then Merge. Rocky recognises their verified number, waits a few seconds for the merge, announces the recording, and records.
 
 Both paths end in the normal pipeline: transcript, summary, tasks, notifications.
@@ -56,3 +56,7 @@ Recordings stay in Twilio and are streamed to members through `/api/meetings/[id
 | Rocky's voice (Polly) | about $0.001 per call |
 
 Call with Rocky ≈ $0.039 / min (two legs, two-channel transcription), about $2.35 / hour. Merge-in ≈ $0.017 / min, about $1.03 / hour.
+
+## What customers pay
+
+Phone calls are a workspace add-on: $25 / month ($240 / year on annual plans) with 6 hours of calls included, then $3.50 per extra hour, invoiced on the 1st of the next month by `/api/cron/bill-overage`. Calls are included in the free trial (they count toward its 5 recording hours) and for complimentary workspaces. Admins turn the add-on on and off under Settings → Billing; the Calls tab offers it when it's off.

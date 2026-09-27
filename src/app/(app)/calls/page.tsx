@@ -9,11 +9,15 @@ import MeetingThumb from "@/components/meeting-thumb";
 import { Icon } from "@/components/icons";
 import PhoneCallForm from "./phone-call-form";
 import { activeProjectsByRecency } from "@/lib/projects";
+import { PRICING, fmtUsd, phoneAccess } from "@/lib/billing";
+import { setPhoneAddonAction } from "@/app/actions/billing";
+import { Mascot } from "@/components/mascot";
 
 /** Phone calls: place a "Call with Rocky" call, see how to merge Rocky in, and browse past calls. */
 export default async function CallsPage() {
   const { org, user, membership } = await requireOrg();
   const ready = twilioConfigured();
+  const access = phoneAccess(org);
   const [calls, projects] = await Promise.all([
     db.meeting.findMany({
       where: { orgId: org.id, platform: "phone" },
@@ -27,9 +31,27 @@ export default async function CallsPage() {
     <div className="space-y-6">
       <PageHeader title="Calls" count={calls.length} />
 
-      {ready ? (
+      {ready && !access.ok ? (
+        <section className="card p-5 max-w-xl flex items-start gap-4">
+          <Mascot pose="listen" size={72} className="shrink-0" />
+          <div className="min-w-0">
+            <h2 className="font-semibold">Record your phone calls too</h2>
+            <p className="text-sm text-ink-soft mt-1">
+              {access.upsell
+                ? <>Rocky joins your calls, then writes the summary and tasks just like a meeting. {fmtUsd(PRICING.phoneMonthly)}/month for the workspace, {PRICING.phoneIncludedHours} hours of calls included, {fmtUsd(PRICING.phoneOveragePerHour)} per extra hour.</>
+                : access.reason}
+            </p>
+            {access.upsell && (membership.isAdmin ? (
+              org.stripeSubscriptionId
+                ? <form action={setPhoneAddonAction.bind(null, true)} className="mt-3"><button className="btn-accent">Turn on phone calls · {fmtUsd(PRICING.phoneMonthly)}/mo</button></form>
+                : <Link href="/settings/billing" className="btn-accent mt-3 inline-flex">Go to billing</Link>
+            ) : <p className="text-xs text-muted mt-3">Ask an admin to turn on phone calls under Settings → Billing.</p>)}
+          </div>
+        </section>
+      ) : ready ? (
         <div className="max-w-xl">
           <PhoneCallForm myPhone={user.phoneVerifiedAt ? user.phone : null} rockyNumber={scoopNumber()} projects={projects.map((p) => ({ id: p.id, name: p.name }))} />
+          {org.billingStatus === "trialing" && !org.phoneAddonItemId && <p className="text-xs text-muted mt-2">Phone calls are included in your free trial. After that they&apos;re an add-on: {fmtUsd(PRICING.phoneMonthly)}/month with {PRICING.phoneIncludedHours} hours of calls.</p>}
         </div>
       ) : (
         <Empty title="Phone calls aren't switched on yet." pose="listen">

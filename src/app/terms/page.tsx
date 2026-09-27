@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LegalPage from "@/components/legal-page";
 import { LEGAL } from "@/lib/legal";
-import { PLANS, PRICING } from "@/lib/billing";
+import { PRICING, fmtUsd } from "@/lib/billing";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Scoop",
@@ -72,10 +72,11 @@ export default function TermsPage() {
       <section>
         <h2>7. Plans, trials and payment</h2>
         <ul>
-          <li><strong>Per-seat pricing.</strong> Subscriptions are priced per seat, where a seat is a team member who has joined the workspace. We offer {PLANS.map((p) => p.name).join(" and ")} plans, billed monthly or annually. Current prices are shown on our website and at checkout.</li>
-          <li><strong>Seats update automatically.</strong> When a teammate joins or is removed, the seat count on your subscription changes and the difference is prorated on your next invoice.</li>
-          <li><strong>Recording allowance.</strong> Each seat includes a number of recording hours per calendar month that depends on your plan ({PLANS.map((p) => `${p.name}: ${p.hoursPerSeat} hours`).join("; ")}), pooled across the workspace. Hours beyond the pool are billed at ${PRICING.overagePerHour.toFixed(2)} per hour, rounded up to the nearest hundredth of an hour, and invoiced on or about the first day of the following month to the payment method on file. Uploaded transcripts do not count.</li>
-          <li><strong>Free trial.</strong> New workspaces get a {PRICING.trialDays}-day free trial that includes {PRICING.trialHours} recording hours. A payment method is required to start it. Unless you cancel before the trial ends, your subscription begins automatically and you will be charged for the plan you selected. One trial per company.</li>
+          <li><strong>Per-person pricing.</strong> Subscriptions are priced per person, where a person is a team member who has joined the workspace, billed monthly or annually. Current prices are shown on our website and at checkout. Workspaces on an earlier plan keep its price until they choose to switch or we give notice under &ldquo;Price changes&rdquo; below.</li>
+          <li><strong>People update automatically.</strong> When a teammate joins or is removed, the count on your subscription changes and the difference is prorated on your next invoice.</li>
+          <li><strong>Unlimited meetings and fair use.</strong> Plans include unlimited meeting recording for normal business use. As a guide, fair use is about {PRICING.fairUseHoursPerSeat} recorded hours per person per calendar month, averaged across the workspace. We don&rsquo;t charge extra for meetings. If a workspace is well above this for two months in a row we will contact you to find a plan that fits; we won&rsquo;t pause recording without talking to you first. Automated or bulk recording (for example, recording media that isn&rsquo;t a live meeting) is not fair use.</li>
+          <li><strong>Phone calls add-on.</strong> Recording phone calls is an optional add-on priced per workspace ({fmtUsd(PRICING.phoneMonthly)} per month, or the annual equivalent on annual plans). It includes {PRICING.phoneIncludedHours} hours of calls per calendar month; additional call time is billed at {fmtUsd(PRICING.phoneOveragePerHour)} per hour, rounded up to the nearest hundredth of an hour, and invoiced on or about the first day of the following month to the payment method on file. Admins can turn the add-on on or off at any time from Settings &rarr; Billing; changes are prorated. You are responsible for obtaining any consent to record a call that the law requires.</li>
+          <li><strong>Free trial.</strong> New workspaces get a {PRICING.trialDays}-day free trial that includes {PRICING.trialHours} recording hours, phone calls included. No payment method is needed to start it. If you add one during the trial, your subscription begins when the trial ends unless you cancel first. If you don&rsquo;t, recording pauses when the trial ends; your summaries and tasks stay available. One trial per company.</li>
           <li><strong>Renewal and cancellation.</strong> Plans renew automatically monthly or annually until cancelled. You can cancel any time from Settings → Billing; access continues until the end of the period you have paid for. Fees already paid are non-refundable except where the law requires otherwise or we say so in writing.</li>
           <li><strong>Failed payments.</strong> If a charge fails we will retry and notify your admins. If it remains unpaid, recording is paused; your summaries and tasks stay readable so you can export them.</li>
           <li><strong>Taxes.</strong> Prices exclude taxes. Where we must collect sales tax, VAT or similar, it is added at checkout.</li>

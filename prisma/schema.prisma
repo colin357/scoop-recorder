@@ -32,13 +32,15 @@ model Organization {
   stripeCustomerId     String?   @unique
   stripeSubscriptionId String?   @unique
   billingStatus        String    @default("none")
-  billingPlan          String?   // starter | team
+  billingPlan          String?   // standard (current per-person plan) | starter | team (legacy, grandfathered)
   billingInterval      String?   // month | year
   seats                Int       @default(1)
   trialEndsAt          DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean   @default(false)
-  overageBilledThrough String?   // "YYYY-MM" of the last calendar month whose overage was invoiced
+  overageBilledThrough String?   // "YYYY-MM" of the last calendar month whose phone overage was invoiced
+  phoneAddonItemId     String?   // Stripe subscription item for the phone-calls add-on, when it's on
+  phoneAddonSince      DateTime? // when the add-on was turned on (phone overage only counts calls after this)
   createdAt           DateTime @default(now())
 
   members             Membership[]

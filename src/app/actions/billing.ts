@@ -4,20 +4,18 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireAdmin, requireOrg } from "@/lib/auth";
-import { createCheckoutUrl, createPortalUrl, endTrialNow, stripeConfigured, PLANS, type PlanKey } from "@/lib/billing";
+import { createCheckoutUrl, createPortalUrl, endTrialNow, setPhoneAddon, stripeConfigured, switchToCurrentPlan } from "@/lib/billing";
 import { logActivity } from "@/lib/audit";
 
-/** Start Checkout (trial on first subscription). Admins only. */
+/** Add a card and start the subscription (keeps any trial time left). Admins only. */
 export async function startCheckoutAction(form: FormData) {
   const { org, user, membership } = await requireOrg({ skipBillingGate: true, skipCalendarGate: true });
   if (!membership.isAdmin) redirect("/billing/start?error=admin_only");
   if (!stripeConfigured()) redirect("/dashboard");
   const interval = form.get("interval") === "year" ? "year" : "month";
-  const planRaw = String(form.get("plan") ?? "team");
-  const plan: PlanKey = PLANS.some((p) => p.key === planRaw) ? (planRaw as PlanKey) : "team";
   let url: string;
   try {
-    url = await createCheckoutUrl(org, { plan, interval, email: user.email });
+    url = await createCheckoutUrl(org, { interval, email: user.email });
   } catch (e) {
     console.error("checkout failed", e);
     redirect(`/billing/start?error=${encodeURIComponent(e instanceof Error ? e.message : "Could not start checkout")}`);
@@ -51,6 +49,36 @@ export async function startPaidPlanNowAction() {
   }
   revalidatePath("/settings/billing");
   redirect("/settings/billing?upgraded=1");
+}
+
+/** Turn the phone-calls add-on on or off. */
+export async function setPhoneAddonAction(on: boolean) {
+  const { org, membership } = await requireAdmin();
+  const back = on ? "/settings/billing?phone=on" : "/settings/billing?phone=off";
+  try {
+    await setPhoneAddon(org, on);
+    await logActivity({ orgId: org.id, actorId: membership.id, action: on ? "billing.phone_on" : "billing.phone_off", entityType: "org", entityId: org.id, summary: `${membership.name} turned ${on ? "on" : "off"} the phone calls add-on` });
+  } catch (e) {
+    console.error("setPhoneAddon failed", e);
+    redirect(`/settings/billing?error=${encodeURIComponent(e instanceof Error ? e.message : "Could not change the add-on")}`);
+  }
+  revalidatePath("/settings/billing");
+  revalidatePath("/calls");
+  redirect(back);
+}
+
+/** Move a grandfathered Starter/Team subscription to the current per-person price. */
+export async function switchToCurrentPlanAction() {
+  const { org, membership } = await requireAdmin();
+  try {
+    await switchToCurrentPlan(org);
+    await logActivity({ orgId: org.id, actorId: membership.id, action: "billing.plan_switched", entityType: "org", entityId: org.id, summary: `${membership.name} switched to the current per-person plan` });
+  } catch (e) {
+    console.error("switchToCurrentPlan failed", e);
+    redirect(`/settings/billing?error=${encodeURIComponent(e instanceof Error ? e.message : "Could not switch plans")}`);
+  }
+  revalidatePath("/settings/billing");
+  redirect("/settings/billing?switched=1");
 }
 
 /** Operator-only: mark an organization as complimentary (no subscription needed) or revert it. */

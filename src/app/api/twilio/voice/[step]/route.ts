@@ -1,6 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { db } from "@/lib/db";
-import { recordingAllowed } from "@/lib/billing";
+import { phoneAccess, recordingAllowed } from "@/lib/billing";
 import { attr, readTwilioWebhook, say, scoopNumber, twiml, voiceHook } from "@/lib/twilio";
 import { failCall, finishPhoneCall, recordingNotice } from "@/lib/phone";
 
@@ -99,6 +99,7 @@ export async function POST(req: Request, { params }: RouteContext<"/api/twilio/v
       if (!user || !membership) {
         return twiml(say("G'day, it's Rocky from Scoop. I don't recognise this number. Add and verify your phone in Scoop under Settings, then Profile, and call again.") + HANG_UP);
       }
+      if (!phoneAccess(membership.org).ok) return twiml(say("Sorry, phone calls aren't turned on for your workspace. An admin can add them in Scoop under Settings, then Billing.") + HANG_UP);
       const gate = await recordingAllowed(membership.org);
       if (!gate.ok) return twiml(say("Sorry, recording is paused for your workspace. Check billing in Scoop.") + HANG_UP);
       const m = await db.meeting.create({

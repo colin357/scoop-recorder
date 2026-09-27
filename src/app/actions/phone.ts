@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireOrg } from "@/lib/auth";
-import { recordingAllowed } from "@/lib/billing";
+import { phoneAccess, recordingAllowed } from "@/lib/billing";
 import { logActivity } from "@/lib/audit";
 import { normalizePhone } from "@/lib/phone-format";
 import { isVerifiedCallerId, requestCallerIdVerification, twilioConfigured } from "@/lib/twilio";
@@ -70,6 +70,8 @@ export async function startPhoneCallAction(_: CallState, form: FormData): Promis
   const contactPhone = normalizePhone(String(form.get("contactPhone") ?? ""));
   if (!contactPhone) return { error: "Enter the number to call, like (239) 555-0123." };
   if (contactPhone === me.phone) return { error: "That's your own number." };
+  const access = phoneAccess(org);
+  if (!access.ok) return { error: access.reason };
   const gate = await recordingAllowed(org);
   if (!gate.ok) return { error: gate.reason };
 

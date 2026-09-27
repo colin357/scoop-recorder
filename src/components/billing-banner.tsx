@@ -12,11 +12,14 @@ export default async function BillingBanner({ org, isAdmin }: { org: Organizatio
   if (snap.status === "past_due") {
     text = "A payment failed. Update your card so recording keeps working.";
     tone = "bg-clay-soft border-clay text-clay";
+  } else if (snap.status === "trial_ended") {
+    text = "Your free trial has ended, so recording is paused. Add a card to keep going; your summaries and tasks are still here.";
+    tone = "bg-clay-soft border-clay text-clay";
   } else if (snap.status === "trialing" && !snap.recording.ok) {
     text = snap.recording.reason;
-  } else if (snap.status === "trialing" && snap.trialEndsAt) {
+  } else if (snap.status === "trialing" && snap.trialEndsAt && !snap.hasCard) {
     const days = differenceInCalendarDays(snap.trialEndsAt, new Date());
-    if (days <= 3) text = days <= 0 ? "Your free trial ends today." : `Your free trial ends in ${days} day${days === 1 ? "" : "s"}.`;
+    if (days <= 5) text = days <= 0 ? "Your free trial ends today. Add a card to keep recording." : `Your free trial ends in ${days} day${days === 1 ? "" : "s"}. Add a card to keep recording.`;
   } else if (["canceled", "unpaid"].includes(snap.status)) {
     text = "Your subscription has ended, so recording is paused. Summaries and tasks are still here.";
     tone = "bg-clay-soft border-clay text-clay";
@@ -25,7 +28,7 @@ export default async function BillingBanner({ org, isAdmin }: { org: Organizatio
   return (
     <div className={`rounded-xl border text-sm px-4 py-2.5 mb-4 flex flex-wrap items-center justify-between gap-2 ${tone}`}>
       <span>{text}</span>
-      {isAdmin ? <Link href="/settings/billing" className="font-semibold underline">Go to billing</Link> : <span className="text-xs">Ask an admin to update billing.</span>}
+      {isAdmin ? <Link href={snap.hasCard ? "/settings/billing" : "/billing/start"} className="font-semibold underline">{snap.hasCard ? "Go to billing" : "Add a card"}</Link> : <span className="text-xs">Ask an admin to update billing.</span>}
     </div>
   );
 }

@@ -66,10 +66,11 @@ Set `XAI_API_KEY` to use Grok (default model `grok-4`, override with `XAI_MODEL`
 
 ## Billing (Stripe)
 
-1. Set `STRIPE_SECRET_KEY` (test key first) and deploy. On first use the app creates a "Scoop" product, monthly and annual per-seat prices for the Starter and Team plans, and a Customer Portal configuration in that Stripe account. Nothing else to configure in the dashboard.
+1. Set `STRIPE_SECRET_KEY` (test key first) and deploy. On first use the app creates a "Scoop" per-person product and a "Scoop phone calls" add-on product (monthly and annual prices each) and a Customer Portal configuration in that Stripe account. Nothing else to configure in the dashboard.
 2. Add a webhook in Stripe → Developers → Webhooks pointing at `https://www.scooprecorder.com/api/webhooks/stripe` with `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, and set `STRIPE_WEBHOOK_SECRET`.
-3. Flow: after onboarding the admin lands on `/billing/start`, picks monthly or annual, and Stripe Checkout starts a 14-day trial with a card on file. Seats = members who have joined; the quantity is updated on invite acceptance and removal. Each seat adds pooled recording hours per calendar month (Starter 10, Team 20); `/api/cron/bill-overage` invoices the previous month's overage at $1.50/hour on the 1st.
-4. Operators can mark an organization complimentary from `/admin`. Plans, prices and allowances live in `src/lib/billing.ts` (`PLANS`, `PRICING`); change them there before the prices are created, or create new prices with new lookup keys.
+3. Pricing: $20 per person per month ($16 billed annually), unlimited meetings under a fair-use guide of ~20 h per person per month (shown on the billing page and in the Terms; never billed). Phone calls are a $25/month workspace add-on with 6 hours included; `/api/cron/bill-overage` invoices extra call hours at $3.50/hour on the 1st. Admins turn the add-on on and off in Settings → Billing (in-app, because Stripe's portal can't edit multi-item subscriptions).
+4. Flow: a new workspace starts a 14-day free trial with no card (5 recording hours, phone calls included). An admin can add a card any time at `/billing/start`, which keeps the remaining trial days; when the trial ends without a card, recording pauses and the app keeps working read-only. People = members who have joined; the quantity is updated on invite acceptance and removal. Subscribers on the old Starter/Team prices keep them until they switch (Settings → Billing offers the switch when it saves them money).
+5. Operators can mark an organization complimentary from `/admin`. Prices and allowances live in `src/lib/billing.ts` (`PRICING`); change them there and bump the lookup keys in `PRICE_KEYS` so new prices get created.
 
 ## Layout
 
