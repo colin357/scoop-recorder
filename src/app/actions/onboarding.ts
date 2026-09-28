@@ -69,15 +69,19 @@ export async function completeOnboarding(input: OnboardingInput) {
 
 // ---------- Conversational onboarding ----------
 
-import { emptyDraft, onboardingTurn, type ChatMessage, type OnboardingDraftData } from "@/lib/onboarding-ai";
+import { ONBOARDING_GREETING, emptyDraft, onboardingTurn, type ChatMessage, type OnboardingDraftData } from "@/lib/onboarding-ai";
 import { safeJson } from "@/lib/utils";
 
 export type ChatState = { messages: ChatMessage[]; draft: OnboardingDraftData };
 
 async function loadState(userId: string, name: string, email: string): Promise<ChatState> {
   const row = await db.onboardingDraft.findUnique({ where: { userId } });
-  if (row) return { messages: safeJson<ChatMessage[]>(row.messages, []), draft: safeJson<OnboardingDraftData>(row.draft, emptyDraft) };
-  return { messages: [], draft: { ...emptyDraft, members: [{ name, email, role: "", responsibilities: "" }] } };
+  const greeting: ChatMessage[] = [{ role: "assistant", content: ONBOARDING_GREETING }];
+  if (row) {
+    const messages = safeJson<ChatMessage[]>(row.messages, []);
+    return { messages: messages.length ? messages : greeting, draft: safeJson<OnboardingDraftData>(row.draft, emptyDraft) };
+  }
+  return { messages: greeting, draft: { ...emptyDraft, members: [{ name, email, role: "", responsibilities: "" }] } };
 }
 
 async function saveState(userId: string, state: ChatState) {

@@ -14,7 +14,6 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
   const [pending, start] = useTransition();
   const [review, setReview] = useState(false);
   const bottom = useRef<HTMLDivElement>(null);
-  const started = useRef(false);
 
   const run = (fn: () => Promise<ChatState | void>) =>
     start(async () => {
@@ -46,15 +45,6 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
       }
     });
   };
-
-  // Kick off the conversation.
-  useEffect(() => {
-    if (state.messages.length === 0 && !started.current) {
-      started.current = true;
-      send(`Hi! I'm ${self.name}. Let's get set up.`);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const last = state.messages[state.messages.length - 1];
   const widget = last?.role === "assistant" ? last.widget : undefined;

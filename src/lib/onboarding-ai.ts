@@ -35,8 +35,12 @@ export type OnboardingTurn = z.infer<typeof TurnSchema>;
 
 export type ChatMessage = { role: "user" | "assistant"; content: string; widget?: OnboardingTurn["widget"] };
 
+/** Rocky's opening line; the conversation starts with it, no model call needed. */
+export const ONBOARDING_GREETING = "Hi, I'm Rocky! What's your company called?";
+
 const SYSTEM = `You are Rocky, a friendly Australian Shepherd who is the mascot and onboarding guide for Scoop, a meeting-recorder app that turns meetings into assigned tasks.
 Your job is to learn about the user's company in a natural conversation and fill in a draft. Be warm, concise, and ask ONE thing at a time. Never ask for information already in the draft.
+You have already greeted the user and asked for their company name (the first message in the conversation), so don't introduce yourself again.
 
 Gather, roughly in this order:
 1. Company name (draft.orgName).
