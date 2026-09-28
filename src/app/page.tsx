@@ -28,7 +28,7 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Logo size={40} />
           <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-ink-soft">
-            <a href="#how" className="hover:text-ink">How it works</a><a href="#team" className="hover:text-ink">For teams</a><a href="#pricing" className="hover:text-ink">Pricing</a><a href="#trust" className="hover:text-ink">Trust</a>
+            <a href="#how" className="hover:text-ink">How it works</a><a href="#team" className="hover:text-ink">For teams</a><a href="#pricing" className="hover:text-ink">Pricing</a>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/login" className="hidden sm:inline-flex text-sm font-semibold text-ink-soft hover:text-ink px-3 py-2">Sign in</Link>
@@ -40,8 +40,8 @@ export default async function Home() {
       {/* Hero */}
       <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 md:pb-44 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
         <div>
-          <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[56px] [text-wrap:balance]">The meeting ends.<br />The work is already assigned.</h1>
-          <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-md leading-relaxed">Scoop records the call, understands who does what on your team, and routes every follow-up to the right person with the context to act.</p>
+          <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[56px] [text-wrap:balance]">Give your team<br />their time back.</h1>
+          <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-md leading-relaxed">Rocky sits in on your meetings, writes the notes, and hands every follow-up to the right person. No more recaps. No more &ldquo;wait, who&rsquo;s doing that?&rdquo;</p>
           <div className="mt-8"><CtaLinks big /></div>
         </div>
         <div className="relative lg:pt-6">
@@ -110,36 +110,13 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Trust */}
-      <section id="trust" className="max-w-6xl mx-auto px-6 py-20">
-        <div className="grid md:grid-cols-[1fr_1.4fr] gap-10 items-start">
-          <div>
-            <div className="eyebrow">Trust</div>
-            <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-4xl mt-2">Built for consent.</h2>
-            <p className="text-ink-soft mt-3">Recording calls is a responsibility. Scoop makes the defaults safe and the controls obvious.</p>
-          </div>
-          <ul className="grid sm:grid-cols-2 gap-x-8 gap-y-6 text-sm">
-            {[
-              ["Announces itself", "Rocky tells the room it's recording when it joins, with a way to opt out."],
-              ["Read-only calendar", "Calendar access is read-only. Nothing is created or edited."],
-              ["Retention limits", "Purge recordings and transcripts after N days. Keep the summaries."],
-              ["Audit log and export", "Every change is logged. Your data exports in one click."],
-              ["Review mode", "Hold AI tasks as drafts until an admin approves them."],
-              ["Admin roles", "Only admins change recording policy, the team, or settings."],
-            ].map(([t, d]) => (
-              <li key={t} className="flex gap-3"><span className="mt-0.5 h-6 w-6 rounded-full bg-grass-soft text-grass flex items-center justify-center shrink-0"><Icon name="check" size={14} /></span><div><div className="font-semibold">{t}</div><div className="text-ink-soft mt-0.5">{d}</div></div></li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
       {/* Pricing */}
       <section id="pricing" className="border-t edge bg-paper">
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="text-center max-w-2xl mx-auto">
             <div className="eyebrow">Pricing</div>
             <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2">One price. Everything included.</h2>
-            <p className="text-ink-soft mt-3 text-lg">{fmtUsd(PRICING.seatMonthly)} per person. Unlimited meetings. Try it free for {PRICING.trialDays} days, no card needed.</p>
+            <p className="text-ink-soft mt-3 text-lg">{fmtUsd(PRICING.seatMonthly)} per person. Unlimited meetings. Try it free for {PRICING.trialDays} days.</p>
           </div>
           <div className="grid md:grid-cols-[1.5fr_1fr] gap-6 mt-12 max-w-4xl mx-auto items-stretch">
             <div className="rounded-3xl bg-[#0e1220] text-paper p-8 md:p-10 ring-1 ring-white/10 shadow-lift flex flex-col">
@@ -164,7 +141,7 @@ export default async function Home() {
               </ul>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link href="/signup" className="inline-flex items-center justify-center rounded-full font-semibold px-6 py-3 transition bg-copper text-ink hover:bg-copper-deep" style={{ fontFamily: "var(--font-display)" }}>Start free trial</Link>
-                <span className="text-xs text-paper/50">No card needed · {PRICING.trialDays} days free</span>
+                <span className="text-xs text-paper/50">{PRICING.trialDays} days free · cancel any time</span>
               </div>
             </div>
             <div className="card-flat rounded-3xl p-8 flex flex-col">
@@ -192,7 +169,7 @@ export default async function Home() {
       <section className="border-t edge">
         <div className="max-w-6xl mx-auto px-6 py-20 text-center">
           <Mascot pose="wave" size={120} className="mx-auto" />
-          <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-4">Give your team its afternoon back.</h2>
+          <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-4">Your team will thank you.</h2>
           <p className="text-ink-soft mt-3 text-lg">Set up in five minutes. Rocky joins your next meeting.</p>
           <div className="flex justify-center mt-8"><CtaLinks big /></div>
         </div>
@@ -201,7 +178,7 @@ export default async function Home() {
       <footer className="border-t edge">
         <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
           <span className="flex items-center gap-2"><LogoMark size={20} />© {new Date().getFullYear()} Scoop · scooprecorder.com</span>
-          <span className="flex gap-5"><a href="#pricing" className="hover:text-ink">Pricing</a><a href="#trust" className="hover:text-ink">Trust</a><Link href="/privacy" className="hover:text-ink">Privacy</Link><Link href="/terms" className="hover:text-ink">Terms</Link><Link href="/login" className="hover:text-ink">Sign in</Link><Link href="/signup" className="hover:text-ink">Start free</Link></span>
+          <span className="flex gap-5"><a href="#pricing" className="hover:text-ink">Pricing</a><Link href="/privacy" className="hover:text-ink">Privacy</Link><Link href="/terms" className="hover:text-ink">Terms</Link><Link href="/login" className="hover:text-ink">Sign in</Link><Link href="/signup" className="hover:text-ink">Start free</Link></span>
         </div>
       </footer>
     </main>

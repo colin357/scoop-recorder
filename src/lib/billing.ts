@@ -12,12 +12,14 @@ import type { Organization } from "@/generated/prisma/client";
  *                   month, averaged across the team; see the Terms).
  *   Phone add-on    $25 / month per workspace, 6 h of calls included, then
  *                   $3.50 per extra hour, invoiced on the 1st of the next month.
- *   Free trial      14 days, no card. 5 recording hours (meetings and calls).
+ *   Free trial      14 days, card required up front (Stripe trial). 5 recording
+ *                   hours (meetings and calls); the plan starts automatically
+ *                   when the trial ends unless it is cancelled.
  *
- * The trial lives only in our database (status "trialing", no subscription).
- * Adding a card at any point starts the Stripe subscription, keeping whatever
- * trial time is left. Organizations on the old Starter/Team prices keep them
- * until they switch.
+ * A few workspaces started a short-lived no-card trial (status "trialing"
+ * with no subscription); they are sent to add a card and keep the days they
+ * have left. Organizations on the old Starter/Team prices keep them until
+ * they switch.
  *
  * Nothing here needs price IDs in env: products, prices and the portal config
  * are created in the connected Stripe account on first use and found again by
@@ -88,33 +90,21 @@ export function fmtUsd(n: number) {
 }
 
 // ---------------------------------------------------------------------------
-// Trial (no card)
+// Trial
 
-/** Fields for a brand-new organization: the free trial starts right away. */
-export function newTrialFields(now = new Date()) {
-  if (!stripeConfigured()) return {};
-  return { billingStatus: "trialing", trialEndsAt: addDays(now, PRICING.trialDays) };
-}
-
-/** On the no-card trial (no Stripe subscription yet). */
+/** On a no-card trial (no Stripe subscription). Only workspaces from the brief no-card period. */
 export function isLocalTrial(org: Pick<Organization, "billingStatus" | "stripeSubscriptionId">) {
   return org.billingStatus === "trialing" && !org.stripeSubscriptionId;
 }
 
-/** The no-card trial ran out and no card was added. */
+/** A no-card trial that ran out without a card. */
 export function trialExpired(org: Pick<Organization, "billingStatus" | "stripeSubscriptionId" | "trialEndsAt">, now = new Date()) {
   return isLocalTrial(org) && (!org.trialEndsAt || org.trialEndsAt <= now);
 }
 
-/**
- * Organizations created before the no-card trial (status "none", never
- * trialed) get their trial the first time someone opens the app.
- */
-export async function ensureTrialStarted(org: Organization) {
-  if (!stripeConfigured() || org.billingStatus !== "none" || org.trialEndsAt || org.stripeSubscriptionId) return org;
-  const fields = newTrialFields();
-  await db.organization.updateMany({ where: { id: org.id, billingStatus: "none", trialEndsAt: null }, data: fields });
-  return Object.assign(org, fields);
+/** Never trialed: checkout starts the free trial. One trial per workspace. */
+export function eligibleForTrial(org: Pick<Organization, "billingStatus" | "trialEndsAt" | "stripeSubscriptionId">) {
+  return org.billingStatus === "none" && !org.trialEndsAt && !org.stripeSubscriptionId;
 }
 
 function trialStart(org: Pick<Organization, "trialEndsAt">) {
@@ -385,22 +375,26 @@ async function ensureCustomer(org: Organization, email: string) {
 /** Stripe needs a trial to end at least 48 hours out; keep a little margin. */
 const MIN_TRIAL_MS = 49 * 3600_000;
 
-/** When adding a card now, the date the first charge would happen (end of the no-card trial), or null for today. */
-export async function trialKeptAtCheckout(org: Organization) {
+/**
+ * When the first charge happens if a card is added now: the end of a new
+ * 14-day trial, the end of a no-card trial already under way (unless its
+ * hours are used up), or null for today.
+ */
+export async function checkoutTrialEnd(org: Organization): Promise<Date | null> {
+  if (eligibleForTrial(org)) return addDays(new Date(), PRICING.trialDays);
   if (!isLocalTrial(org) || !org.trialEndsAt || org.trialEndsAt.getTime() - Date.now() < MIN_TRIAL_MS) return null;
   return (await trialHoursUsed(org)) < PRICING.trialHours ? org.trialEndsAt : null;
 }
 
-/**
- * Add a card and start the subscription. During the no-card trial the
- * remaining trial time is kept (unless the trial hours are used up, in which
- * case the plan starts now).
- */
+/** Add a card and start the subscription, with the free trial when the workspace is due one. */
 export async function createCheckoutUrl(org: Organization, opts: { interval: Interval; email: string }) {
   if (org.stripeSubscriptionId && ["active", "past_due", "trialing"].includes(org.billingStatus)) throw new Error("This workspace already has a subscription.");
-  const [cat, customer, seats] = await Promise.all([ensureCatalog(), ensureCustomer(org, opts.email), seatCount(org.id)]);
-  const keep = await trialKeptAtCheckout(org);
-  const trialEnd = keep ? Math.floor(keep.getTime() / 1000) : null;
+  const [cat, customer, seats, trialEnd] = await Promise.all([ensureCatalog(), ensureCustomer(org, opts.email), seatCount(org.id), checkoutTrialEnd(org)]);
+  const trial: Stripe.Checkout.SessionCreateParams.SubscriptionData = !trialEnd
+    ? {}
+    : eligibleForTrial(org)
+      ? { trial_period_days: PRICING.trialDays, trial_settings: { end_behavior: { missing_payment_method: "cancel" } } }
+      : { trial_end: Math.floor(trialEnd.getTime() / 1000), trial_settings: { end_behavior: { missing_payment_method: "cancel" } } };
   const session = await stripe().checkout.sessions.create({
     mode: "subscription",
     customer,
@@ -409,7 +403,7 @@ export async function createCheckoutUrl(org: Organization, opts: { interval: Int
     payment_method_collection: "always",
     allow_promotion_codes: true,
     billing_address_collection: "auto",
-    subscription_data: { metadata: { orgId: org.id }, ...(trialEnd ? { trial_end: trialEnd } : {}) },
+    subscription_data: { metadata: { orgId: org.id }, ...trial },
     success_url: `${appUrl()}/settings/billing?checkout=success`,
     cancel_url: `${appUrl()}/billing/start?canceled=1`,
   });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireOrg, billingRequired } from "@/lib/auth";
-import { PRICING, isLocalTrial, seatCount, stripeConfigured, trialExpired, trialKeptAtCheckout } from "@/lib/billing";
+import { PRICING, checkoutTrialEnd, eligibleForTrial, isLocalTrial, seatCount, stripeConfigured, trialExpired } from "@/lib/billing";
 import { signOutAction } from "@/app/actions/auth";
 import { Mascot } from "@/components/mascot";
 import { Icon } from "@/components/icons";
@@ -9,7 +9,7 @@ import { fmtDate } from "@/lib/utils";
 import { db } from "@/lib/db";
 import PlanPicker from "./plan-picker";
 
-/** Add a card: during the free trial (keeps the days left), after it ends, or to restart a cancelled plan. */
+/** Add a card: to start the free trial, to keep a no-card trial going, after a trial ends, or to restart a cancelled plan. */
 export default async function BillingStartPage({ searchParams }: PageProps<"/billing/start">) {
   const sp = await searchParams;
   const { org, membership } = await requireOrg({ skipBillingGate: true, skipCalendarGate: true });
@@ -17,13 +17,16 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
   const hasPlan = org.billingStatus === "comped" || (org.stripeSubscriptionId && ["active", "past_due", "trialing"].includes(org.billingStatus));
   if (hasPlan) redirect("/settings/billing");
 
-  const [seats, keepUntil] = await Promise.all([seatCount(org.id), trialKeptAtCheckout(org)]);
+  const [seats, trialEnd, invited] = await Promise.all([seatCount(org.id), checkoutTrialEnd(org), db.membership.count({ where: { orgId: org.id, userId: null } })]);
   const admins = membership.isAdmin ? [] : await db.membership.findMany({ where: { orgId: org.id, isAdmin: true }, select: { name: true, email: true } });
   const onTrial = isLocalTrial(org) && !trialExpired(org);
-  const blocked = billingRequired(org.billingStatus);
+  const blocked = billingRequired(org);
+  const fresh = eligibleForTrial(org);
 
-  const [title, blurb] = keepUntil
-    ? ["Keep Rocky after your trial", `Your free trial runs until ${fmtDate(keepUntil)}. Add a card now and you won't be charged until then. Cancel any time before and you pay nothing.`]
+  const [title, blurb] = fresh
+    ? [`Start your ${PRICING.trialDays}-day free trial`, `Add a card to start recording for ${org.name}. You won't be charged until ${fmtDate(trialEnd!)}, and you can cancel any time before then.`]
+    : trialEnd
+    ? ["Add a card to keep your trial", `Your free trial runs until ${fmtDate(trialEnd)}. Add a card to keep using Scoop; you won't be charged until then. Cancel any time before and you pay nothing.`]
     : onTrial
       ? [`You've used your ${PRICING.trialHours} free hours`, "Add a card to keep recording. Your plan starts today."]
       : ["canceled", "unpaid"].includes(org.billingStatus)
@@ -43,7 +46,14 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
         {typeof sp.error === "string" && <p className="rounded-md bg-clay-soft border border-clay text-clay text-sm p-3 mb-4">{sp.error === "admin_only" ? "Only an admin can add a card." : decodeURIComponent(sp.error)}</p>}
 
         {membership.isAdmin ? (
-          <PlanPicker seats={seats} monthly={PRICING.seatMonthly} annual={PRICING.seatAnnualMonthly} cta={keepUntil ? "Add card" : "Add card and start"} />
+          <PlanPicker
+            seats={seats}
+            invited={invited}
+            monthly={PRICING.seatMonthly}
+            annual={PRICING.seatAnnualMonthly}
+            cta={fresh ? "Start free trial" : trialEnd ? "Add card" : "Add card and start"}
+            note={trialEnd ? `Nothing charged today. Your first charge is on ${fmtDate(trialEnd)}.` : undefined}
+          />
         ) : (
           <div className="card p-5">
             <h2 className="font-semibold">An admin needs to add a card</h2>
@@ -52,13 +62,13 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
         )}
 
         <ul className="mt-4 text-sm space-y-1.5 px-1">
-          {["Unlimited meetings, summaries and tasks", "Ask Rocky, calendar auto-join, every feature", "Add people any time; you pay for who joins", "Cancel any time from Settings"].map((t) => (
+          {[...(fresh ? [`${PRICING.trialHours} recording hours to try it, phone calls included`] : []), "Unlimited meetings, summaries and tasks", "Ask Rocky, calendar auto-join, every feature", "Add people any time; you pay for who joins", "Cancel any time from Settings"].map((t) => (
             <li key={t} className="flex gap-2"><Icon name="check" size={16} className="text-grass mt-0.5 shrink-0" />{t}</li>
           ))}
         </ul>
 
         <p className="text-xs text-muted mt-5">
-          By adding a card you agree to the <Link href="/terms" className="text-merle underline">Terms of Service</Link>, including automatic renewal unless you cancel.
+          By adding a card you agree to the <Link href="/terms" className="text-merle underline">Terms of Service</Link>{trialEnd ? ", including that your plan starts automatically when the trial ends and renews unless you cancel." : ", including automatic renewal unless you cancel."}
         </p>
         <div className="text-xs text-muted mt-4 flex flex-wrap gap-x-4 gap-y-1">
           {!blocked && <Link href="/dashboard" className="underline">Back to Scoop</Link>}

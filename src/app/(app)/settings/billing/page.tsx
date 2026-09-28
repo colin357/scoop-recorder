@@ -65,7 +65,7 @@ export default async function BillingSettingsPage({ searchParams }: PageProps<"/
               )}
             </div>
           </div>
-          <span className={`badge ${st.cls}`}>{st.label}</span>
+          <span className={`badge whitespace-nowrap shrink-0 ${st.cls}`}>{st.label}</span>
         </div>
 
         {subscribed && (
@@ -126,7 +126,7 @@ export default async function BillingSettingsPage({ searchParams }: PageProps<"/
                 {fmtUsd(phone.perMonth)} / month for the workspace{snap.interval === "year" ? ", billed annually" : ""} · {phone.includedHours} hours of calls included · {fmtUsd(PRICING.phoneOveragePerHour)} per extra hour
               </p>
             </div>
-            <span className={`badge ${phone.enabled || snap.status === "comped" ? "bg-grass-soft text-grass" : snap.status === "trialing" ? "bg-sky text-merle-deep" : "bg-paper-2 text-muted"}`}>
+            <span className={`badge whitespace-nowrap shrink-0 ${phone.enabled || snap.status === "comped" ? "bg-grass-soft text-grass" : snap.status === "trialing" ? "bg-sky text-merle-deep" : "bg-paper-2 text-muted"}`}>
               {phone.enabled ? "On" : snap.status === "comped" ? "Included" : snap.status === "trialing" ? "In your trial" : "Off"}
             </span>
           </div>

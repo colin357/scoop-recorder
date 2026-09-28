@@ -96,7 +96,7 @@ export default function OnboardingChat({ initial, self }: { initial: ChatState; 
                   <div className="font-semibold">Almost there</div>
                   <div className="text-ink-soft">{d.orgName} · {named.length} team member{named.length === 1 ? "" : "s"} · {d.projects.filter((p) => p.confirmed).length} projects</div>
                 </div>
-                <button className="btn-primary" onClick={() => run(() => finishFromDraftAction(review))}>Next: connect calendar</button>
+                <button className="btn-primary" onClick={() => run(() => finishFromDraftAction(review))}>Continue</button>
               </div>
               <label className="flex items-start gap-3 text-sm font-normal rounded-lg border border-grass bg-paper p-3 cursor-pointer">
                 <input type="checkbox" className="!w-auto mt-0.5" checked={review} onChange={(e) => setReview(e.target.checked)} />

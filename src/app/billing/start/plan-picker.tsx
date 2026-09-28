@@ -12,7 +12,7 @@ function Submit({ label }: { label: string }) {
 }
 
 /** One plan: pick monthly or annual and see the total for the team before going to Stripe. */
-export default function PlanPicker({ seats, monthly, annual, cta }: { seats: number; monthly: number; annual: number; cta: string }) {
+export default function PlanPicker({ seats, invited = 0, monthly, annual, cta, note }: { seats: number; invited?: number; monthly: number; annual: number; cta: string; note?: string }) {
   const [interval, pickInterval] = useState<"month" | "year">("year");
   const per = interval === "year" ? annual : monthly;
   const people = `${seats} ${seats === 1 ? "person" : "people"}`;
@@ -50,6 +50,12 @@ export default function PlanPicker({ seats, monthly, annual, cta }: { seats: num
           {people} × {usd(per)} = <span className="font-semibold text-ink">{usd(seats * per)} a month</span>
           {interval === "year" && <span className="text-muted">, billed {usd(seats * per * 12)} a year</span>}
         </p>
+        {invited > 0 && (
+          <p className="text-xs text-muted mt-1">
+            {invited === 1 ? "Your invited teammate adds" : `Each of the ${invited} teammates you invited adds`} {usd(per)} a month once they join.
+          </p>
+        )}
+        {note && <p className="text-xs text-grass font-medium mt-1.5">{note}</p>}
       </div>
 
       <Submit label={cta} />

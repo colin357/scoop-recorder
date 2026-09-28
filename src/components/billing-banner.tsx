@@ -17,9 +17,9 @@ export default async function BillingBanner({ org, isAdmin }: { org: Organizatio
     tone = "bg-clay-soft border-clay text-clay";
   } else if (snap.status === "trialing" && !snap.recording.ok) {
     text = snap.recording.reason;
-  } else if (snap.status === "trialing" && snap.trialEndsAt && !snap.hasCard) {
+  } else if (snap.status === "trialing" && snap.trialEndsAt) {
     const days = differenceInCalendarDays(snap.trialEndsAt, new Date());
-    if (days <= 5) text = days <= 0 ? "Your free trial ends today. Add a card to keep recording." : `Your free trial ends in ${days} day${days === 1 ? "" : "s"}. Add a card to keep recording.`;
+    if (days <= 3) text = days <= 0 ? "Your free trial ends today and your plan starts." : `Your free trial ends in ${days} day${days === 1 ? "" : "s"}, then your plan starts.`;
   } else if (["canceled", "unpaid"].includes(snap.status)) {
     text = "Your subscription has ended, so recording is paused. Summaries and tasks are still here.";
     tone = "bg-clay-soft border-clay text-clay";
