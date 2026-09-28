@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { Mascot } from "@/components/mascot";
 import { Icon, type IconName } from "@/components/icons";
-import HeroScene from "@/components/landing/hero-scene";
 import TeamNotifications from "@/components/landing/team-notifications";
 import { Logo, LogoMark } from "@/components/logo";
 import { AskVignette, CtaLinks, MeetingMockup, ReviewVignette, SlackVignette } from "@/components/landing/mockups";
@@ -59,8 +58,7 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="eyebrow">How teams use Scoop</div>
           <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2 max-w-2xl">Fewer communication breakdowns. Zero extra messages.</h2>
-          <div className="mt-12 max-w-4xl"><HeroScene /></div>
-          <div className="grid md:grid-cols-3 gap-10 mt-14">
+          <div className="grid md:grid-cols-3 gap-10 mt-12">
             {how.map((h) => (
               <div key={h.title}>
                 <span className="h-11 w-11 rounded-xl bg-sky text-merle flex items-center justify-center"><Icon name={h.icon} size={22} /></span>
