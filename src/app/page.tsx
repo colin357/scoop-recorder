@@ -4,8 +4,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { Mascot } from "@/components/mascot";
 import { Icon, type IconName } from "@/components/icons";
 import HeroScene from "@/components/landing/hero-scene";
+import TeamNotifications from "@/components/landing/team-notifications";
 import { Logo, LogoMark } from "@/components/logo";
-import { AskVignette, CtaLinks, MeetingMockup, PromptVignette, ReviewVignette, SlackVignette } from "@/components/landing/mockups";
+import { AskVignette, CtaLinks, MeetingMockup, ReviewVignette, SlackVignette } from "@/components/landing/mockups";
 import { PRICING, fmtUsd } from "@/lib/billing";
 
 export default async function Home() {
@@ -38,16 +39,13 @@ export default async function Home() {
       </header>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-24 pb-16 md:pb-44 grid lg:grid-cols-[0.9fr_1.1fr] gap-12 items-center">
+      <section className="max-w-6xl mx-auto px-6 pt-16 md:pt-20 pb-16 md:pb-24 grid lg:grid-cols-[1fr_1fr] gap-12 items-center overflow-x-clip">
         <div>
           <h1 className="font-display font-bold tracking-[-0.03em] leading-[1.02] text-[40px] sm:text-[52px] lg:text-[56px] [text-wrap:balance]">Give your team<br />their time back.</h1>
           <p className="text-lg md:text-xl text-ink-soft mt-6 max-w-md leading-relaxed">Rocky sits in on your meetings, writes the notes, and hands every follow-up to the right person. No more recaps. No more &ldquo;wait, who&rsquo;s doing that?&rdquo;</p>
           <div className="mt-8"><CtaLinks big /></div>
         </div>
-        <div className="relative lg:pt-6">
-          <HeroScene />
-          <div className="absolute left-6 -bottom-[7.5rem] hidden md:block"><PromptVignette /></div>
-        </div>
+        <TeamNotifications />
       </section>
 
       {/* Product mockup */}
@@ -61,7 +59,8 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-6 py-20">
           <div className="eyebrow">How teams use Scoop</div>
           <h2 className="font-display font-bold tracking-[-0.02em] text-3xl md:text-5xl mt-2 max-w-2xl">Fewer communication breakdowns. Zero extra messages.</h2>
-          <div className="grid md:grid-cols-3 gap-10 mt-12">
+          <div className="mt-12 max-w-4xl"><HeroScene /></div>
+          <div className="grid md:grid-cols-3 gap-10 mt-14">
             {how.map((h) => (
               <div key={h.title}>
                 <span className="h-11 w-11 rounded-xl bg-sky text-merle flex items-center justify-center"><Icon name={h.icon} size={22} /></span>

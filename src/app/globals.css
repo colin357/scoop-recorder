@@ -191,3 +191,11 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 .hero-in { opacity: 0; animation: hero-in .6s ease-out forwards; }
 .hero-flow { animation: hero-flow 1.6s linear infinite; }
 @media (prefers-reduced-motion: reduce) { .hero-in { opacity: 1; animation: none; } .hero-flow { animation: none; } }
+
+/* Landing hero: a notification sliding in and pushing the stack down. */
+@keyframes notif-in {
+  from { grid-template-rows: 0fr; opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to { grid-template-rows: 1fr; opacity: 1; transform: none; }
+}
+.notif-in { display: grid; animation: notif-in 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .notif-in { animation: none; } }
