@@ -4,7 +4,6 @@ import { requireOrg, billingRequired } from "@/lib/auth";
 import { PRICING, checkoutTrialEnd, eligibleForTrial, isLocalTrial, seatCount, stripeConfigured, trialExpired } from "@/lib/billing";
 import { signOutAction } from "@/app/actions/auth";
 import { Mascot } from "@/components/mascot";
-import { Icon } from "@/components/icons";
 import { fmtDate } from "@/lib/utils";
 import { db } from "@/lib/db";
 import PlanPicker from "./plan-picker";
@@ -24,25 +23,26 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
   const fresh = eligibleForTrial(org);
 
   const [title, blurb] = fresh
-    ? [`Start your ${PRICING.trialDays}-day free trial`, `Add a card to start recording for ${org.name}. You won't be charged until ${fmtDate(trialEnd!)}, and you can cancel any time before then.`]
+    ? ["Start your free trial", `Try everything free for ${PRICING.trialDays} days.`]
     : trialEnd
-    ? ["Add a card to keep your trial", `Your free trial runs until ${fmtDate(trialEnd)}. Add a card to keep using Scoop; you won't be charged until then. Cancel any time before and you pay nothing.`]
-    : onTrial
-      ? [`You've used your ${PRICING.trialHours} free hours`, "Add a card to keep recording. Your plan starts today."]
-      : ["canceled", "unpaid"].includes(org.billingStatus)
-        ? ["Restart Scoop", "Your summaries and tasks are still here. Add a card to start recording again."]
-        : ["Your free trial has ended", "Your summaries and tasks are still here. Add a card to keep recording."];
+      ? ["Add a card to keep your trial", `You're free until ${fmtDate(trialEnd)}.`]
+      : onTrial
+        ? [`You've used your ${PRICING.trialHours} free hours`, "Add a card to keep recording."]
+        : ["canceled", "unpaid"].includes(org.billingStatus)
+          ? ["Restart Scoop", "Your meetings and tasks are still here."]
+          : ["Your free trial has ended", "Your meetings and tasks are still here."];
+  const footnote = trialEnd ? `No charge until ${fmtDate(trialEnd)}. Cancel anytime.` : "Cancel anytime.";
 
   return (
     <main className="flex-1 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm">
         <section className="flex flex-col items-center text-center mb-6">
-          <Mascot pose="celebrate" size={112} />
-          <h1 className="text-2xl font-bold tracking-tight mt-3">{title}</h1>
-          <p className="text-ink-soft text-sm mt-1">{blurb}</p>
+          <Mascot pose="celebrate" size={80} />
+          <h1 className="text-2xl font-bold tracking-tight mt-2">{title}</h1>
+          <p className="text-ink-soft mt-1">{blurb}</p>
         </section>
 
-        {sp.canceled && <p className="rounded-md bg-butter-soft border border-copper text-copper-deep text-sm p-3 mb-4">Checkout was cancelled. Nothing was charged.</p>}
+        {sp.canceled && <p className="rounded-md bg-butter-soft border border-copper text-copper-deep text-sm p-3 mb-4 text-center">Checkout was cancelled. Nothing was charged.</p>}
         {typeof sp.error === "string" && <p className="rounded-md bg-clay-soft border border-clay text-clay text-sm p-3 mb-4">{sp.error === "admin_only" ? "Only an admin can add a card." : decodeURIComponent(sp.error)}</p>}
 
         {membership.isAdmin ? (
@@ -52,27 +52,17 @@ export default async function BillingStartPage({ searchParams }: PageProps<"/bil
             monthly={PRICING.seatMonthly}
             annual={PRICING.seatAnnualMonthly}
             cta={fresh ? "Start free trial" : trialEnd ? "Add card" : "Add card and start"}
-            note={trialEnd ? `Nothing charged today. Your first charge is on ${fmtDate(trialEnd)}.` : undefined}
+            footnote={footnote}
           />
         ) : (
-          <div className="card p-5">
-            <h2 className="font-semibold">An admin needs to add a card</h2>
-            <p className="text-sm text-muted mt-1">Ask {admins.map((a) => `${a.name} (${a.email})`).join(" or ") || "your admin"} to sign in and add one. You&apos;ll be able to record again the moment they do.</p>
+          <div className="card p-5 text-center">
+            <p className="text-sm text-ink-soft">Ask {admins.map((a) => a.name).join(" or ") || "your admin"} to sign in and add a card. You&apos;ll have access the moment they do.</p>
           </div>
         )}
 
-        <ul className="mt-4 text-sm space-y-1.5 px-1">
-          {[...(fresh ? [`${PRICING.trialHours} recording hours to try it, phone calls included`] : []), "Unlimited meetings, summaries and tasks", "Ask Rocky, calendar auto-join, every feature", "Add people any time; you pay for who joins", "Cancel any time from Settings"].map((t) => (
-            <li key={t} className="flex gap-2"><Icon name="check" size={16} className="text-grass mt-0.5 shrink-0" />{t}</li>
-          ))}
-        </ul>
-
-        <p className="text-xs text-muted mt-5">
-          By adding a card you agree to the <Link href="/terms" className="text-merle underline">Terms of Service</Link>{trialEnd ? ", including that your plan starts automatically when the trial ends and renews unless you cancel." : ", including automatic renewal unless you cancel."}
-        </p>
-        <div className="text-xs text-muted mt-4 flex flex-wrap gap-x-4 gap-y-1">
-          {!blocked && <Link href="/dashboard" className="underline">Back to Scoop</Link>}
-          <form action={signOutAction}>Signed in as {membership.email}. <button className="underline">Not you? Sign out</button></form>
+        <div className="text-xs text-muted mt-6 text-center space-y-1">
+          <p>By continuing you agree to the <Link href="/terms" className="underline">Terms</Link>.{!blocked && <> · <Link href="/dashboard" className="underline">Back to Scoop</Link></>}</p>
+          <form action={signOutAction}>{membership.email} · <button className="underline">Sign out</button></form>
         </div>
       </div>
     </main>

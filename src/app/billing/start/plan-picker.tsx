@@ -11,54 +11,45 @@ function Submit({ label }: { label: string }) {
   return <button className="btn-primary w-full" disabled={pending}>{pending ? "Opening checkout…" : label}</button>;
 }
 
-/** One plan: pick monthly or annual and see the total for the team before going to Stripe. */
-export default function PlanPicker({ seats, invited = 0, monthly, annual, cta, note }: { seats: number; invited?: number; monthly: number; annual: number; cta: string; note?: string }) {
+/** One plan: pick monthly or annual and see the total before going to Stripe. */
+export default function PlanPicker({ seats, invited = 0, monthly, annual, cta, footnote }: { seats: number; invited?: number; monthly: number; annual: number; cta: string; footnote?: string }) {
   const [interval, pickInterval] = useState<"month" | "year">("year");
   const per = interval === "year" ? annual : monthly;
-  const people = `${seats} ${seats === 1 ? "person" : "people"}`;
+  const who = seats === 1 && invited > 0 ? "you" : `${seats} ${seats === 1 ? "person" : "people"}`;
 
   return (
-    <form action={startCheckoutAction} className="card p-5 space-y-4">
+    <form action={startCheckoutAction} className="card p-6 text-center">
       <input type="hidden" name="interval" value={interval} />
-      <div role="radiogroup" aria-label="Billing" className="grid grid-cols-2 gap-1 rounded-xl bg-paper-2 p-1 text-sm">
+      <div role="radiogroup" aria-label="Billing" className="inline-grid grid-cols-2 gap-1 rounded-full bg-paper-2 p-1 text-sm">
         {(
           [
-            ["year", "Annual", "save 20%"],
+            ["year", "Yearly", "-20%"],
             ["month", "Monthly", null],
           ] as const
-        ).map(([key, label, note]) => (
+        ).map(([key, label, tag]) => (
           <button
             key={key}
             type="button"
             role="radio"
             aria-checked={interval === key}
             onClick={() => pickInterval(key)}
-            className={`rounded-lg px-3 py-2 font-medium transition ${interval === key ? "bg-paper shadow-soft text-ink" : "text-muted hover:text-ink"}`}
+            className={`rounded-full px-4 py-1.5 font-medium transition ${interval === key ? "bg-paper shadow-soft text-ink" : "text-muted hover:text-ink"}`}
           >
             {label}
-            {note && <span className="ml-1.5 text-xs font-semibold text-grass">{note}</span>}
+            {tag && <span className="ml-1 text-xs font-semibold text-grass">{tag}</span>}
           </button>
         ))}
       </div>
 
-      <div>
-        <div className="text-3xl font-display font-bold">
-          {usd(per)}
-          <span className="text-base font-medium text-muted"> per person / month</span>
-        </div>
-        <p className="text-sm text-ink-soft mt-2" data-testid="plan-total">
-          {people} × {usd(per)} = <span className="font-semibold text-ink">{usd(seats * per)} a month</span>
-          {interval === "year" && <span className="text-muted">, billed {usd(seats * per * 12)} a year</span>}
-        </p>
-        {invited > 0 && (
-          <p className="text-xs text-muted mt-1">
-            {invited === 1 ? "Your invited teammate adds" : `Each of the ${invited} teammates you invited adds`} {usd(per)} a month once they join.
-          </p>
-        )}
-        {note && <p className="text-xs text-grass font-medium mt-1.5">{note}</p>}
-      </div>
+      <div className="mt-5 font-display font-bold text-5xl tracking-tight">{usd(per)}</div>
+      <div className="text-sm text-muted mt-1">per person / month</div>
+      <p className="text-sm text-ink-soft mt-4" data-testid="plan-total">
+        {usd(seats * per)}/mo for {who}
+        {invited > 0 && `, plus ${usd(per)} per teammate who joins`}
+      </p>
 
-      <Submit label={cta} />
+      <div className="mt-5"><Submit label={cta} /></div>
+      {footnote && <p className="text-xs text-muted mt-3">{footnote}</p>}
     </form>
   );
 }

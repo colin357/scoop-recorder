@@ -81,26 +81,35 @@ export default function AppNav({ items, orgName, user, signOut, isAdmin, superAd
 
   return (
     <>
-      {/* Mobile top bar */}
+      {/* Mobile top bar: the bottom bar holds the main tabs; everything else lives under the avatar. */}
       <header className="md:hidden sticky top-0 z-40 bg-paper border-b edge flex items-center gap-3 px-4 py-2">
-        <button aria-label="Menu" onClick={() => setOpen((o) => !o)} className="btn-ghost !px-2"><Icon name="menu" size={22} /></button>
-        <LogoMark size={32} />
-        <div className="min-w-0"><Wordmark height={14} /><div className="text-[11px] text-muted truncate">{orgName}</div></div>
-        <div className="ml-auto flex items-center gap-1">
+        <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0" title="Home">
+          <LogoMark size={32} />
+          <div className="min-w-0"><Wordmark height={14} /><div className="text-[11px] text-muted truncate">{orgName}</div></div>
+        </Link>
+        <div className="ml-auto flex items-center gap-1.5">
           <Bell alerts={alerts} />
           <Link href="/meetings/new" className="btn-accent !py-1.5 text-xs"><Icon name="mic" size={14} />Record</Link>
+          <button type="button" aria-label="Account and settings" aria-expanded={open} onClick={() => setOpen((o) => !o)} className="ml-0.5 rounded-full">
+            <Avatar name={user.name} size="md" />
+          </button>
         </div>
       </header>
       {open && (
-        <div className="md:hidden fixed inset-0 z-50 bg-ink/40" onClick={() => setOpen(false)}>
-          <nav className="absolute left-0 top-0 h-full w-72 bg-paper p-3 overflow-y-auto border-r edge" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-1 pb-3"><span className="font-display font-semibold">Menu</span><button className="btn-ghost !px-2" onClick={() => setOpen(false)}><Icon name="close" size={18} /></button></div>
-            {links()}
-            <div className="mt-6 border-t border-line pt-3 text-sm px-1">
-              <div className="truncate font-medium">{user.name}</div>
+        <div className="md:hidden fixed inset-0 z-50" onClick={() => setOpen(false)}>
+          <nav className="absolute right-3 top-14 w-64 card p-2 shadow-lift" onClick={(e) => e.stopPropagation()}>
+            <div className="px-3 py-2 border-b edge mb-1">
+              <div className="truncate text-sm font-medium">{user.name}</div>
               <div className="truncate text-xs text-muted">{user.email}</div>
-              <form action={signOut} className="mt-3"><button className="w-full flex items-center gap-2 rounded-lg border edge px-3 py-2 text-sm text-ink-soft hover:bg-paper-2 hover:text-ink"><Icon name="logout" size={16} />Sign out</button></form>
             </div>
+            {[...items.slice(6).map((n) => ({ href: n.href, label: n.label, icon: n.icon })), { href: "/search", label: "Search", icon: "search" as IconName }, ...settings.map((n) => ({ href: n.href, label: n.label, icon: "settings" as IconName }))].map((n) => (
+              <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm ${active(n.href) ? "bg-paper-2 text-ink font-semibold" : "text-ink-soft hover:bg-paper-2"}`}>
+                <Icon name={n.icon} size={16} className="text-muted" />{n.label}
+              </Link>
+            ))}
+            <form action={signOut} className="border-t edge mt-1 pt-1">
+              <button className="w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-ink-soft hover:bg-paper-2"><Icon name="logout" size={16} className="text-muted" />Sign out</button>
+            </form>
           </nav>
         </div>
       )}
