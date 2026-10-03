@@ -15,10 +15,11 @@ function Window({ title, children, className = "" }: { title: string; children: 
 }
 
 const TASKS = [
-  { t: "Send revised pricing table to Acme", who: "Dana K.", due: "Wed", tone: "bg-butter" },
-  { t: "Set up demo environment with Acme branding", who: "Jordan M.", due: "Sep 26", tone: "bg-sky" },
+  // Soonest first.
   { t: "Request brand assets from client", who: "Marcus L.", due: "Today", tone: "bg-clay-soft" },
+  { t: "Send revised pricing table to Acme", who: "Dana K.", due: "Wed", tone: "bg-butter" },
   { t: "Schedule follow-up call after proposal", who: "Marcus L.", due: "Mon", tone: "bg-grass-soft" },
+  { t: "Set up demo environment with Acme branding", who: "Jordan M.", due: "Sep 26", tone: "bg-sky" },
 ];
 
 /** The big hero mockup: a meeting page with summary and assigned tasks. */
@@ -62,7 +63,7 @@ export function SlackVignette() {
           <div>
             <div className="font-semibold">Rocky <span className="ml-1 rounded bg-paper-2 px-1 text-[10px] font-medium text-muted">APP</span> <span className="text-xs text-muted font-normal">2:41 PM</span></div>
             <p className="text-ink-soft mt-1"><b>Acme kickoff</b> — summary ready. Proposal due Thursday, demo env in two weeks, kickoff moved to the 24th.</p>
-            <p className="text-ink-soft mt-2"><b>Tasks (4)</b><br />• Send revised pricing table — <span className="text-merle">@dana</span>, due Wed<br />• Set up demo environment — <span className="text-merle">@jordan</span>, due Sep 26<br />• Request brand assets — <span className="text-merle">@marcus</span>, due today</p>
+            <p className="text-ink-soft mt-2"><b>Tasks (4)</b><br />• Request brand assets — <span className="text-merle">@marcus</span>, due today<br />• Send revised pricing table — <span className="text-merle">@dana</span>, due Wed<br />• Set up demo environment — <span className="text-merle">@jordan</span>, due Sep 26</p>
           </div>
         </div>
       </div>
@@ -92,7 +93,7 @@ export function ReviewVignette() {
       <div className="p-4 text-sm">
         <div className="flex items-center gap-3"><Mascot pose="write" size={36} className="shrink-0 !animate-none" /><div><div className="font-semibold">3 drafted tasks waiting for your review</div><div className="text-xs text-muted">Nobody has been notified yet.</div></div><span className="ml-auto rounded-full bg-ink text-paper px-3 py-1 text-xs font-semibold">Approve all</span></div>
         <ul className="mt-3 divide-y edge text-xs">
-          {["Send revised pricing table — Dana K.", "Set up demo environment — Jordan M.", "Request brand assets — Marcus L."].map((t) => (
+          {["Request brand assets — Marcus L.", "Send revised pricing table — Dana K.", "Set up demo environment — Jordan M."].map((t) => (
             <li key={t} className="py-2 flex items-center justify-between"><span className="text-ink-soft">{t}</span><span className="flex gap-2 text-[11px]"><span className="text-merle font-semibold">Approve</span><span className="text-muted">Discard</span></span></li>
           ))}
         </ul>

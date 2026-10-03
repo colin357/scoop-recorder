@@ -50,7 +50,6 @@ export default async function Home() {
       {/* Product mockup */}
       <section className="max-w-6xl mx-auto px-6 pb-20">
         <MeetingMockup />
-        <p className="text-center text-xs text-muted mt-4">A real meeting page: summary, decisions, and every task with its owner, due date and the moment it came from.</p>
       </section>
 
       {/* How teams use */}
