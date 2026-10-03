@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { phoneAccess, recordingAllowed } from "@/lib/billing";
 import { attr, callErrors, readTwilioWebhook, say, scoopNumber, twiml, voiceHook } from "@/lib/twilio";
 import { explainTwilioError, failCall, finishPhoneCall, recordingNotice } from "@/lib/phone";
+import { formatPhone } from "@/lib/phone-format";
 
 export const maxDuration = 300;
 
@@ -68,7 +69,8 @@ export async function POST(req: Request, { params }: RouteContext<"/api/twilio/v
       if (meeting && meeting.status === "joining") {
         const s = p.CallStatus;
         let reason: string;
-        if (s === "busy") reason = "Your phone was busy, so the call wasn't placed.";
+        const rocky = scoopNumber() ? formatPhone(scoopNumber()!) : "Rocky's number";
+        if (s === "busy") reason = `Your phone turned the call away before it rang, so it wasn't placed. If you weren't on another call, your carrier or phone is probably blocking unknown numbers: save ${rocky} as a contact and check your spam-call blocking.`;
         else if (s === "no-answer") reason = "You didn't pick up, so the call wasn't placed.";
         else if (s === "canceled") reason = "The call was cancelled before it rang.";
         else if (s === "failed") {
@@ -78,7 +80,7 @@ export async function POST(req: Request, { params }: RouteContext<"/api/twilio/v
           reason = `Twilio couldn't ring your phone${code ? ` (error ${code})` : ""}. ${explainTwilioError(code)}`;
           console.error("phone call failed", { meetingId: meeting.id, callSid: p.CallSid, errorCode: code, sipResponse: p.SipResponseCode ?? null, twilio: errors });
         } else reason = "The call ended before it connected.";
-        console.warn("phone call did not connect", { meetingId: meeting.id, callSid: p.CallSid, status: s });
+        console.warn("phone call did not connect", { meetingId: meeting.id, callSid: p.CallSid, status: s, sipResponse: p.SipResponseCode ?? null });
         await failCall(meeting.id, reason);
       }
       return new Response(null, { status: 204 });
