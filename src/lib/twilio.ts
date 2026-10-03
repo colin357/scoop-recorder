@@ -72,6 +72,29 @@ export async function placeCall(opts: { to: string; url: string; statusCallback:
   });
 }
 
+/**
+ * Ring a number and have Rocky read out a code. Used to confirm someone owns a
+ * number that is already a verified caller ID on the Twilio account (Twilio
+ * won't run its own verification call twice).
+ */
+export async function callWithCode(to: string, code: string) {
+  const spoken = code.split("").join(", ");
+  const body = `<Pause length="1"/>${say(`G'day, it's Rocky from Scoop. Your verification code is ${spoken}. Again, your code is ${spoken}.`)}`;
+  return twilioApi<{ sid: string }>("/Calls.json", {
+    form: { To: to, From: scoopNumber() ?? undefined, Twiml: `<Response>${body}</Response>`, Timeout: "30" },
+  });
+}
+
+/** Errors Twilio logged for a call, newest first. Best effort: [] if the lookup fails. */
+export async function callErrors(sid: string): Promise<{ code: number; text: string }[]> {
+  try {
+    const r = await twilioApi<{ notifications?: { error_code: string | null; message_text: string | null }[] }>(`/Calls/${sid}/Notifications.json`);
+    return (r.notifications ?? []).filter((n) => n.error_code).map((n) => ({ code: Number(n.error_code), text: decodeURIComponent((n.message_text ?? "").replace(/\+/g, " ")) }));
+  } catch {
+    return [];
+  }
+}
+
 export async function getCall(sid: string) {
   return twilioApi<{ sid: string; status: string; end_time: string | null }>(`/Calls/${sid}.json`);
 }

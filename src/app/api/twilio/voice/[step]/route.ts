@@ -1,8 +1,8 @@
 import { NextResponse, after } from "next/server";
 import { db } from "@/lib/db";
 import { phoneAccess, recordingAllowed } from "@/lib/billing";
-import { attr, readTwilioWebhook, say, scoopNumber, twiml, voiceHook } from "@/lib/twilio";
-import { failCall, finishPhoneCall, recordingNotice } from "@/lib/phone";
+import { attr, callErrors, readTwilioWebhook, say, scoopNumber, twiml, voiceHook } from "@/lib/twilio";
+import { explainTwilioError, failCall, finishPhoneCall, recordingNotice } from "@/lib/phone";
 
 export const maxDuration = 300;
 
@@ -67,7 +67,19 @@ export async function POST(req: Request, { params }: RouteContext<"/api/twilio/v
     case "status": {
       if (meeting && meeting.status === "joining") {
         const s = p.CallStatus;
-        await failCall(meeting.id, ["busy", "no-answer", "failed", "canceled"].includes(s) ? "You didn't pick up, so the call wasn't placed." : "The call ended before it connected.");
+        let reason: string;
+        if (s === "busy") reason = "Your phone was busy, so the call wasn't placed.";
+        else if (s === "no-answer") reason = "You didn't pick up, so the call wasn't placed.";
+        else if (s === "canceled") reason = "The call was cancelled before it rang.";
+        else if (s === "failed") {
+          // Twilio couldn't ring the user at all. Find out why so it shows on the call and in the logs.
+          const errors = p.CallSid ? await callErrors(p.CallSid) : [];
+          const code = Number(p.ErrorCode) || errors[0]?.code || null;
+          reason = `Twilio couldn't ring your phone${code ? ` (error ${code})` : ""}. ${explainTwilioError(code)}`;
+          console.error("phone call failed", { meetingId: meeting.id, callSid: p.CallSid, errorCode: code, sipResponse: p.SipResponseCode ?? null, twilio: errors });
+        } else reason = "The call ended before it connected.";
+        console.warn("phone call did not connect", { meetingId: meeting.id, callSid: p.CallSid, status: s });
+        await failCall(meeting.id, reason);
       }
       return new Response(null, { status: 204 });
     }

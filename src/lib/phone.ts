@@ -50,6 +50,22 @@ export async function startBridgeCall(input: {
   return meeting;
 }
 
+// The Twilio errors people actually hit when a call can't ring, in plain words.
+const TWILIO_ERRORS: Record<number, string> = {
+  21210: "The Scoop number in TWILIO_PHONE_NUMBER isn't a number on the Twilio account.",
+  21211: "That isn't a valid phone number.",
+  21212: "The Scoop number in TWILIO_PHONE_NUMBER isn't in the right format (it should look like +12395550100).",
+  21215: "Twilio isn't allowed to call that country yet. Turn it on under Voice → Settings → Geo permissions.",
+  21219: "The Twilio account is still a trial, so it can only call numbers verified in Twilio. Upgrade the account to call anyone.",
+  13225: "Twilio blocked the call as possible fraud. Check Voice → Settings → Geo permissions.",
+  13227: "Twilio isn't allowed to call that country yet. Turn it on under Voice → Settings → Geo permissions.",
+  32021: "The Twilio account doesn't have enough balance to place calls.",
+};
+
+export function explainTwilioError(code?: number | null) {
+  return (code && TWILIO_ERRORS[code]) || "Details are in Twilio under Monitor → Logs → Calls.";
+}
+
 export async function failCall(meetingId: string, error: string) {
   await db.meeting.updateMany({ where: { id: meetingId, status: { in: ["joining", "recording"] } }, data: { status: "failed", error, endedAt: new Date() } });
 }

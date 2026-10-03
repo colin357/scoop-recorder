@@ -60,3 +60,23 @@ Call with Rocky ≈ $0.039 / min (two legs, two-channel transcription), about $2
 ## What customers pay
 
 Phone calls are a workspace add-on: $25 / month ($240 / year on annual plans) with 6 hours of calls included, then $3.50 per extra hour, invoiced on the 1st of the next month by `/api/cron/bill-overage`. Calls are included in the free trial (they count toward its 5 recording hours) and for complimentary workspaces. Admins turn the add-on on and off under Settings → Billing; the Calls tab offers it when it's off.
+
+## Verifying a user's phone
+
+Every number is confirmed by a phone call before Scoop uses it:
+
+- **New to the Twilio account:** Twilio's caller-ID verification. Scoop shows a 6-digit code and Twilio rings the phone; the user types the code on the keypad. This also lets calls show the user's own number as caller ID.
+- **Already a verified caller ID on the account** (for example the number you used to open the Twilio account): Twilio won't verify it twice, so Rocky rings the number and reads out a 6-digit code, which the user types into Scoop. Codes expire after 10 minutes and allow 5 tries.
+
+## When a call fails
+
+If Twilio can't ring the user, the call page shows Twilio's error code with a plain-English reason, and the function log has a `phone call failed` line with the call SID. Common causes:
+
+| Error | Meaning |
+|---|---|
+| 21219 | Trial account: it can only call numbers verified in Twilio. Upgrade the account. |
+| 21215 / 13227 | Geo permissions: allow the destination country under Voice → Settings → Geo permissions. |
+| 21210 / 21212 | `TWILIO_PHONE_NUMBER` isn't a number on the account, or isn't in +1XXXXXXXXXX format. |
+| 32021 | Not enough Twilio balance. |
+
+Full details for any call are in the Twilio console under Monitor → Logs → Calls.
