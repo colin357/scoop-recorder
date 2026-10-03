@@ -29,25 +29,54 @@ export default async function CallsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Calls" count={calls.length} />
+      <PageHeader title="Calls" count={calls.length || undefined} />
 
       {ready && !access.ok ? (
-        <section className="card p-5 max-w-xl flex items-start gap-4">
-          <Mascot pose="listen" size={72} className="shrink-0" />
-          <div className="min-w-0">
-            <h2 className="font-semibold">Record your phone calls too</h2>
-            <p className="text-sm text-ink-soft mt-1">
-              {access.upsell
-                ? <>Rocky joins your calls, then writes the summary and tasks just like a meeting. {fmtUsd(PRICING.phoneMonthly)}/month for the workspace, {PRICING.phoneIncludedHours} hours of calls included, {fmtUsd(PRICING.phoneOveragePerHour)} per extra hour.</>
-                : access.reason}
-            </p>
-            {access.upsell && (membership.isAdmin ? (
-              org.stripeSubscriptionId
-                ? <form action={setPhoneAddonAction.bind(null, true)} className="mt-3"><button className="btn-accent">Turn on phone calls · {fmtUsd(PRICING.phoneMonthly)}/mo</button></form>
-                : <Link href="/settings/billing" className="btn-accent mt-3 inline-flex">Go to billing</Link>
-            ) : <p className="text-xs text-muted mt-3">Ask an admin to turn on phone calls under Settings → Billing.</p>)}
-          </div>
-        </section>
+        access.upsell ? (
+          <section className="card overflow-hidden grid lg:grid-cols-[1.1fr_1fr]">
+            <div className="p-6 md:p-10">
+              <Mascot pose="listen" size={64} />
+              <h2 className="text-2xl font-semibold tracking-tight mt-4">Record your phone calls</h2>
+              <p className="text-ink-soft mt-2 max-w-md">Rocky joins the call, then writes the summary and hands out the tasks, just like your meetings.</p>
+              <ul className="mt-5 space-y-2 text-sm">
+                {["Rocky rings you, then dials the other person", "Or merge Rocky into a call you're already on", `${PRICING.phoneIncludedHours} hours of calls a month included`].map((t) => (
+                  <li key={t} className="flex gap-2.5"><Icon name="check" size={16} className="text-grass mt-0.5 shrink-0" />{t}</li>
+                ))}
+              </ul>
+              <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2">
+                {membership.isAdmin ? (
+                  org.stripeSubscriptionId
+                    ? <form action={setPhoneAddonAction.bind(null, true)}><button className="btn-accent">Turn on phone calls</button></form>
+                    : <Link href="/settings/billing" className="btn-accent">Go to billing</Link>
+                ) : <span className="text-sm text-muted">Ask an admin to turn this on.</span>}
+                <span className="text-sm text-muted">{fmtUsd(PRICING.phoneMonthly)}/month for the whole workspace</span>
+              </div>
+              <p className="text-xs text-muted mt-3">{fmtUsd(PRICING.phoneOveragePerHour)} per extra hour. Turn it off anytime.</p>
+            </div>
+
+            {/* What a recorded call turns into */}
+            <div className="hidden lg:flex items-center justify-center bg-paper-2 p-10" aria-hidden>
+              <div className="w-full max-w-sm rounded-2xl bg-paper border edge shadow-soft p-5 text-sm">
+                <div className="flex items-center gap-3">
+                  <span className="h-9 w-9 rounded-xl bg-sky text-merle flex items-center justify-center"><Icon name="phone" size={16} /></span>
+                  <div><div className="font-semibold">Call with Jess Park</div><div className="text-xs text-muted">14 min · just now</div></div>
+                </div>
+                <p className="text-ink-soft mt-4 leading-relaxed">Jess wants to see the waterfront listing Saturday and needs the HOA docs before making an offer.</p>
+                <div className="mt-4 space-y-2">
+                  {[["Send HOA documents to Jess", "Today", "bg-clay-soft"], ["Book Saturday showing", "Fri", "bg-butter"]].map(([t, d, tone]) => (
+                    <div key={t} className="flex items-center gap-2.5 rounded-xl border edge px-3 py-2">
+                      <Icon name="check" size={14} className="text-muted" />
+                      <span className="flex-1 truncate">{t}</span>
+                      <span className={`badge text-ink ${tone}`}>{d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <Empty title="Recording is paused." pose="listen">{access.reason}</Empty>
+        )
       ) : ready ? (
         <div className="max-w-xl">
           <PhoneCallForm myPhone={user.phoneVerifiedAt ? user.phone : null} rockyNumber={scoopNumber()} projects={projects.map((p) => ({ id: p.id, name: p.name }))} />
@@ -59,7 +88,7 @@ export default async function CallsPage() {
         </Empty>
       )}
 
-      <section>
+      {(calls.length > 0 || (ready && access.ok)) && <section>
         <h2 className="font-semibold mb-3">Recent calls</h2>
         {calls.length === 0 ? (
           <p className="text-sm text-muted">No calls recorded yet.</p>
@@ -89,7 +118,7 @@ export default async function CallsPage() {
             })}
           </ul>
         )}
-      </section>
+      </section>}
     </div>
   );
 }
