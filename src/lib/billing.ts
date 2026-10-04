@@ -404,11 +404,30 @@ export async function createCheckoutUrl(org: Organization, opts: { interval: Int
     allow_promotion_codes: true,
     billing_address_collection: "auto",
     subscription_data: { metadata: { orgId: org.id }, ...trial },
-    success_url: `${appUrl()}/billing/started`,
+    success_url: `${appUrl()}/billing/started?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl()}/billing/start?canceled=1`,
   });
   if (!session.url) throw new Error("Stripe did not return a checkout URL");
   return session.url;
+}
+
+/**
+ * What a finished Checkout session bought, for the Meta Purchase event: the
+ * plan's full price for the period (people × price; a year's worth on yearly
+ * plans), even when a free trial means nothing is charged today. Only for
+ * this organization's own sessions.
+ */
+export async function checkoutPurchase(org: Organization, sessionId: string): Promise<{ value: number; currency: string } | null> {
+  if (!stripeConfigured() || !/^cs_[A-Za-z0-9_]+$/.test(sessionId)) return null;
+  try {
+    const session = await stripe().checkout.sessions.retrieve(sessionId, { expand: ["line_items"] });
+    if (session.client_reference_id !== org.id || session.status !== "complete") return null;
+    const cents = (session.line_items?.data ?? []).reduce((sum, li) => sum + (li.price?.unit_amount ?? 0) * (li.quantity ?? 1), 0);
+    return cents > 0 ? { value: cents / 100, currency: (session.currency ?? "usd").toUpperCase() } : null;
+  } catch (e) {
+    console.error("checkoutPurchase", e);
+    return null;
+  }
 }
 
 export async function createPortalUrl(org: Organization, returnPath = "/settings/billing") {

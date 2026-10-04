@@ -10,7 +10,8 @@ import { useEffect } from "react";
  * detection is off, so the pixel sends only what we track explicitly:
  *   PageView              public pages
  *   CompleteRegistration  a new account reaches onboarding (once per browser)
- *   StartTrial            card added at checkout (/billing/started, via trackMeta)
+ *   Purchase              subscription bought at checkout (/billing/started, via trackMeta),
+ *                         with the plan's value and currency
  */
 export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "1397100318741972";
 
@@ -42,13 +43,13 @@ function pixel(): Fbq {
   return n;
 }
 
-/** Send one standard event (loads the pixel if needed). */
-export function trackMeta(event: string) {
-  pixel()("track", event);
+/** Send one standard event (loads the pixel if needed). `eventId` lets Meta drop duplicates. */
+export function trackMeta(event: string, params?: Record<string, unknown>, eventId?: string) {
+  pixel()("track", event, params ?? {}, eventId ? { eventID: eventId } : {});
 }
 
 /** True if this browser already sent the event; marks it sent otherwise. */
-function seen(key: string) {
+export function seen(key: string) {
   try {
     if (localStorage.getItem(key)) return true;
     localStorage.setItem(key, "1");
