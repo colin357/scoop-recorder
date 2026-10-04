@@ -1,11 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState } from "react";
 import { startPhoneCallAction } from "@/app/actions/phone";
 import { Icon } from "@/components/icons";
 import { formatPhone } from "@/lib/phone-format";
 import { ProjectOptions } from "@/components/project-options";
+import PhoneVerify from "@/components/phone-verify";
 
 type Project = { id: string; name: string };
 
@@ -13,12 +13,15 @@ type Project = { id: string; name: string };
 export default function PhoneCallForm({ myPhone, rockyNumber, projects }: { myPhone: string | null; rockyNumber: string | null; projects: Project[] }) {
   const [state, action, pending] = useActionState(startPhoneCallAction, {});
 
+  // Verify right here; once it's done the page refreshes into the dialer.
   if (!myPhone) {
     return (
-      <section className="card p-5 flex flex-wrap items-center gap-4">
-        <span className="h-10 w-10 shrink-0 rounded-full bg-flame-soft text-flame-deep flex items-center justify-center"><Icon name="phone" size={18} /></span>
-        <p className="flex-1 min-w-48 text-sm text-ink-soft">Add your mobile so Rocky knows which phone to ring.</p>
-        <Link href="/settings/profile" className="btn-primary">Verify your phone</Link>
+      <section className="card p-5 space-y-3">
+        <div className="flex items-center gap-3">
+          <span className="h-10 w-10 shrink-0 rounded-full bg-flame-soft text-flame-deep flex items-center justify-center"><Icon name="phone" size={18} /></span>
+          <h2 className="font-semibold">First, add your mobile</h2>
+        </div>
+        <PhoneVerify intro={<>Rocky rings this phone to start each call, and the people you call see it as the caller ID. We&apos;ll call it once with a code to confirm it&apos;s yours.</>} />
       </section>
     );
   }

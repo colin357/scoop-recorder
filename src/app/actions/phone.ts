@@ -120,7 +120,7 @@ export async function startPhoneCallAction(_: CallState, form: FormData): Promis
   const { user, org, membership } = await requireOrg();
   if (!twilioConfigured()) return { error: "Phone calls aren't set up yet." };
   const me = await db.user.findUniqueOrThrow({ where: { id: user.id }, select: { phone: true, phoneVerifiedAt: true } });
-  if (!me.phone || !me.phoneVerifiedAt) return { error: "Verify your mobile number in Settings → Profile first." };
+  if (!me.phone || !me.phoneVerifiedAt) return { error: "Verify your mobile number first." };
   const contactPhone = normalizePhone(String(form.get("contactPhone") ?? ""));
   if (!contactPhone) return { error: "Enter the number to call, like (239) 555-0123." };
   if (contactPhone === me.phone) return { error: "That's your own number." };
