@@ -404,7 +404,7 @@ export async function createCheckoutUrl(org: Organization, opts: { interval: Int
     allow_promotion_codes: true,
     billing_address_collection: "auto",
     subscription_data: { metadata: { orgId: org.id }, ...trial },
-    success_url: `${appUrl()}/settings/billing?checkout=success`,
+    success_url: `${appUrl()}/billing/started`,
     cancel_url: `${appUrl()}/billing/start?canceled=1`,
   });
   if (!session.url) throw new Error("Stripe did not return a checkout URL");

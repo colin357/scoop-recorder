@@ -11,7 +11,7 @@ export const LEGAL = {
   privacyEmail: "privacy@scooprecorder.com",
   /** Governing law for the Terms. */
   governingLaw: "the laws of the United States and of the state in which Scoop is organized",
-  effectiveDate: "September 12, 2026",
+  effectiveDate: "October 4, 2026",
   /** Third parties that process customer data on Scoop's behalf. */
   subprocessors: [
     { name: "Vercel", purpose: "Application hosting and serverless compute", location: "United States" },
