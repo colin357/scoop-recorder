@@ -199,3 +199,18 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 }
 .notif-in { display: grid; animation: notif-in 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @media (prefers-reduced-motion: reduce) { .notif-in { animation: none; } }
+
+/* Onboarding: big friendly questions, one page at a time. */
+@keyframes onboard-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.onboard-step { animation: onboard-in 380ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .onboard-step { animation: none; } }
+@utility onboard-q { @apply font-display font-bold tracking-tight text-[28px] sm:text-[34px] leading-tight mt-5; }
+@utility onboard-sub { @apply text-ink-soft mt-2 text-base sm:text-lg; }
+@utility onboard-input { @apply text-xl !py-3.5 !px-4 rounded-2xl; }
+@utility onboard-chip { @apply inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium bg-paper transition hover:-translate-y-0.5; border-color: var(--color-edge); }
+@utility onboard-chip-on { @apply bg-ink text-paper; border-color: var(--color-ink); }
+@utility onboard-tile { @apply flex flex-col items-center justify-center rounded-2xl border bg-paper py-4 transition hover:-translate-y-0.5; border-color: var(--color-edge); }
+@utility onboard-tile-on { @apply bg-ink text-paper shadow-lift; border-color: var(--color-ink); }
+@utility onboard-mate { @apply rounded-2xl border bg-paper p-3; border-color: var(--color-edge); }
+@utility onboard-choice { @apply flex flex-col items-start text-left rounded-2xl border bg-paper p-5 transition hover:-translate-y-0.5; border-color: var(--color-edge); }
+@utility onboard-choice-on { @apply bg-ink text-paper shadow-lift; border-color: var(--color-ink); }
