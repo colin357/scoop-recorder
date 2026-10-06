@@ -57,6 +57,7 @@ export default function PrivacyPage() {
         <ul>
           <li>An activity log of actions taken in your workspace (who created, edited, approved or deleted what), server logs, and AI token counts per meeting so we can monitor cost and reliability.</li>
           <li>We use one strictly necessary cookie to keep you signed in.</li>
+          <li>We use PostHog to understand how people use {P}: which pages are visited and for how long, how far people get through setup, and recordings of sessions so we can find and fix confusing spots. Recordings never include what you type, and inside the app the text on the page (meeting titles, transcripts, summaries and tasks) is masked, so we see the layout and clicks but not the content. PostHog stores a cookie or local-storage identifier for this.</li>
           <li>On our public pages (the home page, sign-up and sign-in, pricing and checkout, and these policies) we use the Meta Pixel to measure our advertising. It may set cookies and tells Meta that a page was viewed. Inside the app it only reports two events, that an account was created and that a subscription was purchased (with its price), and never anything about your meetings, calls, tasks or transcripts. You can opt out of ad personalization in your Meta ad settings or with your browser&rsquo;s tracking protection.</li>
         </ul>
       </section>

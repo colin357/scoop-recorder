@@ -5,6 +5,7 @@ import MeetingPrompt from "@/components/meeting-prompt";
 import AppNav, { type Alert, type NavItem } from "@/components/app-nav";
 import CommandK from "@/components/command-k";
 import BillingBanner from "@/components/billing-banner";
+import { IdentifyUser } from "@/components/analytics";
 import Toast from "@/components/toast";
 import SupportWidget from "@/components/support-widget";
 import TimezoneSync from "@/components/timezone-sync";
@@ -50,13 +51,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex-1 flex flex-col md:flex-row min-h-screen">
       <AppNav items={NAV} orgName={org.name} user={{ name: user.name, email: user.email }} signOut={signOutAction} isAdmin={membership.isAdmin} superAdmin={superAdmin} alerts={alerts} />
-      <main className="flex-1 min-w-0 p-4 pb-20 md:p-8 md:pb-8">
+      {/* ph-mask: session recordings show layout and clicks here, not meeting or task text. */}
+      <main className="ph-mask flex-1 min-w-0 p-4 pb-20 md:p-8 md:pb-8">
         <div className="mx-auto w-full max-w-6xl"><BillingBanner org={org} isAdmin={membership.isAdmin} />{children}</div>
       </main>
-      <MeetingPrompt />
-      <CommandK />
-      <Toast />
-      <SupportWidget />
+      <div className="ph-mask contents">
+        <MeetingPrompt />
+        <CommandK />
+        <Toast />
+        <SupportWidget />
+      </div>
+      <IdentifyUser id={user.id} email={user.email} name={user.name} org={{ id: org.id, name: org.name }} />
       <TimezoneSync />
     </div>
   );

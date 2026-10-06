@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { startCheckoutAction } from "@/app/actions/billing";
+import { track } from "@/components/analytics";
 
 const usd = (n: number) => (Number.isInteger(n) ? `$${n.toLocaleString("en-US")}` : `$${n.toFixed(2)}`);
 
@@ -18,7 +19,7 @@ export default function PlanPicker({ seats, invited = 0, monthly, annual, cta, f
   const who = seats === 1 && invited > 0 ? "you" : `${seats} ${seats === 1 ? "person" : "people"}`;
 
   return (
-    <form action={startCheckoutAction} className="card p-6 text-center">
+    <form action={startCheckoutAction} onSubmit={() => track("checkout_opened", { interval, people: seats })} className="card p-6 text-center">
       <input type="hidden" name="interval" value={interval} />
       <div role="radiogroup" aria-label="Billing" className="inline-grid grid-cols-2 gap-1 rounded-full bg-paper-2 p-1 text-sm">
         {(

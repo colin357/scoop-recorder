@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, DM_Sans } from "next/font/google";
 import "./globals.css";
 import MetaPixel from "@/components/meta-pixel";
+import Analytics from "@/components/analytics";
 
 const display = Outfit({ variable: "--font-display", subsets: ["latin"], weight: ["500", "600", "700"] });
 const body = DM_Sans({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600"] });
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         {children}
         <MetaPixel />
+        <Analytics />
       </body>
     </html>
   );

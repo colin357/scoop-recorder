@@ -5,6 +5,7 @@ import { completeOnboarding, suggestStarterProjectsAction } from "@/app/actions/
 import { Mascot, type MascotPose } from "@/components/mascot";
 import { Icon } from "@/components/icons";
 import { Confetti } from "@/components/celebrate";
+import { track } from "@/components/analytics";
 
 /**
  * Onboarding: six short pages, one or two questions each. Progress is kept
@@ -44,7 +45,14 @@ const SIZES: { key: NonNullable<Answers["size"]>; label: string; sub: string; ro
   { key: "large", label: "16+", sub: "people", rows: 3 },
 ];
 
-const STEPS: { pose: MascotPose }[] = [{ pose: "wave" }, { pose: "listen" }, { pose: "write" }, { pose: "think" }, { pose: "think" }, { pose: "celebrate" }];
+const STEPS: { pose: MascotPose; name: string }[] = [
+  { pose: "wave", name: "company" },
+  { pose: "listen", name: "about" },
+  { pose: "write", name: "role" },
+  { pose: "think", name: "team" },
+  { pose: "think", name: "projects" },
+  { pose: "celebrate", name: "assignments" },
+];
 
 const emailOk = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
 
@@ -81,6 +89,11 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
     if (!loaded.current) return;
     try { localStorage.setItem(STORE, JSON.stringify({ step, a })); } catch {}
   }, [step, a]);
+
+  // Funnel analytics: which onboarding pages people reach.
+  useEffect(() => {
+    track("onboarding_step_viewed", { step: step + 1, step_name: STEPS[step].name, total_steps: STEPS.length });
+  }, [step]);
 
   const set = (patch: Partial<Answers>) => setA((x) => ({ ...x, ...patch }));
   const industry = INDUSTRIES.find((i) => i.key === a.industry) ?? null;
@@ -142,6 +155,13 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
       try {
         const description = [industry && industry.key !== "other" ? `${industry.label}.` : "", a.description.trim()].join(" ").trim();
         try { localStorage.removeItem(STORE); } catch {}
+        track("onboarding_completed", {
+          industry: a.industry,
+          team_size_choice: a.size,
+          teammates_added: namedMates.length,
+          projects_picked: pickedProjects.length,
+          review_before_assign: Boolean(a.review),
+        });
         await completeOnboarding({
           orgName: a.orgName,
           businessDescription: description || null,

@@ -72,6 +72,14 @@ Set `XAI_API_KEY` to use Grok (default model `grok-4`, override with `XAI_MODEL`
 4. Flow: after onboarding the admin lands on `/billing/start`, sees the team total (people × price, monthly or annual), and Stripe Checkout starts a 14-day trial with a card on file (5 recording hours, phone calls included); the plan starts automatically when the trial ends. People = members who have joined; the quantity is updated on invite acceptance and removal. Subscribers on the old Starter/Team prices keep them until they switch (Settings → Billing offers the switch when it saves them money).
 5. Operators can mark an organization complimentary from `/admin`. Prices and allowances live in `src/lib/billing.ts` (`PRICING`); change them there and bump the lookup keys in `PRICE_KEYS` so new prices get created.
 
+## Analytics (PostHog)
+
+1. Create a PostHog project and copy its project API key (`phc_…`). Set `NEXT_PUBLIC_POSTHOG_KEY` (and `NEXT_PUBLIC_POSTHOG_HOST=https://eu.i.posthog.com` for an EU project) in Vercel, then redeploy: `NEXT_PUBLIC_` values are baked in at build time.
+2. In PostHog → Settings → Session replay, turn on recordings. Web analytics (visitors, time on page, bounce) works out of the box.
+3. What's sent: page views and page leaves (time on page), autocaptured clicks, `onboarding_step_viewed` (step 1–6 with its name), `onboarding_completed`, `checkout_opened`, `checkout_completed`, and the signed-in person (`identify`) with their workspace as the `company` group.
+4. Privacy: typed input is always masked in recordings. Inside the app the content area has the `ph-mask` class, so recordings show layout and clicks but not meeting, transcript or task text, and clicked-element text isn't attached to events there. Add `ph-mask` (mask text) or `ph-no-capture` (don't record at all) to anything else sensitive.
+5. Suggested insights: a funnel of `$pageview` on `/signup` → `onboarding_step_viewed` steps 1–6 → `onboarding_completed` → `checkout_opened` → `checkout_completed`.
+
 ## Layout
 
 ```

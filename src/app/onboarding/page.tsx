@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth";
 import { LogoMark } from "@/components/logo";
 import OnboardingSetup from "./setup";
+import { IdentifyUser } from "@/components/analytics";
 
 export default async function OnboardingPage() {
   const user = await getCurrentUser();
@@ -16,6 +17,7 @@ export default async function OnboardingPage() {
         </div>
       </header>
       <OnboardingSetup self={{ name: user.name, email: user.email }} />
+      <IdentifyUser id={user.id} email={user.email} name={user.name} />
     </main>
   );
 }
