@@ -215,7 +215,7 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
 @utility onboard-choice { @apply flex flex-col items-start text-left rounded-2xl border bg-paper p-5 transition hover:-translate-y-0.5; border-color: var(--color-edge); }
 @utility onboard-choice-on { @apply bg-ink text-paper shadow-lift; border-color: var(--color-ink); }
 
-/* Celebrations (onboarding): confetti, paw prints, Rocky's hop and cheers. */
+/* Celebrations (onboarding): confetti, Rocky's hop and cheers. */
 .celebrate-layer { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 60; }
 @keyframes confetti-fall {
   0% { transform: translate3d(0, -10vh, 0) rotate(0); opacity: 1; }
@@ -223,12 +223,6 @@ h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0
   100% { transform: translate3d(var(--drift), 105vh, 0) rotate(var(--spin)); opacity: 0; }
 }
 .confetti-bit { position: absolute; top: 0; animation-name: confetti-fall; animation-timing-function: cubic-bezier(0.25, 0.6, 0.4, 1); animation-fill-mode: both; }
-@keyframes paw-rise {
-  0% { transform: translateY(0) rotate(var(--tilt)) scale(0.6); opacity: 0; }
-  15% { opacity: 1; transform: translateY(-8vh) rotate(var(--tilt)) scale(1); }
-  100% { transform: translateY(-70vh) rotate(var(--tilt)) scale(1); opacity: 0; }
-}
-.paw-bit { position: absolute; bottom: -2rem; animation-name: paw-rise; animation-timing-function: ease-out; animation-fill-mode: both; }
 @keyframes rocky-hop {
   0% { transform: translateY(0) rotate(0); }
   30% { transform: translateY(-14px) rotate(-4deg); }

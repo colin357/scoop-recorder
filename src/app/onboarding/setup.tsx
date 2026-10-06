@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { completeOnboarding, suggestStarterProjectsAction } from "@/app/actions/onboarding";
 import { Mascot, type MascotPose } from "@/components/mascot";
 import { Icon } from "@/components/icons";
-import { Confetti, PawBurst } from "@/components/celebrate";
+import { Confetti } from "@/components/celebrate";
 
 /**
  * Onboarding: six short pages, one or two questions each. Progress is kept
@@ -55,14 +55,13 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [suggesting, setSuggesting] = useState(false);
-  // Little celebrations between some pages: a burst on screen and a cheer from Rocky.
-  const [burst, setBurst] = useState<{ kind: "confetti" | "paws"; key: number; pieces?: number } | null>(null);
+  // Rocky cheers on a couple of pages, and confetti plays once, after the team page.
+  const [burst, setBurst] = useState<number | null>(null);
   const [cheer, setCheer] = useState<{ step: number; text: string } | null>(null);
-  const celebrate = (kind: "confetti" | "paws", forStep: number, text: string, pieces?: number) => {
+  const confetti = () => {
     const key = Date.now();
-    setBurst({ kind, key, pieces });
-    setCheer({ step: forStep, text });
-    setTimeout(() => setBurst((b) => (b?.key === key ? null : b)), 3200);
+    setBurst(key);
+    setTimeout(() => setBurst((b) => (b === key ? null : b)), 3200);
   };
   const loaded = useRef(false);
   const suggestedFor = useRef<string | null>(null);
@@ -113,8 +112,11 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
   const goTo = (n: number) => {
     setError(null);
     if (n === 4) loadIdeas();
-    if (n === 1 && step === 0) celebrate("paws", 1, "Love that name! 🐶");
-    if (n === 4 && step === 3) celebrate("confetti", 4, namedMates.length ? `What a crew! ${namedMates.length + 1} of you 🎉` : "Solo and mighty! 💪");
+    if (n === 1 && step === 0) setCheer({ step: 1, text: "Love that name! 🐶" });
+    if (n === 4 && step === 3) {
+      setCheer({ step: 4, text: namedMates.length ? `What a crew! ${namedMates.length + 1} of you 🎉` : "Solo and mighty! 💪" });
+      confetti();
+    }
     setStep(n);
   };
 
@@ -136,12 +138,7 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
     if (step === 3 && missingEmail) { setError(`Add an email for ${missingEmail.name.trim()} so we can invite them.`); return; }
     if (!canNext) return;
     if (step < STEPS.length - 1) { goTo(step + 1); return; }
-    // The big finish: confetti, then set everything up while it falls.
-    celebrate("confetti", step, "Let's do this! 🎉", 160);
-    let reduced = false;
-    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch {}
     start(async () => {
-      if (!reduced) await new Promise((r) => setTimeout(r, 1100));
       try {
         const description = [industry && industry.key !== "other" ? `${industry.label}.` : "", a.description.trim()].join(" ").trim();
         try { localStorage.removeItem(STORE); } catch {}
@@ -340,8 +337,7 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
           </div>
         </div>
       </form>
-      {burst?.kind === "confetti" && <Confetti burstKey={burst.key} pieces={burst.pieces} />}
-      {burst?.kind === "paws" && <PawBurst burstKey={burst.key} />}
+      {burst && <Confetti burstKey={burst} />}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 /**
- * One-off celebration overlays. Render with a new `burstKey` to replay;
+ * One-off confetti overlay. Render with a new `burstKey` to replay;
  * pieces remove themselves visually after the animation (the parent clears
  * the burst a moment later). Nothing renders for reduced motion (CSS).
  */
@@ -42,21 +42,6 @@ export function Confetti({ burstKey, pieces = 90 }: { burstKey: number; pieces?:
             ["--drift" as string]: `${b.drift}px`, ["--spin" as string]: `${b.spin}deg`,
           }}
         />
-      ))}
-    </div>
-  );
-}
-
-/** A handful of paw prints that float up from the bottom of the screen. */
-export function PawBurst({ burstKey }: { burstKey: number }) {
-  const paws = useMemo(() => {
-    const r = rng(burstKey * 104729 + 7);
-    return Array.from({ length: 14 }, () => ({ left: 5 + r() * 90, delay: r() * 0.5, dur: 1.4 + r() * 0.8, size: 18 + r() * 18, tilt: (r() - 0.5) * 50 }));
-  }, [burstKey]);
-  return (
-    <div className="celebrate-layer" aria-hidden key={burstKey}>
-      {paws.map((p, i) => (
-        <span key={i} className="paw-bit" style={{ left: `${p.left}%`, fontSize: p.size, animationDelay: `${p.delay}s`, animationDuration: `${p.dur}s`, ["--tilt" as string]: `${p.tilt}deg` }}>🐾</span>
       ))}
     </div>
   );
