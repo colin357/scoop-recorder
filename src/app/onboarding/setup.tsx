@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { completeOnboarding, suggestStarterProjectsAction } from "@/app/actions/onboarding";
 import { Mascot, type MascotPose } from "@/components/mascot";
 import { Icon } from "@/components/icons";
+import { Confetti, PawBurst } from "@/components/celebrate";
 
 /**
  * Onboarding: six short pages, one or two questions each. Progress is kept
@@ -54,6 +55,15 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const [suggesting, setSuggesting] = useState(false);
+  // Little celebrations between some pages: a burst on screen and a cheer from Rocky.
+  const [burst, setBurst] = useState<{ kind: "confetti" | "paws"; key: number; pieces?: number } | null>(null);
+  const [cheer, setCheer] = useState<{ step: number; text: string } | null>(null);
+  const celebrate = (kind: "confetti" | "paws", forStep: number, text: string, pieces?: number) => {
+    const key = Date.now();
+    setBurst({ kind, key, pieces });
+    setCheer({ step: forStep, text });
+    setTimeout(() => setBurst((b) => (b?.key === key ? null : b)), 3200);
+  };
   const loaded = useRef(false);
   const suggestedFor = useRef<string | null>(null);
 
@@ -103,6 +113,8 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
   const goTo = (n: number) => {
     setError(null);
     if (n === 4) loadIdeas();
+    if (n === 1 && step === 0) celebrate("paws", 1, "Love that name! 🐶");
+    if (n === 4 && step === 3) celebrate("confetti", 4, namedMates.length ? `What a crew! ${namedMates.length + 1} of you 🎉` : "Solo and mighty! 💪");
     setStep(n);
   };
 
@@ -124,7 +136,12 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
     if (step === 3 && missingEmail) { setError(`Add an email for ${missingEmail.name.trim()} so we can invite them.`); return; }
     if (!canNext) return;
     if (step < STEPS.length - 1) { goTo(step + 1); return; }
+    // The big finish: confetti, then set everything up while it falls.
+    celebrate("confetti", step, "Let's do this! 🎉", 160);
+    let reduced = false;
+    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch {}
     start(async () => {
+      if (!reduced) await new Promise((r) => setTimeout(r, 1100));
       try {
         const description = [industry && industry.key !== "other" ? `${industry.label}.` : "", a.description.trim()].join(" ").trim();
         try { localStorage.removeItem(STORE); } catch {}
@@ -187,7 +204,12 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
         onSubmit={(e) => { e.preventDefault(); next(); }}
       >
         <div key={step} className="onboard-step w-full max-w-xl">
-          <Mascot pose={STEPS[step].pose} size={step === 0 || step === 5 ? 112 : 84} />
+          <div className="relative inline-block">
+            <span className="rocky-hop"><Mascot pose={STEPS[step].pose} size={step === 0 || step === 5 ? 112 : 84} /></span>
+            {cheer?.step === step && (
+              <span key={cheer.text} className="cheer absolute left-full top-3 ml-2 whitespace-nowrap rounded-2xl rounded-bl-sm border edge bg-paper px-3 py-1.5 text-sm font-semibold shadow-soft">{cheer.text}</span>
+            )}
+          </div>
 
           {step === 0 && (
             <>
@@ -318,6 +340,8 @@ export default function OnboardingSetup({ self }: { self: { name: string; email:
           </div>
         </div>
       </form>
+      {burst?.kind === "confetti" && <Confetti burstKey={burst.key} pieces={burst.pieces} />}
+      {burst?.kind === "paws" && <PawBurst burstKey={burst.key} />}
     </div>
   );
 }
