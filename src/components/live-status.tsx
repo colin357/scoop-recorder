@@ -11,6 +11,7 @@ export default function LiveStatus({ meetingId, status, phone = false }: { meeti
   useEffect(() => {
     if (!LIVE.includes(status)) return;
     const t = setInterval(async () => {
+      if (document.hidden) return;
       try {
         const res = await fetch(`/api/meetings/${meetingId}/status`, { cache: "no-store" });
         if (!res.ok) return;
