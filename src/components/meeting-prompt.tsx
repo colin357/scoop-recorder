@@ -6,7 +6,7 @@ import { Mascot } from "@/components/mascot";
 
 type Ev = { id: string; title: string; startAt: string; platform: string };
 
-/** Pop-up asking whether to record a meeting that starts soon. Polls once a minute. */
+/** Pop-up asking whether to record a meeting that starts soon. Polls once a minute while the tab is visible. */
 export default function MeetingPrompt() {
   const [events, setEvents] = useState<Ev[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
@@ -15,6 +15,8 @@ export default function MeetingPrompt() {
   useEffect(() => {
     let alive = true;
     const load = async () => {
+      // Skip background tabs so an idle tab doesn't keep the database awake around the clock.
+      if (document.hidden) return;
       try {
         const res = await fetch("/api/calendar/upcoming", { cache: "no-store" });
         if (!res.ok) return;
@@ -24,7 +26,8 @@ export default function MeetingPrompt() {
     };
     load();
     const t = setInterval(load, 60_000);
-    return () => { alive = false; clearInterval(t); };
+    document.addEventListener("visibilitychange", load);
+    return () => { alive = false; clearInterval(t); document.removeEventListener("visibilitychange", load); };
   }, []);
 
   const ev = events.find((e) => !dismissed.has(e.id));
