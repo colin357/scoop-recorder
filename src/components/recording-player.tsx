@@ -6,10 +6,10 @@ import { fmtTimestamp } from "@/lib/utils";
 import { Avatar } from "@/components/ui";
 import { Icon } from "@/components/icons";
 
-export default function RecordingPlayer({ url, startAt, transcript, audio = false }: { url: string | null; startAt: number; transcript: TranscriptSegment[]; audio?: boolean }) {
+export default function RecordingPlayer({ url, startAt, transcript, audio = false, media = false }: { url: string | null; startAt: number; transcript: TranscriptSegment[]; audio?: boolean; media?: boolean }) {
   const videoRef = useRef<HTMLVideoElement & HTMLAudioElement>(null);
   const [current, setCurrent] = useState(startAt);
-  const isMedia = url ? audio || /\.(mp4|webm|m4v|mov)(\?|$)/i.test(url) : false;
+  const isMedia = url ? audio || media || /\.(mp4|webm|m4v|mov)(\?|$)/i.test(url) : false;
 
   useEffect(() => {
     const v = videoRef.current;

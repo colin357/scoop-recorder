@@ -113,7 +113,13 @@ export default async function MeetingPage({ params, searchParams }: PageProps<"/
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="lg:col-span-3 space-y-6">
-          <RecordingPlayer url={meeting.platform === "phone" && meeting.recordingUrl ? `/api/meetings/${meeting.id}/recording` : meeting.recordingUrl} audio={meeting.platform === "phone"} startAt={startAt} transcript={transcript} />
+          <RecordingPlayer
+            url={!meeting.recordingUrl ? null : meeting.platform === "phone" ? `/api/meetings/${meeting.id}/recording` : meeting.recallBotId ? `/api/meetings/${meeting.id}/recording?play` : meeting.recordingUrl}
+            media={meeting.platform === "phone" || Boolean(meeting.recallBotId)}
+            audio={meeting.platform === "phone"}
+            startAt={startAt}
+            transcript={transcript}
+          />
 
           {meeting.summary && (
             <section className="card p-5 space-y-4">

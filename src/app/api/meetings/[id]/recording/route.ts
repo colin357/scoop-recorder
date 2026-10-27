@@ -7,7 +7,8 @@ import { fetchTwilioMedia, isTwilioMediaUrl } from "@/lib/twilio";
 /**
  * Same-origin proxy for a meeting's recording, forwarding Range requests, so
  * the browser can read frames into a canvas (a cross-origin video taints it).
- * Used for thumbnail capture; playback still streams from the stored URL.
+ * Used for thumbnail capture. With `?play`, video recordings instead redirect to
+ * the (refreshed) download link so playback streams straight from the source.
  * If the stored download link has expired, a fresh one is fetched from Recall.
  */
 export async function GET(req: Request, { params }: RouteContext<"/api/meetings/[id]/recording">) {
@@ -17,16 +18,25 @@ export async function GET(req: Request, { params }: RouteContext<"/api/meetings/
   const m = await db.meeting.findFirst({ where: { id, orgId: { in: user.memberships.map((x) => x.orgId) } }, select: { recordingUrl: true, recallBotId: true } });
   if (!m?.recordingUrl) return NextResponse.json({ error: "No recording" }, { status: 404 });
 
-  const range = req.headers.get("range");
   // Phone recordings live behind Twilio auth, so they are always played through this proxy.
+  const play = new URL(req.url).searchParams.has("play") && !isTwilioMediaUrl(m.recordingUrl);
+  // When redirecting, only probe the first byte to see whether the link is still live.
+  const range = play ? "bytes=0-0" : req.headers.get("range");
   const upstream = async (url: string) => (isTwilioMediaUrl(url) ? fetchTwilioMedia(url, range) : fetch(url, { headers: range ? { Range: range } : {}, cache: "no-store" }));
-  let res = await upstream(m.recordingUrl);
+  let url = m.recordingUrl;
+  let res = await upstream(url);
   if ((res.status === 403 || res.status === 404) && m.recallBotId && recallConfigured()) {
     const fresh = recordingUrlFromBot(await getBot(m.recallBotId));
-    if (fresh && fresh !== m.recordingUrl) {
+    if (fresh && fresh !== url) {
       await db.meeting.update({ where: { id }, data: { recordingUrl: fresh } });
-      res = await upstream(fresh);
+      url = fresh;
+      res = await upstream(url);
     }
+  }
+  if (play) {
+    await res.body?.cancel();
+    if (!res.ok && res.status !== 206) return NextResponse.json({ error: "Recording unavailable" }, { status: 502 });
+    return NextResponse.redirect(url, { status: 302, headers: { "cache-control": "no-store" } });
   }
   if (!res.ok && res.status !== 206) return NextResponse.json({ error: "Recording unavailable" }, { status: 502 });
 
