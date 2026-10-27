@@ -10,6 +10,7 @@ export default function RecordingPlayer({ url, startAt, transcript, audio = fals
   const videoRef = useRef<HTMLVideoElement & HTMLAudioElement>(null);
   const [current, setCurrent] = useState(startAt);
   const isMedia = url ? audio || media || /\.(mp4|webm|m4v|mov)(\?|$)/i.test(url) : false;
+  const [unavailable, setUnavailable] = useState(false);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -33,8 +34,10 @@ export default function RecordingPlayer({ url, startAt, transcript, audio = fals
           <span className="h-10 w-10 shrink-0 rounded-full bg-flame-soft text-flame-deep flex items-center justify-center"><Icon name="phone" size={18} /></span>
           <audio ref={videoRef} src={url} controls preload="metadata" className="w-full" onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)} />
         </div>
+      ) : url && isMedia && unavailable ? (
+        <div className="px-4 py-3 bg-paper-2 border-b edge text-sm text-muted flex items-center gap-2"><Icon name="video" size={16} />The video for this meeting is no longer available. The transcript is below.</div>
       ) : url && isMedia ? (
-        <video ref={videoRef} src={url} controls className="w-full bg-black aspect-video" onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)} />
+        <video ref={videoRef} src={url} controls className="w-full bg-black aspect-video" onError={() => setUnavailable(true)} onTimeUpdate={(e) => setCurrent(e.currentTarget.currentTime)} />
       ) : url ? (
         <div className="p-4 bg-ink text-paper text-sm flex items-center justify-between">
           <span>Recording hosted externally.</span>

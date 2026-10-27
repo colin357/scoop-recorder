@@ -25,6 +25,8 @@ async function recallFetch<T>(path: string, init: RequestInit = {}): Promise<T> 
   const key = process.env.RECALL_API_KEY;
   if (!key) throw new Error("RECALL_API_KEY is not set");
   const res = await fetch(`${BASE}${path}`, {
+    // Never hang a request on a slow Recall response.
+    signal: AbortSignal.timeout(15_000),
     ...init,
     headers: {
       Authorization: `Token ${key}`,
