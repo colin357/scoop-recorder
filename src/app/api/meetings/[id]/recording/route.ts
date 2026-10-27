@@ -18,25 +18,33 @@ export async function GET(req: Request, { params }: RouteContext<"/api/meetings/
   const m = await db.meeting.findFirst({ where: { id, orgId: { in: user.memberships.map((x) => x.orgId) } }, select: { recordingUrl: true, recallBotId: true } });
   if (!m?.recordingUrl) return NextResponse.json({ error: "No recording" }, { status: 404 });
 
-  // Phone recordings live behind Twilio auth, so they are always played through this proxy.
-  const play = new URL(req.url).searchParams.has("play") && !isTwilioMediaUrl(m.recordingUrl);
-  // When redirecting, only probe the first byte to see whether the link is still live.
-  const range = play ? "bytes=0-0" : req.headers.get("range");
+  // Playback redirects to a download link instead of streaming through this function.
+  // Recall links expire after a few hours, so ask Recall for a fresh one each time.
+  // Phone recordings live behind Twilio auth, so they are always played through the proxy below.
+  if (new URL(req.url).searchParams.has("play") && !isTwilioMediaUrl(m.recordingUrl)) {
+    let url: string | null = m.recordingUrl;
+    if (m.recallBotId && recallConfigured()) {
+      try {
+        url = recordingUrlFromBot(await getBot(m.recallBotId));
+      } catch (err) {
+        console.error(`recording ${id}: Recall lookup failed`, err);
+        return NextResponse.json({ error: "Recording unavailable" }, { status: 502 });
+      }
+      if (!url) return NextResponse.json({ error: "Recording no longer available" }, { status: 404 });
+      if (url !== m.recordingUrl) await db.meeting.update({ where: { id }, data: { recordingUrl: url } });
+    }
+    return NextResponse.redirect(url, { status: 302, headers: { "cache-control": "no-store" } });
+  }
+
+  const range = req.headers.get("range");
   const upstream = async (url: string) => (isTwilioMediaUrl(url) ? fetchTwilioMedia(url, range) : fetch(url, { headers: range ? { Range: range } : {}, cache: "no-store" }));
-  let url = m.recordingUrl;
-  let res = await upstream(url);
+  let res = await upstream(m.recordingUrl);
   if ((res.status === 403 || res.status === 404) && m.recallBotId && recallConfigured()) {
     const fresh = recordingUrlFromBot(await getBot(m.recallBotId));
-    if (fresh && fresh !== url) {
+    if (fresh && fresh !== m.recordingUrl) {
       await db.meeting.update({ where: { id }, data: { recordingUrl: fresh } });
-      url = fresh;
-      res = await upstream(url);
+      res = await upstream(fresh);
     }
-  }
-  if (play) {
-    await res.body?.cancel();
-    if (!res.ok && res.status !== 206) return NextResponse.json({ error: "Recording unavailable" }, { status: 502 });
-    return NextResponse.redirect(url, { status: 302, headers: { "cache-control": "no-store" } });
   }
   if (!res.ok && res.status !== 206) return NextResponse.json({ error: "Recording unavailable" }, { status: 502 });
 
